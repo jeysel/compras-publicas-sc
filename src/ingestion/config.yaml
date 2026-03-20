@@ -1,0 +1,44 @@
+# ============================================
+# Configurações do Pipeline de Compras Públicas
+# ============================================
+
+# Fonte ativa para ingestão
+source: transparencia_sc   # opções: transparencia_sc, betha
+
+# Parâmetros gerais de ingestão
+parameters:
+  start_date: "2020-01-01"
+  end_date: "2024-12-31"
+  pagination: true
+  page_size: 100
+  max_pages: 500
+
+# Configurações específicas por fonte
+sources:
+  transparencia_sc:
+    base_url: "https://www.transparencia.sc.gov.br"
+    endpoints:
+      compras: "/licitacoes"
+      contratos: "/contratos"
+    format: "html"   # html, json, csv
+    requires_scraping: true
+
+  betha:
+    base_url: "https://transparencia.betha.cloud"
+    endpoints:
+      compras: "/api/compras"
+      contratos: "/api/contratos"
+    format: "json"
+    requires_scraping: false
+
+# Diretórios de saída
+output:
+  raw_path: "data/raw"
+  staging_path: "data/staging"
+  core_path: "data/core"
+  marts_path: "data/marts"
+
+# Configurações de logs
+logging:
+  level: "INFO"
+  file: "logs/pipeline.log"
