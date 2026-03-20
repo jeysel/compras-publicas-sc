@@ -71,8 +71,48 @@ Métricas analíticas:
 
 ## 📁 Estrutura do Projeto
 
-
-
+compras-publicas/
+│
+├── data/
+│   ├── raw/                  # Dados brutos extraídos das fontes
+│   ├── staging/              # Dados normalizados e padronizados
+│   ├── core/                 # Entidades modeladas (Órgão, Compra, Item...)
+│   └── marts/                # Tabelas analíticas e métricas
+│
+├── docs/
+│   ├── architecture.md       # Arquitetura completa do pipeline
+│   ├── backlog.md            # Backlog técnico (épicos, features, histórias)
+│   ├── data_dictionary.md    # Dicionário de dados (campos e descrições)
+│   ├── decisions.md          # Decisões arquiteturais registradas
+│   └── roadmap.md            # Roadmap de evolução do projeto
+│
+├── src/
+│   ├── ingestion/
+│   │   ├── sources/
+│   │   │   ├── base_source.py        # Classe abstrata para padronizar fontes
+│   │   │   └── transparencia_sc.py   # Fonte Transparência SC (em desenvolvimento)
+│   │   ├── config.yaml               # Configurações do pipeline
+│   │   └── ingestion_runner.py       # Orquestrador da ingestão
+│   │
+│   ├── transformations/
+│   │   ├── staging_transform.py      # Transformações da camada staging
+│   │   ├── core_transform.py         # Modelagem das entidades core
+│   │   └── marts_builder.py          # Construção das métricas analíticas
+│   │
+│   ├── pipelines/
+│   │   ├── pipeline_staging.py       # Pipeline: raw → staging
+│   │   ├── pipeline_core.py          # Pipeline: staging → core
+│   │   └── pipeline_marts.py         # Pipeline: core → marts
+│   │
+│   └── utils/
+│       ├── logger.py                 # Logger padronizado
+│       ├── validators.py             # Validações de qualidade
+│       └── helpers.py                # Funções auxiliares
+│
+└── tests/
+    ├── test_ingestion.py             # Testes da ingestão
+    ├── test_transformations.py       # Testes das transformações
+    └── test_marts.py                 # Testes das métricas
 
 ---
 
