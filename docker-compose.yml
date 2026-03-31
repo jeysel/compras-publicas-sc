@@ -1,0 +1,81 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Compras Públicas — Pipeline Analytics
+#
+# Serviços:
+#   postgres  → banco de dados principal
+#   dbt       → transformações (staging → intermediate → marts)
+#   evidence  → dashboards estáticos (GitHub Pages)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL 17 ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:17
+    container_name: compras_postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
+      POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
+      TZ: America/Sao_Paulo
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d   
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cp_user} -d ${POSTGRES_DB:-compras_publicas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── DBT Core ─────────────────────────────────────────────────────────────
+  dbt:
+    build:
+      context: ./dbt
+      dockerfile: Dockerfile
+    container_name: compras_dbt
+    env_file: .env
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+      POSTGRES_HOST:     postgres
+      POSTGRES_PORT:     ${POSTGRES_PORT:-5432}
+      POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
+      POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
+    volumes:
+      - ./dbt:/usr/app/dbt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["dbt"]
+
+  # ── Evidence ─────────────────────────────────────────────────────────────
+  evidence:
+    build:
+      context: ./evidence
+      dockerfile: Dockerfile
+    container_name: compras_evidence
+    env_file: .env
+    environment:
+      EVIDENCE_DATABASE: postgres
+      POSTGRES_HOST:     postgres
+      POSTGRES_PORT:     ${POSTGRES_PORT:-5432}
+      POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
+      POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./evidence:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["evidence"]
+
+volumes:
+  pgdata:

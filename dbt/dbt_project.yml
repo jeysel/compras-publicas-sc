@@ -1,0 +1,40 @@
+name: 'compras_publicas'
+version: '1.0.0'
+config-version: 2
+
+profile: 'compras_publicas'
+
+model-paths:  ["models"]
+seed-paths:   ["seeds"]
+test-paths:   ["tests"]
+macro-paths:  ["macros"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  compras_publicas:
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ["stg"]
+
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+      +tags: ["int"]
+
+    marts:
+      +materialized: table
+      +schema: marts
+      +tags: ["marts"]
+
+seeds:
+  compras_publicas:
+    +schema: raw
+    +enabled: true
+    +quote_columns: false

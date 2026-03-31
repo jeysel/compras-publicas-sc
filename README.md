@@ -1,166 +1,112 @@
-# 🛒 Compras Públicas — Pipeline de Dados  
-### Fontes iniciais: Transparência SC e Betha Sistemas
+# 🛒 Compras Públicas SC — Pipeline Analytics
 
-Este projeto implementa um pipeline completo para coleta, padronização, modelagem e análise de **compras públicas** do estado de Santa Catarina, utilizando:
+Pipeline Analytics completo para análise de compras públicas do estado de Santa Catarina.
 
-- **Transparência SC** → https://www.transparencia.sc.gov.br/  
-- **Betha Transparência** → https://transparencia.betha.cloud/#/
+Objetivo: Analisar padrões de contratação pública em SC — evolução de gastos, concentração de fornecedores e comportamento dos órgãos ao longo do tempo.
 
-O objetivo central é comparar **valores licitados x valores contratados**, identificar padrões de compras, analisar competitividade entre fornecedores e entender o comportamento dos órgãos públicos ao longo do ciclo de aquisição.
+**Fonte:** [Transparência SC](https://www.transparencia.sc.gov.br/)
 
 ---
 
-## ❓ Por que este projeto é importante?
+## 🏗️ Arquitetura
 
-Compras públicas movimentam bilhões de reais todos os anos.  
-Entender **quanto foi planejado (licitado)** e **quanto realmente foi contratado** permite:
+```
+CSV (Transparência SC)
+       ↓
+  dbt seed → PostgreSQL (raw)
+       ↓
+  dbt build
+  ├── staging      → padronização e limpeza
+  ├── intermediate → regras de negócio
+  └── marts        → métricas analíticas
+       ↓
+    Evidence → GitHub Pages
+```
 
-- Identificar economia ou sobrepreço  
-- Avaliar eficiência dos processos  
-- Medir competitividade entre fornecedores  
-- Detectar padrões de comportamento dos órgãos  
-- Aumentar transparência e controle social  
+## 🧱 Stack
 
-Este projeto transforma dados brutos e dispersos em **informação estruturada, confiável e analítica**.
+| Camada | Tecnologia |
+|---|---|
+| Banco de dados | PostgreSQL 17 |
+| Transformação | dbt-core 1.9 |
+| Visualização | Evidence.dev |
+| Orquestração local | Docker Compose |
+| CI/CD | GitHub Actions |
+| Publicação | GitHub Pages |
 
 ---
 
-## 🎯 Objetivos do Projeto
+## 🎯 Métricas Analíticas
 
-- Criar um pipeline de ingestão configurável para múltiplas fontes  
-- Padronizar dados brutos em uma camada staging  
-- Modelar entidades principais (core)  
-- Construir marts analíticos com métricas relevantes  
-- Documentar arquitetura, decisões e dicionário de dados  
-- Demonstrar práticas reais de Analytics Engineering  
+- Valor licitado vs contratado (economia/sobrepreço)
+- Competitividade (nº de fornecedores por compra)
+- Modalidades mais utilizadas
+- Tempo médio entre abertura e contratação
+- Ranking de órgãos por volume de compras
+- Ranking de fornecedores por participação
 
 ---
 
-## 🧱 Arquitetura do Pipeline
+## 🚀 Como rodar localmente
 
+### Pré-requisitos
+- Docker Desktop instalado e rodando
+- Git
 
-### **Ingestão**
-- Transparência SC  
-- Betha Sistemas  
-- Configuração via `config.yaml`  
-- Módulo de ingestão extensível para novas fontes  
+### Setup
 
-### **Staging**
-- Normalização de campos  
-- Padronização de datas, valores e códigos  
-- Validações de qualidade  
+```bash
+# 1. Clone o repositório
+git clone https://github.com/jeysel/compras-publicas.git
+cd compras-publicas
 
-### **Core**
-Entidades principais:
-- Órgão  
-- Compra  
-- Item  
-- Fornecedor  
-- Modalidade  
-- Contrato  
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
 
-### **Marts**
-Métricas analíticas:
-- Valor licitado vs contratado  
-- Competitividade (nº de fornecedores)  
-- Modalidades mais utilizadas  
-- Tempo médio do processo  
-- Órgãos com maior volume de compras  
+# 3. Sobe o PostgreSQL
+docker compose up postgres -d
+
+# 4. Roda o dbt (seed + build)
+docker compose run --rm dbt dbt seed
+docker compose run --rm dbt dbt build
+
+# 5. Sobe o Evidence
+docker compose --profile evidence up evidence
+# Acesse: http://localhost:3000
+```
 
 ---
 
 ## 📁 Estrutura do Projeto
 
+```
 compras-publicas/
-│
-├── data/
-│   ├── raw/                  # Dados brutos extraídos das fontes
-│   ├── staging/              # Dados normalizados e padronizados
-│   ├── core/                 # Entidades modeladas (Órgão, Compra, Item...)
-│   └── marts/                # Tabelas analíticas e métricas
-│
-├── docs/
-│   ├── architecture.md       # Arquitetura completa do pipeline
-│   ├── backlog.md            # Backlog técnico (épicos, features, histórias)
-│   ├── data_dictionary.md    # Dicionário de dados (campos e descrições)
-│   ├── decisions.md          # Decisões arquiteturais registradas
-│   └── roadmap.md            # Roadmap de evolução do projeto
-│
-├── src/
-│   ├── ingestion/
-│   │   ├── sources/
-│   │   │   ├── base_source.py        # Classe abstrata para padronizar fontes
-│   │   │   └── transparencia_sc.py   # Fonte Transparência SC (em desenvolvimento)
-│   │   ├── config.yaml               # Configurações do pipeline
-│   │   └── ingestion_runner.py       # Orquestrador da ingestão
-│   │
-│   ├── transformations/
-│   │   ├── staging_transform.py      # Transformações da camada staging
-│   │   ├── core_transform.py         # Modelagem das entidades core
-│   │   └── marts_builder.py          # Construção das métricas analíticas
-│   │
-│   ├── pipelines/
-│   │   ├── pipeline_staging.py       # Pipeline: raw → staging
-│   │   ├── pipeline_core.py          # Pipeline: staging → core
-│   │   └── pipeline_marts.py         # Pipeline: core → marts
-│   │
-│   └── utils/
-│       ├── logger.py                 # Logger padronizado
-│       ├── validators.py             # Validações de qualidade
-│       └── helpers.py                # Funções auxiliares
-│
-└── tests/
-    ├── test_ingestion.py             # Testes da ingestão
-    ├── test_transformations.py       # Testes das transformações
-    └── test_marts.py                 # Testes das métricas
+├── .github/workflows/   # CI/CD — GitHub Actions
+├── postgres/
+│   └── init/            # Scripts SQL de inicialização
+├── dbt/
+│   ├── models/
+│   │   ├── staging/     # Padronização dos dados brutos
+│   │   ├── intermediate/# Regras de negócio
+│   │   └── marts/       # Tabelas analíticas finais
+│   └── seeds/           # CSVs dos contratos SC
+├── evidence/
+│   └── pages/           # Dashboards interativos
+├── docs/                # Arquitetura e decisões
+├── docker-compose.yml
+└── .env.example
+```
 
 ---
 
-## 📊 Métricas que serão geradas
+## 📊 Dashboard
 
-- Economia (valor licitado – contratado)  
-- Competitividade (nº de fornecedores por compra)  
-- Modalidade mais utilizada  
-- Tempo médio entre abertura e contratação  
-- Ranking de órgãos por volume de compras  
-- Ranking de fornecedores por participação  
+Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/compras-publicas)**
 
 ---
 
-## 🚦 Status do Projeto
+## 👤 Autor
 
-- **Em desenvolvimento**  
-- Ingestão Transparência SC → Em andamento  
-- Ingestão Betha → Backlog  
-- Modelagem Core → Backlog  
-- Marts Analíticos → Backlog  
+Desenvolvido por [Jeysel](https://github.com/jeysel) como projeto de portfólio em Analytics Engineering.
 
----
-
-## 🗺️ Roadmap Inicial
-
-### 🔹 **Fase 1 — Estrutura e Ingestão**
-- [ ] Criar estrutura de pastas  
-- [ ] Implementar `base_source.py`  
-- [ ] Implementar ingestão Transparência SC  
-- [ ] Implementar ingestão Betha  
-
-### 🔹 **Fase 2 — Staging e Core**
-- [ ] Criar camada staging  
-- [ ] Criar validações de qualidade  
-- [ ] Criar modelagem core  
-
-### 🔹 **Fase 3 — Marts e Métricas**
-- [ ] Criar marts analíticos  
-- [ ] Criar métricas licitado x contratado  
-- [ ] Criar métricas de competitividade  
-
-### 🔹 **Fase 4 — Documentação e Testes**
-- [ ] Documentar arquitetura  
-- [ ] Criar dicionário de dados  
-- [ ] Criar testes unitários  
-
----
-
-## 📄 Licença
-Uso educacional e demonstrativo.
+Portfólio completo: [github.com/jeysel/Analytics-Engineer](https://github.com/jeysel/Analytics-Engineer)
