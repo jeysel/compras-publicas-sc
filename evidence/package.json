@@ -1,0 +1,13 @@
+{
+  "name": "compras-publicas",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "evidence dev --host 0.0.0.0",
+    "build": "evidence build",
+    "preview": "evidence preview"
+  },
+  "dependencies": {
+    "@evidence-dev/evidence": "^35.0.0",
+    "@evidence-dev/postgres": "^1.0.0"
+  }
+}
