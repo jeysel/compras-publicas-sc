@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DBT Profiles — Compras Públicas
+# As variáveis são injetadas pelo docker-compose via environment
+# ─────────────────────────────────────────────────────────────────────────────
+
+compras_publicas:
+  target: dev
+  outputs:
+
+    dev:
+      type: postgres
+      host:     "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port:     "{{ env_var('POSTGRES_PORT', '5432') | int }}"
+      dbname:   "{{ env_var('POSTGRES_DB', 'compras_publicas') }}"
+      user:     "{{ env_var('POSTGRES_USER', 'cp_user') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'cp_pass') }}"
+      schema:   raw
+      threads:  4
+
+    prod:
+      type: postgres
+      host:     "{{ env_var('POSTGRES_HOST_PROD') }}"
+      port:     "{{ env_var('POSTGRES_PORT_PROD', '5432') | int }}"
+      dbname:   "{{ env_var('POSTGRES_DB_PROD') }}"
+      user:     "{{ env_var('POSTGRES_USER_PROD') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD_PROD') }}"
+      schema:   raw
+      threads:  4
