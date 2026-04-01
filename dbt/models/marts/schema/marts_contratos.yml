@@ -1,0 +1,309 @@
+version: 2
+
+models:
+  - name: dim_datas
+    description: >
+      Dimensão calendário gerada a partir das datas dos contratos.
+      Cobre todo o período de 2016 a 2026.
+
+    columns:
+      - name: dt_data
+        description: "Data no formato DATE"
+        tests:
+          - not_null
+          - unique
+
+      - name: ano
+        description: "Ano"
+        tests:
+          - not_null
+
+      - name: mes
+        description: "Mês (1-12)"
+        tests:
+          - not_null
+
+      - name: dia
+        description: "Dia do mês"
+
+      - name: trimestre
+        description: "Trimestre (1-4)"
+
+      - name: nm_mes
+        description: "Nome do mês por extenso"
+
+      - name: nm_mes_abrev
+        description: "Nome do mês abreviado"
+
+      - name: nm_dia_semana
+        description: "Nome do dia da semana"
+
+      - name: ano_mes
+        description: "Ano e mês no formato YYYY-MM"
+
+      - name: nm_trimestre
+        description: "Trimestre por extenso (ex: 1º Tri)"
+
+      - name: sigla_trimestre
+        description: "Sigla do trimestre (Q1, Q2, Q3, Q4)"
+
+      - name: fl_fim_de_semana
+        description: "Flag indicando se é fim de semana"
+
+      - name: primeiro_dia_mes
+        description: "Primeiro dia do mês"
+
+      - name: ultimo_dia_mes
+        description: "Último dia do mês"
+
+  - name: fct_aditivos
+    description: >
+      Fato de aditivos contratuais — contratos que sofreram alteração de valor
+      ou prazo. Representa o total consolidado de aditivos por contrato.
+      Regra de negócio: vl_original + vl_aditado = vl_atual.
+      Evolução futura: fonte detalhada com 1 linha por evento de aditivo.
+
+    columns:
+      - name: nu_contrato
+        description: "Número do contrato"
+        tests:
+          - not_null
+
+      - name: id_contratado
+        description: "Identificador do fornecedor"
+        tests:
+          - not_null
+
+      - name: vl_original
+        description: "Valor original do contrato"
+        tests:
+          - not_null
+
+      - name: vl_aditado
+        description: "Valor total dos aditivos"
+
+      - name: vl_atual
+        description: "Valor atual = vl_original + vl_aditado"
+        tests:
+          - not_null
+
+      - name: vl_variacao
+        description: "Variação de valor (vl_atual - vl_original)"
+
+      - name: perc_alteracao_valor
+        description: "Percentual de alteração do valor original"
+
+      - name: perc_alteracao_prazo
+        description: "Percentual de alteração do prazo original"
+
+      - name: tp_aditivo
+        description: "Tipo do aditivo: Valor e Prazo, Somente Valor, Somente Prazo"
+        tests:
+          - accepted_values:
+              values: ['Valor e Prazo', 'Somente Valor', 'Somente Prazo', 'Sem alteração']
+
+      - name: tp_variacao_valor
+        description: "Tipo de variação de valor: Acréscimo, Supressão, Sem variação"
+        tests:
+          - accepted_values:
+              values: ['Acréscimo', 'Supressão', 'Sem variação de valor']
+
+      - name: faixa_variacao
+        description: "Faixa de variação: Acima de 25%, Até 25%, Redução ou sem variação"
+
+  - name: dim_orgaos
+    description: >
+      Dimensão de unidades gestoras (órgãos públicos).
+      Agrega totais de contratos e valores por órgão, com ranking.
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora"
+        tests:
+          - not_null
+
+      - name: cod_gestao
+        description: "Código da gestão"
+
+      - name: nm_gestao
+        description: "Nome da gestão"
+
+      - name: qt_contratos
+        description: "Total de contratos do órgão"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores distintos contratados"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais"
+
+      - name: vl_total_variacao
+        description: "Soma da variação total"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos"
+
+      - name: dt_primeiro_contrato
+        description: "Data do primeiro contrato"
+
+      - name: dt_ultimo_contrato
+        description: "Data do último contrato"
+
+      - name: rank_por_valor
+        description: "Ranking do órgão por valor total contratado"
+
+      - name: rank_por_quantidade
+        description: "Ranking do órgão por quantidade de contratos"
+
+  - name: dim_fornecedores
+    description: >
+      Dimensão de fornecedores (contratados).
+      Agrega totais, métricas de concentração e classificação por porte.
+
+    columns:
+      - name: id_contratado
+        description: "Identificador único do fornecedor (CNPJ/CPF)"
+        tests:
+          - not_null
+          - unique
+
+      - name: nm_contratado
+        description: "Nome ou razão social do fornecedor"
+        tests:
+          - not_null
+
+      - name: qt_contratos
+        description: "Total de contratos do fornecedor"
+        tests:
+          - not_null
+
+      - name: qt_orgaos_distintos
+        description: "Quantidade de órgãos distintos com que contratou"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais dos contratos"
+
+      - name: perc_concentracao
+        description: "Percentual do maior contrato sobre o total"
+
+      - name: porte_fornecedor
+        description: "Classificação por porte: Micro, Pequeno, Médio, Grande"
+        tests:
+          - accepted_values:
+              values: ['Micro', 'Pequeno', 'Médio', 'Grande']
+
+      - name: rank_por_valor
+        description: "Ranking do fornecedor por valor total contratado"
+
+      - name: rank_por_quantidade
+        description: "Ranking do fornecedor por quantidade de contratos"
+
+  - name: dim_modalidades
+    description: >
+      Dimensão de modalidades de licitação.
+      Inclui ranking, percentuais sobre o total e taxa de aditivos.
+
+    columns:
+      - name: nm_modalidade
+        description: "Nome da modalidade de licitação"
+        tests:
+          - not_null
+          - unique
+
+      - name: qt_contratos
+        description: "Total de contratos na modalidade"
+        tests:
+          - not_null
+
+      - name: perc_contratos_com_aditivo
+        description: "Percentual de contratos que tiveram aditivo"
+
+      - name: rank_por_quantidade
+        description: "Ranking por quantidade de contratos"
+
+      - name: rank_por_valor
+        description: "Ranking por valor total"
+
+      - name: perc_sobre_total_qt
+        description: "Percentual da modalidade sobre o total de contratos"
+
+      - name: perc_sobre_total_valor
+        description: "Percentual da modalidade sobre o valor total"
+
+  - name: fct_contratos
+    description: >
+      Tabela fato principal com todos os contratos enriquecidos.
+      Une dados do staging com métricas das dimensões de fornecedores e órgãos.
+
+    columns:
+      - name: nu_contrato
+        description: "Número do contrato"
+        tests:
+          - not_null
+
+      - name: id_contratado
+        description: "Identificador do fornecedor"
+        tests:
+          - not_null
+
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_modalidade
+        description: "Modalidade de licitação"
+
+      - name: dt_assinatura
+        description: "Data de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: ano_assinatura
+        description: "Ano de assinatura"
+        tests:
+          - not_null
+
+      - name: vl_original
+        description: "Valor original do contrato"
+        tests:
+          - not_null
+
+      - name: vl_atual
+        description: "Valor atual do contrato"
+        tests:
+          - not_null
+
+      - name: vl_variacao
+        description: "Variação entre valor atual e original"
+
+      - name: tp_variacao
+        description: "Tipo de variação: Acréscimo, Decréscimo ou Sem variação"
+        tests:
+          - accepted_values:
+              values: ['Acréscimo', 'Decréscimo', 'Sem variação']
+
+      - name: fl_possui_aditivo
+        description: "Flag indicando se o contrato possui aditivo"
+
+      - name: perc_variacao
+        description: "Percentual de variação em relação ao valor original"
+
+      - name: porte_fornecedor
+        description: "Classificação do fornecedor por porte"
+
+      - name: rank_fornecedor_por_valor
+        description: "Ranking do fornecedor por valor total"
+
+      - name: rank_orgao_por_valor
+        description: "Ranking do órgão por valor total"

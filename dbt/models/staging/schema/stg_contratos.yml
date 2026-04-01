@@ -1,0 +1,85 @@
+version: 2
+ 
+models:
+  - name: stg_contratos
+    description: >
+      Contratos públicos do estado de Santa Catarina padronizados.
+      Fonte: Transparência SC. Período: 2016 a 2026.
+      78.000 registros aproximadamente.
+ 
+    columns:
+      - name: nu_contrato
+        description: "Número do contrato"
+        tests:
+          - not_null
+ 
+      - name: id_contratado
+        description: "Identificador único do contratado (CNPJ/CPF)"
+        tests:
+          - not_null
+ 
+      - name: nm_contratado
+        description: "Nome/razão social do contratado"
+        tests:
+          - not_null
+ 
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora responsável pelo contrato"
+        tests:
+          - not_null
+ 
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora"
+        tests:
+          - not_null
+ 
+      - name: dt_assinatura
+        description: "Data de assinatura do contrato"
+        tests:
+          - not_null
+ 
+      - name: dt_inicio
+        description: "Data de início de vigência do contrato"
+ 
+      - name: dt_fim
+        description: "Data de fim original do contrato"
+ 
+      - name: dt_fim_atual
+        description: "Data de fim atual (considera aditivos)"
+ 
+      - name: vl_original
+        description: "Valor original do contrato em R$"
+        tests:
+          - not_null
+ 
+      - name: vl_atual
+        description: "Valor atual do contrato em R$ (considera aditivos)"
+        tests:
+          - not_null
+ 
+      - name: vl_aditado
+        description: "Valor total dos aditivos em R$"
+ 
+      - name: vl_variacao
+        description: "Diferença entre valor atual e valor original (vl_atual - vl_original)"
+ 
+      - name: ds_situacao
+        description: "Situação atual do contrato (ativo, encerrado, etc.)"
+        tests:
+          - not_null
+ 
+      - name: nm_modalidade
+        description: "Modalidade de licitação (pregão, dispensa, etc.)"
+ 
+      - name: de_tipo_contrato
+        description: "Tipo do contrato"
+ 
+      - name: ano_assinatura
+        description: "Ano de assinatura extraído de dt_assinatura"
+        tests:
+          - not_null
+ 
+      - name: mes_assinatura
+        description: "Mês de assinatura extraído de dt_assinatura"
+        tests:
+          - not_null

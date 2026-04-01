@@ -85,19 +85,45 @@ docker compose run --rm dbt deps
 # 6. Carrega os dados (seed)
 docker compose run --rm dbt seed
 # Valide no PgAdmin: raw.contratos (~78.000 linhas)
-- SELECT count(*) FROM raw.contratos; # Esperado: 76.041
+- SELECT table_name 
+     FROM information_schema.tables 
+     WHERE table_schema = 'raw'
+     ORDER BY table_name;
 
 # 7. Executa e valida o staging
-docker compose run --rm dbt dbt build --select stg_contratos
+docker compose run --rm dbt build --select stg_contratos
 # Valide no PgAdmin: staging.stg_contratos
+- SELECT table_name 
+     FROM information_schema.tables 
+     WHERE table_schema = 'staging'
+     ORDER BY table_name;
 
 # 8. Executa e valida o intermediate
-docker compose run --rm dbt dbt build --select tag:int
+docker compose run --rm dbt build --select tag:int
 # Valide no PgAdmin: intermediate.*
+- SELECT table_name 
+     FROM information_schema.tables 
+     WHERE table_schema = 'intermediate'
+     ORDER BY table_name;
 
 # 9. Executa os marts
 docker compose run --rm dbt dbt build --select tag:marts
 # Valide no PgAdmin: marts.dim_*, marts.fct_*
+- SELECT table_name 
+     FROM information_schema.tables 
+     WHERE table_schema = 'marts'
+     ORDER BY table_name;
+
+- -- Confere os campos descritivos na fct
+     SELECT 
+          ds_situacao_aditivo,
+          ds_situacao_prazo,
+          porte_fornecedor,
+          count(*) as qt
+     FROM marts.fct_contratos
+     GROUP BY 1, 2, 3
+     ORDER BY 4 DESC
+     LIMIT 10;
 
 # 10. Sobe o Evidence
 docker compose --profile evidence up evidence -d

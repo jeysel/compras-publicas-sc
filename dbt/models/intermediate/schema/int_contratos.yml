@@ -1,0 +1,217 @@
+version: 2
+
+models:
+  - name: int_contratos_por_orgao
+    description: >
+      Agregação de contratos por unidade gestora e gestão.
+      Inclui totais de valor, quantidade de contratos e fornecedores distintos.
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora"
+        tests:
+          - not_null
+
+      - name: cod_gestao
+        description: "Código da gestão"
+
+      - name: nm_gestao
+        description: "Nome da gestão"
+
+      - name: qt_contratos
+        description: "Quantidade total de contratos"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores distintos"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais dos contratos"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais dos contratos"
+
+      - name: vl_total_aditado
+        description: "Soma dos valores aditados"
+
+      - name: vl_total_variacao
+        description: "Soma da variação (vl_atual - vl_original)"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos"
+
+      - name: vl_maior_contrato
+        description: "Maior valor de contrato"
+
+      - name: vl_menor_contrato
+        description: "Menor valor de contrato"
+
+      - name: dt_primeiro_contrato
+        description: "Data do primeiro contrato assinado"
+
+      - name: dt_ultimo_contrato
+        description: "Data do último contrato assinado"
+
+  - name: int_contratos_por_fornecedor
+    description: >
+      Agregação de contratos por fornecedor (contratado).
+      Inclui métricas de concentração e participação.
+
+    columns:
+      - name: id_contratado
+        description: "Identificador único do contratado (CNPJ/CPF)"
+        tests:
+          - not_null
+          
+      - name: nm_contratado
+        description: "Nome ou razão social do contratado"
+        tests:
+          - not_null
+
+      - name: qt_contratos
+        description: "Quantidade total de contratos"
+        tests:
+          - not_null
+
+      - name: qt_orgaos_distintos
+        description: "Quantidade de órgãos distintos com que contratou"
+
+      - name: qt_modalidades_distintas
+        description: "Quantidade de modalidades distintas utilizadas"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais"
+
+      - name: vl_total_aditado
+        description: "Soma dos valores aditados"
+
+      - name: vl_total_variacao
+        description: "Soma da variação (vl_atual - vl_original)"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos"
+
+      - name: vl_maior_contrato
+        description: "Maior valor de contrato"
+
+      - name: vl_menor_contrato
+        description: "Menor valor de contrato"
+
+      - name: dt_primeiro_contrato
+        description: "Data do primeiro contrato assinado"
+
+      - name: dt_ultimo_contrato
+        description: "Data do último contrato assinado"
+
+      - name: perc_concentracao
+        description: "Percentual do maior contrato sobre o total do fornecedor"
+
+  - name: int_contratos_por_modalidade
+    description: >
+      Agregação de contratos por modalidade de licitação.
+      Inclui ranking por quantidade e por valor.
+
+    columns:
+      - name: nm_modalidade
+        description: "Nome da modalidade de licitação"
+        tests:
+          - not_null:
+              severity: warn
+
+      - name: qt_contratos
+        description: "Quantidade total de contratos"
+        tests:
+          - not_null
+
+      - name: qt_orgaos_distintos
+        description: "Quantidade de órgãos distintos"
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores distintos"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais"
+
+      - name: vl_total_aditado
+        description: "Soma dos valores aditados"
+
+      - name: vl_total_variacao
+        description: "Soma da variação"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos"
+
+      - name: vl_maior_contrato
+        description: "Maior valor de contrato"
+
+      - name: vl_menor_contrato
+        description: "Menor valor de contrato"
+
+      - name: perc_contratos_com_aditivo
+        description: "Percentual de contratos que tiveram aditivo"
+
+      - name: rank_por_quantidade
+        description: "Ranking da modalidade por quantidade de contratos"
+
+      - name: rank_por_valor
+        description: "Ranking da modalidade por valor total"
+
+  - name: int_contratos_evolucao_anual
+    description: >
+      Evolução mensal de contratos por ano de assinatura.
+      Inclui totais acumulados dentro do ano.
+
+    columns:
+      - name: ano_assinatura
+        description: "Ano de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: mes_assinatura
+        description: "Mês de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: qt_contratos
+        description: "Quantidade de contratos no mês"
+        tests:
+          - not_null
+
+      - name: qt_orgaos_distintos
+        description: "Quantidade de órgãos distintos no mês"
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores distintos no mês"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais no mês"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais no mês"
+
+      - name: vl_total_aditado
+        description: "Soma dos valores aditados no mês"
+
+      - name: vl_total_variacao
+        description: "Soma da variação no mês"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos no mês"
+
+      - name: qt_contratos_acumulado_ano
+        description: "Quantidade acumulada de contratos no ano até o mês"
+
+      - name: vl_acumulado_ano
+        description: "Valor acumulado no ano até o mês"
