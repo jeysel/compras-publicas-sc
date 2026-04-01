@@ -1,11 +1,4 @@
-# This file was automatically generated
 type: postgres
 name: compras
-# Advanced Options, you probably don't want to change this
 buildOptions:
   batchSize: 1000000
-options:
-  database: compras_publicas
-  host: localhost
-  port: 5432
-  schema: marts
