@@ -6,12 +6,14 @@ version: "3.9"
 # Serviços:
 #   postgres  → banco de dados (Ubuntu 24.04 + PostgreSQL 17)
 #   dbt       → transformações (staging → intermediate → marts)
+#   pgadmin   → interface visual para consultas no PostgreSQL
 #   evidence  → dashboards estáticos (GitHub Pages)
 #
 # Rede: todos os serviços compartilham a rede "compras_network"
 #
 # Uso:
 #   docker compose up postgres -d                      # sobe o banco
+#   docker compose up pgadmin -d                       # sobe o PgAdmin
 #   docker compose run --rm dbt dbt seed               # carrega CSVs
 #   docker compose run --rm dbt dbt build              # transforma + testa
 #   docker compose --profile evidence up evidence -d   # sobe o dashboard
@@ -44,6 +46,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ── PgAdmin 4 ────────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: compras_pgadmin
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_EMAIL:-admin@compras.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      TZ: America/Sao_Paulo
+    ports:
+      - "${PGADMIN_PORT:-8080}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - compras_network
 
   # ── DBT Core ─────────────────────────────────────────────────────────────
   dbt:
@@ -86,7 +108,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./evidence:/app
+      - ./evidence/pages:/app/pages
+      - ./evidence/sources:/app/sources
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,3 +126,5 @@ networks:
 volumes:
   pgdata:
   pglog:
+  pgadmin_data:
+  evidence_node_modules:
