@@ -1,10 +1,8 @@
 # 🛒 Compras Públicas SC — Pipeline Analytics
 
-Pipeline Analytics completo para análise de compras públicas do estado de Santa Catarina.
+Pipeline de dados analíticos sobre contratos públicos do estado de Santa Catarina.
 
-Objetivo: Analisar padrões de contratação pública em SC — evolução de gastos, concentração de fornecedores e comportamento dos órgãos ao longo do tempo.
-
-**Fonte:** [Transparência SC](https://www.transparencia.sc.gov.br/)
+**Fonte:** [Portal Transparência SC](https://www.transparencia.sc.gov.br/) | **Período:** 2016 a 2026
 
 ---
 
@@ -36,27 +34,18 @@ CSV (Transparência SC)
 
 ---
 
-## 🎯 Métricas Analíticas
-
-- Valor licitado vs contratado (economia/sobrepreço)
-- Competitividade (nº de fornecedores por compra)
-- Modalidades mais utilizadas
-- Tempo médio entre abertura e contratação
-- Ranking de órgãos por volume de compras
-- Ranking de fornecedores por participação
-
----
-
 ## 🚀 Como rodar localmente
 
 ### Pré-requisitos
 - Docker Desktop instalado e rodando
+- Node.js 20+
 - Git
+
+---
 
 ### Setup
 
 ```bash
-
 # 1. Clone o repositório
 git clone https://github.com/jeysel/compras-publicas.git
 cd compras-publicas
@@ -67,69 +56,79 @@ cp .env.example .env
 # 3. Compila as imagens docker
 docker compose build
 
-# 4. Sobe o PostgreSQL e PgAdmin
+# 4. Sobe o PostgreSQL
 docker compose up postgres -d
-- Visualizar logs: docker logs compras_postgres
-- Configuração PGAdmin
-Host:     localhost
-Port:     5432
-Database: compras_publicas
-Username: cp_user
-Password: cp_pass
 
-- SELECT count(dd.dt_data) FROM "raw".dim_datas dd # Deve retornar 5.844 linhas
+# Visualizar logs
+docker logs compras_postgres
+
+# Configurar PgAdmin (opcional)
+# Host:     localhost
+# Port:     5432
+# Database: compras_publicas
+# Username: cp_user
+# Password: cp_pass
+
+# Validar dim_datas (deve retornar 5.844 linhas)
+# SELECT count(*) FROM raw.dim_datas;
 
 # 5. Instala dependências do dbt
-docker compose run --rm dbt deps 
+docker compose run --rm dbt deps
 
 # 6. Carrega os dados (seed)
 docker compose run --rm dbt seed
-# Valide no PgAdmin: raw.contratos (~78.000 linhas)
-- SELECT table_name 
-     FROM information_schema.tables 
-     WHERE table_schema = 'raw'
-     ORDER BY table_name;
+
+# Validar no PgAdmin:
+# SELECT count(*) FROM raw.contratos;
+# Esperado: ~76.000 linhas
 
 # 7. Executa e valida o staging
 docker compose run --rm dbt build --select stg_contratos
-# Valide no PgAdmin: staging.stg_contratos
-- SELECT table_name 
-     FROM information_schema.tables 
-     WHERE table_schema = 'staging'
-     ORDER BY table_name;
+
+# Validar no PgAdmin:
+# SELECT table_name
+#   FROM information_schema.tables
+#   WHERE table_schema = 'staging'
+#   ORDER BY table_name;
 
 # 8. Executa e valida o intermediate
 docker compose run --rm dbt build --select tag:int
-# Valide no PgAdmin: intermediate.*
-- SELECT table_name 
-     FROM information_schema.tables 
-     WHERE table_schema = 'intermediate'
-     ORDER BY table_name;
+
+# Validar no PgAdmin:
+# SELECT table_name
+#   FROM information_schema.tables
+#   WHERE table_schema = 'intermediate'
+#   ORDER BY table_name;
 
 # 9. Executa os marts
-docker compose run --rm dbt dbt build --select tag:marts
-# Valide no PgAdmin: marts.dim_*, marts.fct_*
-- SELECT table_name 
-     FROM information_schema.tables 
-     WHERE table_schema = 'marts'
-     ORDER BY table_name;
+docker compose run --rm dbt build --select tag:marts
 
-- -- Confere os campos descritivos na fct
-     SELECT 
-          ds_situacao_aditivo,
-          ds_situacao_prazo,
-          porte_fornecedor,
-          count(*) as qt
-     FROM marts.fct_contratos
-     GROUP BY 1, 2, 3
-     ORDER BY 4 DESC
-     LIMIT 10;
+# Validar no PgAdmin:
+# SELECT table_name
+#   FROM information_schema.tables
+#   WHERE table_schema = 'marts'
+#   ORDER BY table_name;
 
-# 10. Sobe o Evidence
-docker compose --profile evidence up evidence -d
+# Conferir campos descritivos na fct_contratos:
+# SELECT
+#     ds_situacao_aditivo,
+#     ds_situacao_prazo,
+#     porte_fornecedor,
+#     count(*) as qt
+# FROM marts.fct_contratos
+# GROUP BY 1, 2, 3
+# ORDER BY 4 DESC
+# LIMIT 10;
+
+# 10. Sobe o Evidence (desenvolvimento local)
+cd evidence
+npm install
+npm run sources
+npm run dev
 # Acesse: http://localhost:3000
 
-
+# Para buildar antes de publicar no GitHub Pages:
+npm run build
 ```
 
 ---
@@ -140,15 +139,24 @@ docker compose --profile evidence up evidence -d
 compras-publicas/
 ├── .github/workflows/   # CI/CD — GitHub Actions
 ├── postgres/
-│   └── init/            # Scripts SQL de inicialização
+│   ├── Dockerfile       # Ubuntu 24.04 + PostgreSQL 17
+│   ├── entrypoint.sh    # Inicialização do cluster
+│   └── init/
+│       └── 01_init.sql  # Schemas + dim_datas (2015-2030)
 ├── dbt/
 │   ├── models/
+│   │   ├── sources.yml
 │   │   ├── staging/     # Padronização dos dados brutos
 │   │   ├── intermediate/# Regras de negócio
 │   │   └── marts/       # Tabelas analíticas finais
-│   └── seeds/           # CSVs dos contratos SC
+│   ├── seeds/           # CSV dos contratos SC
+│   ├── macros/          # generate_schema_name
+│   ├── dbt_project.yml
+│   ├── profiles.yml
+│   └── Dockerfile
 ├── evidence/
-│   └── pages/           # Dashboards interativos
+│   ├── pages/           # Dashboards (index, orgaos, fornecedores...)
+│   └── sources/         # Conexão com PostgreSQL
 ├── docs/                # Arquitetura e decisões
 ├── docker-compose.yml
 └── .env.example
@@ -159,6 +167,28 @@ compras-publicas/
 ## 📊 Dashboard
 
 Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/compras-publicas)**
+
+### Páginas disponíveis
+
+| Página | Conteúdo |
+|---|---|
+| Home | KPIs gerais, evolução anual, top 10 |
+| Órgãos Públicos | Ranking por valor e quantidade |
+| Fornecedores | Ranking, porte, concentração |
+| Modalidades | Distribuição e taxa de aditivos |
+| Evolução Temporal | Série temporal mensal e anual |
+| Aditivos Contratuais | Tipos, faixas e maiores aditivos |
+
+---
+
+## 🎯 Métricas Analíticas
+
+- Volume de contratos por órgão e período
+- Ranking de fornecedores por valor e quantidade
+- Distribuição por modalidade de licitação
+- Evolução anual de gastos (2016-2026)
+- Contratos com aditivo — acréscimo e supressão
+- Perfil de contratação dos órgãos
 
 ---
 

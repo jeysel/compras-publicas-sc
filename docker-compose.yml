@@ -90,33 +90,6 @@ services:
       - compras_network
     profiles: ["dbt"]
 
-  # ── Evidence ─────────────────────────────────────────────────────────────
-  evidence:
-    build:
-      context: ./evidence
-      dockerfile: Dockerfile
-    container_name: compras_evidence
-    env_file: .env
-    environment:
-      EVIDENCE_DATABASE: postgres
-      POSTGRES_HOST:     postgres
-      POSTGRES_PORT:     ${POSTGRES_PORT:-5432}
-      POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
-      POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
-      POSTGRES_SCHEMA:   marts
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./evidence/pages:/app/pages
-      - ./evidence/sources:/app/sources
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - compras_network
-    profiles: ["evidence"]
-
 # ── Rede compartilhada ───────────────────────────────────────────────────────
 networks:
   compras_network:
