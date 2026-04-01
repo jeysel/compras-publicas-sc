@@ -77,44 +77,28 @@ Database: compras_publicas
 Username: cp_user
 Password: cp_pass
 
+- SELECT count(dd.dt_data) FROM "raw".dim_datas dd # Deve retornar 5.844 linhas
 
-
-
-# 5. Valida se os containers estão rodando
-docker compose ps
-
-# 6. Configurar o PgAdmin
-- Acesse: http://localhost:8080
-- Email: admin@compras.local / Senha: admin
-- Adicione o servidor:
--   Host: compras_postgres
--   Port: 5432
--   Database: compras_publicas
--   Username: cp_user
--   Password: cp_pass
-- Valide os schemas: raw, staging, intermediate, marts
-- Valide a tabela: raw.dim_datas (deve ter 5.844 linhas — 2015 a 2030)
-
-# 7. Instala dependências do dbt
+# 5. Instala dependências do dbt
 docker compose run --rm dbt dbt deps
 
-# 8. Carrega os dados (seed)
+# 6. Carrega os dados (seed)
 docker compose run --rm dbt dbt seed
 # Valide no PgAdmin: raw.contratos (~78.000 linhas)
 
-# 9. Executa e valida o staging
+# 7. Executa e valida o staging
 docker compose run --rm dbt dbt build --select stg_contratos
 # Valide no PgAdmin: staging.stg_contratos
 
-# 10. Executa e valida o intermediate
+# 8. Executa e valida o intermediate
 docker compose run --rm dbt dbt build --select tag:int
 # Valide no PgAdmin: intermediate.*
 
-# 11. Executa os marts
+# 9. Executa os marts
 docker compose run --rm dbt dbt build --select tag:marts
 # Valide no PgAdmin: marts.dim_*, marts.fct_*
 
-# 12. Sobe o Evidence
+# 10. Sobe o Evidence
 docker compose --profile evidence up evidence -d
 # Acesse: http://localhost:3000
 
