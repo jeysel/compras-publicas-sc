@@ -56,6 +56,7 @@ CSV (Transparência SC)
 ### Setup
 
 ```bash
+
 # 1. Clone o repositório
 git clone https://github.com/jeysel/compras-publicas.git
 cd compras-publicas
@@ -63,16 +64,61 @@ cd compras-publicas
 # 2. Configure as variáveis de ambiente
 cp .env.example .env
 
-# 3. Sobe o PostgreSQL
+# 3. Compila as imagens docker
+docker compose build
+
+# 4. Sobe o PostgreSQL e PgAdmin
 docker compose up postgres -d
+- Visualizar logs: docker logs compras_postgres
+- Configuração PGAdmin
+Host:     localhost
+Port:     5432
+Database: compras_publicas
+Username: cp_user
+Password: cp_pass
 
-# 4. Roda o dbt (seed + build)
+
+
+
+# 5. Valida se os containers estão rodando
+docker compose ps
+
+# 6. Configurar o PgAdmin
+- Acesse: http://localhost:8080
+- Email: admin@compras.local / Senha: admin
+- Adicione o servidor:
+-   Host: compras_postgres
+-   Port: 5432
+-   Database: compras_publicas
+-   Username: cp_user
+-   Password: cp_pass
+- Valide os schemas: raw, staging, intermediate, marts
+- Valide a tabela: raw.dim_datas (deve ter 5.844 linhas — 2015 a 2030)
+
+# 7. Instala dependências do dbt
+docker compose run --rm dbt dbt deps
+
+# 8. Carrega os dados (seed)
 docker compose run --rm dbt dbt seed
-docker compose run --rm dbt dbt build
+# Valide no PgAdmin: raw.contratos (~78.000 linhas)
 
-# 5. Sobe o Evidence
-docker compose --profile evidence up evidence
+# 9. Executa e valida o staging
+docker compose run --rm dbt dbt build --select stg_contratos
+# Valide no PgAdmin: staging.stg_contratos
+
+# 10. Executa e valida o intermediate
+docker compose run --rm dbt dbt build --select tag:int
+# Valide no PgAdmin: intermediate.*
+
+# 11. Executa os marts
+docker compose run --rm dbt dbt build --select tag:marts
+# Valide no PgAdmin: marts.dim_*, marts.fct_*
+
+# 12. Sobe o Evidence
+docker compose --profile evidence up evidence -d
 # Acesse: http://localhost:3000
+
+
 ```
 
 ---

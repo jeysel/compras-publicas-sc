@@ -4,16 +4,26 @@ version: "3.9"
 # Compras Públicas — Pipeline Analytics
 #
 # Serviços:
-#   postgres  → banco de dados principal
+#   postgres  → banco de dados (Ubuntu 24.04 + PostgreSQL 17)
 #   dbt       → transformações (staging → intermediate → marts)
 #   evidence  → dashboards estáticos (GitHub Pages)
+#
+# Rede: todos os serviços compartilham a rede "compras_network"
+#
+# Uso:
+#   docker compose up postgres -d                      # sobe o banco
+#   docker compose run --rm dbt dbt seed               # carrega CSVs
+#   docker compose run --rm dbt dbt build              # transforma + testa
+#   docker compose --profile evidence up evidence -d   # sobe o dashboard
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
 
   # ── PostgreSQL 17 ────────────────────────────────────────────────────────
   postgres:
-    image: postgres:17
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
     container_name: compras_postgres
     restart: unless-stopped
     env_file: .env
@@ -25,10 +35,12 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./postgres/init:/docker-entrypoint-initdb.d   
+      - pgdata:/var/lib/postgresql/17/main
+      - pglog:/var/log/postgresql
+    networks:
+      - compras_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cp_user} -d ${POSTGRES_DB:-compras_publicas}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-compras_publicas}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,6 +64,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - compras_network
     profiles: ["dbt"]
 
   # ── Evidence ─────────────────────────────────────────────────────────────
@@ -68,6 +82,7 @@ services:
       POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
       POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
+      POSTGRES_SCHEMA:   marts
     ports:
       - "3000:3000"
     volumes:
@@ -75,7 +90,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - compras_network
     profiles: ["evidence"]
 
+# ── Rede compartilhada ───────────────────────────────────────────────────────
+networks:
+  compras_network:
+    driver: bridge
+
+# ── Volumes persistentes ─────────────────────────────────────────────────────
 volumes:
   pgdata:
+  pglog:
