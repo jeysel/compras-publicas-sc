@@ -1,0 +1,41 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Schema raw — dados brutos e tabelas de suporte geradas na inicialização"
+    database: compras_publicas
+    schema: raw
+
+    tables:
+      - name: dim_datas
+        description: >
+          Dimensão calendário populada pela procedure raw.sp_popula_dim_datas()
+          executada automaticamente no 01_init.sql.
+          Período: 2015-01-01 a 2030-12-31.
+          Gerada independentemente dos dados de contratos.
+
+        columns:
+          - name: dt_data
+            description: "Data no formato DATE — chave primária"
+            tests:
+              - not_null
+              - unique
+
+          - name: ano
+            description: "Ano"
+            tests:
+              - not_null
+
+          - name: mes
+            description: "Mês (1-12)"
+            tests:
+              - not_null
+
+          - name: nm_mes
+            description: "Nome do mês por extenso em português"
+
+          - name: sigla_trimestre
+            description: "Sigla do trimestre (Q1, Q2, Q3, Q4)"
+
+          - name: fl_fim_de_semana
+            description: "Flag indicando se é sábado ou domingo"

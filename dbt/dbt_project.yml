@@ -38,3 +38,25 @@ seeds:
     +schema: raw
     +enabled: true
     +quote_columns: false
+    +delimiter: ";"
+    contratos:
+      +column_types:
+        cdunidadegestora: varchar
+        cdgestao: varchar
+        idcontratado: varchar
+        nucontrato: varchar
+        nuprocesso: varchar
+        nuedital: varchar
+        nudocumentolegal: varchar
+        nuautorizacaoorgao: varchar
+        nutitulo: varchar
+        nuprazo: varchar
+        vloriginal: numeric
+        vlatual: numeric
+        vladitado: numeric
+        vlgarantia: numeric
+        vlpercgarantia: numeric
+        vlpercmulta: numeric
+        diasoriginais: integer
+        diasaditados: integer
+        diasatuais: integer

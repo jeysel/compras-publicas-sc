@@ -80,11 +80,12 @@ Password: cp_pass
 - SELECT count(dd.dt_data) FROM "raw".dim_datas dd # Deve retornar 5.844 linhas
 
 # 5. Instala dependências do dbt
-docker compose run --rm dbt dbt deps
+docker compose run --rm dbt deps 
 
 # 6. Carrega os dados (seed)
-docker compose run --rm dbt dbt seed
+docker compose run --rm dbt seed
 # Valide no PgAdmin: raw.contratos (~78.000 linhas)
+- SELECT count(*) FROM raw.contratos; # Esperado: 76.041
 
 # 7. Executa e valida o staging
 docker compose run --rm dbt dbt build --select stg_contratos

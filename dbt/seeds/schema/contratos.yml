@@ -1,0 +1,14 @@
+version: 2
+
+seeds:
+  - name: contratos
+    description: "Dados brutos de contratos públicos de SC — Transparência SC (2016–2026)"
+    columns:
+      - name: nucontrato
+        description: "Número do contrato"
+      - name: idcontratado
+        description: "Identificador do contratado (CNPJ/CPF)"
+      - name: vloriginal
+        description: "Valor original do contrato"
+      - name: vlatual
+        description: "Valor atual do contrato"
