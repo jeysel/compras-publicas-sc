@@ -13,9 +13,9 @@ agregado as (
 
     select
         cod_unidade_gestora,
-        nm_unidade_gestora,
+        mode() within group (order by nm_unidade_gestora) as nm_unidade_gestora,
         cod_gestao,
-        nm_gestao,
+        mode() within group (order by nm_gestao)          as nm_gestao,
 
         count(*)                                        as qt_contratos,
         count(distinct id_contratado)                   as qt_fornecedores_distintos,
@@ -33,7 +33,7 @@ agregado as (
         max(dt_assinatura)                              as dt_ultimo_contrato
 
     from contratos
-    group by 1, 2, 3, 4
+    group by 1, 3
 
 )
 
