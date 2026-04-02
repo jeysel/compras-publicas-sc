@@ -1,0 +1,9 @@
+{
+  "host": "localhost",
+  "port": 5432,
+  "database": "compras_publicas",
+  "user": "cp_user",
+  "password": "cp_pass",
+  "schema": "marts",
+  "ssl": false
+}
