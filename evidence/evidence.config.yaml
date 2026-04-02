@@ -89,3 +89,6 @@ localization:
 ui:
   tableOfContents:
     title: "Nesta página"
+
+deployment:
+  basePath: /Analytics-Engineer/compras-publicas
