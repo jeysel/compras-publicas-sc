@@ -87,8 +87,10 @@ localization:
   decimalSeparator: ","
 
 ui:
-  tableOfContents:
-    title: "Nesta página"
+  tableOfContents: false
 
 deployment:
   basePath: /Analytics-Engineer/compras-publicas
+
+customFormattingSettings:
+  hideQueryResults: true
