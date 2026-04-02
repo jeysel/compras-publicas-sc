@@ -1,0 +1,20 @@
+version: 2
+
+macros:
+  - name: generate_schema_name
+    description: >
+      Sobrescreve o comportamento padrão do dbt para geração de nomes de schema.
+      Por padrão o dbt prefixaria o schema com o nome do target (ex: dbt_user_staging).
+      Esta macro garante que o schema customizado seja usado exatamente como definido
+      no dbt_project.yml — sem prefixo adicional.
+      Exemplo: staging, intermediate, marts (em vez de dbt_cp_user_staging).
+      Referência: https://docs.getdbt.com/docs/build/custom-schemas
+
+    arguments:
+      - name: custom_schema_name
+        type: string
+        description: "Nome do schema customizado definido no dbt_project.yml. Se None, usa o schema do target."
+
+      - name: node
+        type: node
+        description: "Nó dbt atual sendo processado (modelo, seed, snapshot, etc.)"

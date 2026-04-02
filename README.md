@@ -2,7 +2,7 @@
 
 Pipeline de dados analíticos sobre contratos públicos do estado de Santa Catarina.
 
-**Fonte:** [Portal Transparência SC](https://www.transparencia.sc.gov.br/) | **Período:** 2016 a 2026
+**Fonte:** [Portal de Transparência do Estado de Santa Catarina](https://www.transparencia.sc.gov.br/) | **Período:** 2016 a 2026
 
 ---
 
@@ -47,8 +47,8 @@ CSV (Transparência SC)
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/jeysel/compras-publicas.git
-cd compras-publicas
+git clone https://github.com/jeysel/Analytics-Engineer.git
+cd Analytics-Engineer/compras-publicas
 
 # 2. Configure as variáveis de ambiente
 cp .env.example .env
@@ -129,6 +129,15 @@ npm run dev
 
 # Para buildar antes de publicar no GitHub Pages:
 npm run build
+
+# 11. Documentação do DBT (opcional)
+# Gera a documentação com lineage graph e descrições dos modelos
+cd ..
+docker compose run --rm dbt docs generate
+
+# Sobe o servidor de documentação
+docker compose run --rm -p 8080:8080 dbt docs serve --host 0.0.0.0 --port 8080
+# Acesse: http://localhost:8080
 ```
 
 ---
@@ -166,7 +175,7 @@ compras-publicas/
 
 ## 📊 Dashboard
 
-Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/compras-publicas)**
+Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/Analytics-Engineer/compras-publicas)**
 
 ### Páginas disponíveis
 
@@ -178,6 +187,10 @@ Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/compras-
 | Modalidades | Distribuição e taxa de aditivos |
 | Evolução Temporal | Série temporal mensal e anual |
 | Aditivos Contratuais | Tipos, faixas e maiores aditivos |
+| Ramos de Atividade | Classificação por setor econômico |
+| Fornecedores por Ramo | Análise cruzada com filtro dinâmico |
+| Tecnologia da Informação | Análise detalhada do setor de TI |
+| Contratos Não Classificados | Contratos de nicho e atípicos |
 
 ---
 
@@ -189,6 +202,8 @@ Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/compras-
 - Evolução anual de gastos (2016-2026)
 - Contratos com aditivo — acréscimo e supressão
 - Perfil de contratação dos órgãos
+- Classificação por ramo de atividade (16 categorias)
+- Análise completa do setor de TI por subcategoria
 
 ---
 

@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: int_contratos_por_ramo
+    description: >
+      Agregação de contratos por ramo de atividade.
+      A classificação é feita por palavras-chave no campo ds_objeto usando lógica CASE WHEN
+      com 82+ condições cobrindo 16 categorias de ramo de atividade mais "Outros".
+      Inclui ranking por quantidade e por valor, e percentuais sobre o total.
+
+    columns:
+      - name: ramo_atividade
+        description: "Nome do ramo de atividade classificado por palavras-chave"
+        tests:
+          - not_null
+
+      - name: qt_contratos
+        description: "Quantidade total de contratos no ramo"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores
+        description: "Quantidade de fornecedores distintos no ramo"
+
+      - name: qt_orgaos
+        description: "Quantidade de órgãos distintos no ramo"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais"
+
+      - name: vl_total_aditado
+        description: "Soma dos valores aditados"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos do ramo"
+
+      - name: vl_maior_contrato
+        description: "Maior valor de contrato do ramo"
+
+      - name: rank_por_quantidade
+        description: "Ranking do ramo por quantidade de contratos"
+
+      - name: rank_por_valor
+        description: "Ranking do ramo por valor total"
+
+      - name: perc_sobre_total_qt
+        description: "Percentual do ramo sobre o total de contratos"
+
+      - name: perc_sobre_total_valor
+        description: "Percentual do ramo sobre o valor total"

@@ -1,0 +1,121 @@
+version: 2
+
+models:
+  - name: dim_ramos
+    description: >
+      Dimensão de ramos de atividade classificados por palavras-chave do objeto do contrato.
+      Cada contrato é classificado em uma das 16 categorias (ex: Alimentação, TI, Obras) 
+      com base no campo ds_objeto do staging. Contratos com objetos atípicos são agrupados 
+      em "Outros". Inclui ranking e percentuais sobre o total.
+
+    columns:
+      - name: ramo_atividade
+        description: "Nome do ramo de atividade classificado por palavras-chave do objeto do contrato"
+        tests:
+          - not_null
+          - unique
+
+      - name: qt_contratos
+        description: "Quantidade total de contratos classificados neste ramo"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores
+        description: "Quantidade de fornecedores distintos que atuam neste ramo"
+
+      - name: qt_orgaos
+        description: "Quantidade de órgãos distintos que contratam neste ramo"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais dos contratos do ramo"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais dos contratos do ramo"
+
+      - name: vl_total_aditado
+        description: "Soma dos valores aditados dos contratos do ramo"
+
+      - name: vl_medio_contrato
+        description: "Valor médio dos contratos do ramo"
+
+      - name: vl_maior_contrato
+        description: "Maior valor de contrato do ramo"
+
+      - name: rank_por_quantidade
+        description: "Ranking do ramo por quantidade de contratos"
+
+      - name: rank_por_valor
+        description: "Ranking do ramo por valor total"
+
+      - name: perc_sobre_total_qt
+        description: "Percentual do ramo sobre o total de contratos"
+
+      - name: perc_sobre_total_valor
+        description: "Percentual do ramo sobre o valor total contratado"
+
+  - name: fct_contratos_ramo
+    description: >
+      Tabela fato com contratos individuais classificados por ramo de atividade.
+      A classificação é feita por palavras-chave no campo ds_objeto usando lógica CASE WHEN.
+      Exclui contratos de teste (objeto = 'teste') e contratos com valor abaixo de R$ 1.000.
+      Subcategorias de TI: Desenvolvimento de Software, Manutenção e Suporte, Licenciamento e Geral.
+
+    columns:
+      - name: nu_contrato
+        description: "Número do contrato"
+        tests:
+          - not_null
+
+      - name: id_contratado
+        description: "Identificador único do fornecedor (CNPJ/CPF)"
+        tests:
+          - not_null
+
+      - name: nm_contratado
+        description: "Nome ou razão social do fornecedor"
+        tests:
+          - not_null
+
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora"
+
+      - name: nm_modalidade
+        description: "Modalidade de licitação"
+
+      - name: ds_objeto
+        description: "Objeto do contrato — usado para classificação do ramo"
+
+      - name: dt_assinatura
+        description: "Data de assinatura do contrato"
+
+      - name: ano_assinatura
+        description: "Ano de assinatura do contrato"
+
+      - name: vl_original
+        description: "Valor original do contrato em R$"
+
+      - name: vl_atual
+        description: "Valor atual do contrato em R$"
+
+      - name: vl_aditado
+        description: "Valor aditado (0 quando não há aditivo)"
+
+      - name: ds_situacao
+        description: "Situação atual do contrato"
+
+      - name: ramo_atividade
+        description: >
+          Ramo de atividade classificado por palavras-chave do objeto do contrato.
+          Categorias: Alimentação, Combustíveis e Energia, Veículos e Manutenção,
+          Obras e Construção, Limpeza e Higiene, Água e Saneamento, Educação e Capacitação,
+          Saúde e Medicamentos, Segurança Pública, Locação de Imóveis, Transporte e Logística,
+          Material de Escritório e Equipamentos, Agropecuária, Meio Ambiente e Recursos Hídricos,
+          TI - Geral, TI - Licenciamento de Software, TI - Manutenção e Suporte,
+          TI - Desenvolvimento de Software, Outros.
+        tests:
+          - not_null
