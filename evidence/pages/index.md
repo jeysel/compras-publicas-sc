@@ -77,14 +77,13 @@ order by ano_assinatura
     <Column id="vl_total_atual"    title="Valor Atualizado" fmt="num1b"/>
 </DataTable>
 
-> 📌 **Anos eleitorais:** Em **2018** e **2022**, anos de eleição para o Governo do Estado, observa-se variação nos volumes contratados — especialmente em 2022, onde o valor original registrado (R$ 39,8B) contrasta fortemente com o valor atualizado (R$ 15,7B), indicando forte redução no valor dos contratos.
+> 📌 **Anos eleitorais:** Em **2018** e **2022**, anos de eleição para o Governo do Estado, observa-se variação nos volumes contratados — especialmente em 2022, onde o valor original registrado (R$ 39,8B) contrasta com o valor atualizado (R$ 15,7B), indicando redução no valor dos contratos.
 
 ---
 
 ## Os contratos sofreram alterações?
 
-A grande maioria dos contratos (**97,6%**) não sofreu aditivos. Dos que foram alterados, a maioria teve acréscimo de valor — o que merece atenção do ponto de vista do controle social.
-
+A grande maioria dos contratos (**97,6%**) não sofreu aditivos. Dos que foram alterados, a maioria teve acréscimo de valor.
 ```sql situacao_aditivo
 select
     ds_situacao_aditivo     as situacao,
