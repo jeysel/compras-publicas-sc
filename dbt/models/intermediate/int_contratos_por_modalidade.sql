@@ -1,6 +1,8 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- int_contratos_por_modalidade.sql
 -- Agregação de contratos por modalidade de licitação
+-- Pregão Eletrônico das Leis 10.520/2002 e 14.133/2021 são concatenados
+-- pois representam a mesma modalidade em legislações diferentes
 -- ─────────────────────────────────────────────────────────────────────────────
 
 with contratos as (
@@ -9,10 +11,41 @@ with contratos as (
 
 ),
 
+normalizado as (
+
+    select
+        *,
+        case
+            when nm_modalidade in (
+                'Pregão Eletrônico - Lei 10.520',
+                'Pregão Eletrônico Lei 14.133'
+            ) then 'Pregão Eletrônico - Leis 10.520/2002 e 14.133/2021'
+            when nm_modalidade in (
+                'Pregão Presencial - Lei 10.520',
+                'Pregão Presencial Lei 14.133'
+            ) then 'Pregão Presencial - Leis 10.520/2002 e 14.133/2021'
+            when nm_modalidade in (
+                'Dispensa de Licitação - Lei 8.666',
+                'Dispensa de Licitação - Lei 14.133'
+            ) then 'Dispensa de Licitação - Leis 8.666/1993 e 14.133/2021'
+            when nm_modalidade in (
+                'Licitação Inexigível - Lei 8.666',
+                'Licitação Inexigível - Lei 14.133'
+            ) then 'Licitação Inexigível - Leis 8.666/1993 e 14.133/2021'
+            when nm_modalidade in (
+                'Dispensa de Licitação por Valor - Lei 8.666'
+            ) then 'Dispensa por Valor - Lei 8.666/1993'
+            else coalesce(nm_modalidade, 'Não informado')
+        end as nm_modalidade_norm
+
+    from contratos
+
+),
+
 agregado as (
 
     select
-        coalesce(nm_modalidade, 'Não informado')        as nm_modalidade,
+        nm_modalidade_norm                              as nm_modalidade,
 
         count(*)                                        as qt_contratos,
         count(distinct cod_unidade_gestora)             as qt_orgaos_distintos,
@@ -33,7 +66,7 @@ agregado as (
             0
         )                                               as perc_contratos_com_aditivo
 
-    from contratos
+    from normalizado
     group by 1
 
 ),
