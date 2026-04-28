@@ -1,0 +1,118 @@
+name: Pipeline Compras Publicas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'compras-publicas/**'
+      - '.github/workflows/compras-publicas.yml'
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB:       compras_publicas
+          POSTGRES_USER:     cp_user
+          POSTGRES_PASSWORD: cp_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inicializa schemas
+        env:
+          PGPASSWORD: cp_pass
+        run: |
+          psql -h localhost -U cp_user -d compras_publicas \
+            -f compras-publicas/postgres/init/01_init.sql
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instala dbt
+        run: pip install dbt-core==1.9.* dbt-postgres==1.9.*
+
+      - name: dbt deps
+        working-directory: compras-publicas/dbt
+        run: dbt deps
+        env:
+          DBT_PROFILES_DIR: .
+          POSTGRES_HOST:     localhost
+          POSTGRES_PORT:     "5432"
+          POSTGRES_DB:       compras_publicas
+          POSTGRES_USER:     cp_user
+          POSTGRES_PASSWORD: cp_pass
+
+      - name: dbt seed
+        working-directory: compras-publicas/dbt
+        run: dbt seed
+        env:
+          DBT_PROFILES_DIR: .
+          POSTGRES_HOST:     localhost
+          POSTGRES_PORT:     "5432"
+          POSTGRES_DB:       compras_publicas
+          POSTGRES_USER:     cp_user
+          POSTGRES_PASSWORD: cp_pass
+
+      - name: dbt build
+        working-directory: compras-publicas/dbt
+        run: dbt build
+        env:
+          DBT_PROFILES_DIR: .
+          POSTGRES_HOST:     localhost
+          POSTGRES_PORT:     "5432"
+          POSTGRES_DB:       compras_publicas
+          POSTGRES_USER:     cp_user
+          POSTGRES_PASSWORD: cp_pass
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instala dependencias Evidence
+        working-directory: compras-publicas/evidence
+        run: npm install
+
+      - name: Sources Evidence
+        working-directory: compras-publicas/evidence
+        run: npm run sources
+        env:
+          EVIDENCE_SOURCE__COMPRAS__host:     localhost
+          EVIDENCE_SOURCE__COMPRAS__port:     "5432"
+          EVIDENCE_SOURCE__COMPRAS__database: compras_publicas
+          EVIDENCE_SOURCE__COMPRAS__user:     cp_user
+          EVIDENCE_SOURCE__COMPRAS__password: cp_pass
+          EVIDENCE_SOURCE__COMPRAS__schema:   marts
+
+      - name: Build Evidence
+        working-directory: compras-publicas/evidence
+        run: npm run build
+        env:
+          EVIDENCE_SOURCE__COMPRAS__host:     localhost
+          EVIDENCE_SOURCE__COMPRAS__port:     "5432"
+          EVIDENCE_SOURCE__COMPRAS__database: compras_publicas
+          EVIDENCE_SOURCE__COMPRAS__user:     cp_user
+          EVIDENCE_SOURCE__COMPRAS__password: cp_pass
+          EVIDENCE_SOURCE__COMPRAS__schema:   marts
+
+      - name: Publica no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir:  ./compras-publicas/evidence/build
+          destination_dir: compras-publicas
