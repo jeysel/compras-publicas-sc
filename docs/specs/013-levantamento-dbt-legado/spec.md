@@ -72,6 +72,15 @@ Convenção de camadas (`dbt_project.yml`): `staging` (view) → `intermediate` 
 
 `README.md` descreve Evidence.dev + GitHub Pages + GitHub Actions como camada de apresentação/deploy — potencialmente conflitante com a seção "Status da migração" do `CLAUDE.md` (GitHub Actions como fonte de verdade operacional até a migração k3s estar documentada em spec própria) e com a spec 010 (fronteira Argo CD/k3s), que não menciona Evidence em nenhum momento.
 
+### Adendo (2026-08-19) — `.gitignore` nunca versionado + encoding misto
+
+Achado de higiene de repositório, sem relação com o pipeline dbt — registrado aqui por decisão explícita da sessão, não porque pertença ao tema desta spec.
+
+- `git log --all --oneline -- .gitignore` e `git ls-files -- .gitignore` retornaram vazio: **o `.gitignore` nunca foi commitado neste repositório em nenhum momento do histórico.** O arquivo existia só como untracked em disco, e continha uma linha `.gitignore` que se auto-excluía — o que explica por que `git add .gitignore` falhava silenciosamente em sessão anterior.
+- O corpo do arquivo (separadores `# ── ... ──`) é UTF-8 correto (bytes `e2 94 80` = U+2500); a exibição corrompida (`â”€â”€`) era só o console decodificando como cp1252/Latin-1, não um defeito no arquivo.
+- A linha `dbt/.user.yml`, adicionada em sessão anterior, estava genuinamente corrompida: bytes `64 00 62 00 74 00 2f 00...` = UTF-16LE (cada caractere seguido de byte nulo), misturado num arquivo que é UTF-8 no resto — provavelmente resultado de `Add-Content`/`Out-File` do PowerShell (que usa UTF-16LE por padrão) anexando a uma edição que era UTF-8.
+- Correção aplicada: arquivo reescrito em UTF-8 limpo, sem bytes nulos, com a linha `.gitignore` removida (não deve haver uma entrada se auto-excluindo) e `dbt/.user.yml` reescrita como texto plano. Commitado em `75a5235` como `new file` (78 linhas) — consistente com o achado de que nunca existira no histórico.
+
 ## Requirements
 
 Resolvido nas specs [[007-marts-e-metricas]] e [[014-cobertura-dim-ramos]] — esta spec (013) permanece só como levantamento histórico. As decisões de arquitetura vivem lá, não aqui.
