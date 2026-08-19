@@ -77,7 +77,10 @@ services:
     environment:
       DBT_PROFILES_DIR: /usr/app/dbt
       POSTGRES_HOST:     postgres
-      POSTGRES_PORT:     ${POSTGRES_PORT:-5432}
+      # Porta interna do container postgres na rede Docker — não é a porta
+      # exposta no host (essa vem de POSTGRES_PORT/.env, ver ports: do
+      # serviço postgres). Fixa em 5432 independente do mapeamento externo.
+      POSTGRES_PORT:     5432
       POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
       POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
