@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: mart_diversidade_vencedores
+    description: >
+      Diversidade de vencedores por processo licitatório (spec 007 —
+      substitui a métrica "competitividade" do backlog original, renomeada
+      deliberadamente: mede quantos fornecedores DIFERENTES venceram
+      contratos de um processo, não quantos participaram/concorreram — esse
+      dado não existe na fonte). Grão: (cod_unidade_gestora, nu_processo).
+      Depende de int_processos, que já exclui nu_processo placeholder.
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora (atributo descritivo, não chave)"
+
+      - name: nu_processo
+        description: "Número do processo licitatório, já filtrado de placeholders"
+        tests:
+          - not_null
+
+      - name: qt_contratos
+        description: "Quantidade de contratos vinculados a este processo"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores (id_contratado) distintos que venceram contratos deste processo"
+        tests:
+          - not_null
+
+      - name: qt_modalidades_distintas
+        description: "Quantidade de modalidades distintas usadas nos contratos deste processo"
+
+      - name: vl_total_original
+        description: "Soma de vl_original dos contratos deste processo"
+
+      - name: vl_total_atual
+        description: "Soma de vl_atual dos contratos deste processo"
+
+      - name: vl_total_variacao
+        description: "Soma de vl_variacao dos contratos deste processo"
+
+      - name: dt_primeiro_contrato
+        description: "Data de assinatura do contrato mais antigo do processo"
+
+      - name: dt_ultimo_contrato
+        description: "Data de assinatura do contrato mais recente do processo"
+
+      - name: ds_diversidade
+        description: "Classificação: 'Fornecedor único' (qt_fornecedores_distintos = 1) ou 'Múltiplos fornecedores' (> 1)"
+        tests:
+          - accepted_values:
+              values: ['Fornecedor único', 'Múltiplos fornecedores']
+
+      - name: rank_por_diversidade
+        description: "Ranking do processo por quantidade de fornecedores distintos (1 = mais diverso)"

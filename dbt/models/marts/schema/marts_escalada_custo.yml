@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: mart_escalada_custo
+    description: >
+      Escalada de custo por aditivo (spec 007) — mart dedicada, grão de
+      contrato (cod_unidade_gestora, nu_contrato), agregável por
+      órgão/modalidade/período pelo consumidor. vl_variacao (vl_atual -
+      vl_original) é a métrica oficial (spec 013/014), não vl_aditado.
+      fl_aditivo_inconsistente é exposta como coluna de contexto (sinal de
+      qualidade de dado), não usada como filtro aqui.
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora — parte da chave"
+        tests:
+          - not_null
+
+      - name: nu_contrato
+        description: "Número do contrato — parte da chave"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora (atributo descritivo, não chave)"
+
+      - name: nm_modalidade
+        description: "Modalidade de licitação (valor bruto da fonte)"
+
+      - name: ano_assinatura
+        description: "Ano de assinatura do contrato"
+
+      - name: mes_assinatura
+        description: "Mês de assinatura do contrato"
+
+      - name: dt_assinatura
+        description: "Data de assinatura do contrato"
+
+      - name: id_contratado
+        description: "Identificador do fornecedor (CNPJ/CPF)"
+        tests:
+          - not_null
+
+      - name: nm_contratado
+        description: "Nome/razão social do fornecedor"
+
+      - name: vl_original
+        description: "Valor original do contrato"
+
+      - name: vl_atual
+        description: "Valor atual do contrato"
+
+      - name: vl_variacao
+        description: "Escalada de custo — métrica oficial (vl_atual - vl_original), spec 013/014"
+
+      - name: perc_variacao
+        description: "Percentual de variação sobre vl_original (null quando vl_original é nulo ou zero)"
+
+      - name: dias_originais
+        description: "Prazo original em dias"
+
+      - name: dias_atuais
+        description: "Prazo atual em dias"
+
+      - name: dias_variacao
+        description: "Variação de prazo em dias (dias_atuais - dias_originais) — equivalente em dias da escalada de custo"
+
+      - name: tp_variacao
+        description: "Classificação da variação de valor"
+        tests:
+          - accepted_values:
+              values: ['Acréscimo', 'Decréscimo', 'Sem variação']
+
+      - name: fl_aditivo_inconsistente
+        description: >
+          Sinal de qualidade de dado (spec 013/014): true quando vl_aditado
+          diverge de vl_variacao em mais de R$0,01, null quando vl_aditado
+          é nulo/zero. Coluna de contexto, não usada como filtro nesta mart
+          — decisão de excluir ou não fica com quem consome.

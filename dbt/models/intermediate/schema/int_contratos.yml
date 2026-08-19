@@ -215,3 +215,84 @@ models:
 
       - name: vl_acumulado_ano
         description: "Valor acumulado no ano até o mês"
+
+  - name: int_contratos_evolucao_por_orgao
+    description: >
+      Evolução mensal de contratos por ano de assinatura, recortada por
+      órgão (spec 007 — recorte que faltava em int_contratos_evolucao_anual,
+      achado spec 013). Grão: (ano_assinatura, mes_assinatura, cod_unidade_gestora).
+
+    columns:
+      - name: ano_assinatura
+        description: "Ano de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: mes_assinatura
+        description: "Mês de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora (atributo descritivo, não chave)"
+
+      - name: qt_contratos
+        description: "Quantidade de contratos do órgão no mês"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores distintos do órgão no mês"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais do órgão no mês"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais do órgão no mês"
+
+      - name: vl_total_variacao
+        description: "Soma da variação (vl_atual - vl_original) do órgão no mês"
+
+  - name: int_contratos_evolucao_por_modalidade
+    description: >
+      Evolução mensal de contratos por ano de assinatura, recortada por
+      modalidade (spec 007 — recorte que faltava em int_contratos_evolucao_anual,
+      achado spec 013). nm_modalidade bruta (sem a normalização Lei
+      8.666/14.133 de int_contratos_por_modalidade — propósito diferente).
+      Grão: (ano_assinatura, mes_assinatura, nm_modalidade).
+
+    columns:
+      - name: ano_assinatura
+        description: "Ano de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: mes_assinatura
+        description: "Mês de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: nm_modalidade
+        description: "Modalidade de licitação (valor bruto da fonte, não normalizado)"
+
+      - name: qt_contratos
+        description: "Quantidade de contratos da modalidade no mês"
+        tests:
+          - not_null
+
+      - name: qt_orgaos_distintos
+        description: "Quantidade de órgãos distintos que usaram esta modalidade no mês"
+
+      - name: vl_total_original
+        description: "Soma dos valores originais da modalidade no mês"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais da modalidade no mês"
+
+      - name: vl_total_variacao
+        description: "Soma da variação (vl_atual - vl_original) da modalidade no mês"

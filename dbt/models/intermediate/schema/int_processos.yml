@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: int_processos
+    description: >
+      Agrupamento de contratos por processo licitatório (spec 007 —
+      entidade "Processo", NOVA). Grão: (cod_unidade_gestora, nu_processo).
+      Exclui nu_processo placeholder (vazio, sem dígito, ou com dígitos mas
+      todos zero — ex.: '-', '.', 'SED', 'S/N', '00'): 4.482 de 76.041
+      linhas de stg_contratos ficam de fora do agrupamento (continuam
+      existindo normalmente em stg_contratos/fct_contratos, só não entram
+      numa entidade Processo porque não têm processo formal identificável).
+      Não confundir "excluído do agrupamento" com "contrato inválido".
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora — parte da chave composta (nu_processo sozinho colide entre UGs, achado spec 007)"
+        tests:
+          - not_null
+
+      - name: nu_processo
+        description: "Número do processo licitatório, já filtrado de placeholders"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora (atributo descritivo, não chave)"
+
+      - name: qt_contratos
+        description: "Quantidade de contratos vinculados a este processo"
+        tests:
+          - not_null
+
+      - name: qt_fornecedores_distintos
+        description: "Quantidade de fornecedores (id_contratado) distintos vinculados a este processo"
+        tests:
+          - not_null
+
+      - name: qt_modalidades_distintas
+        description: "Quantidade de modalidades distintas usadas nos contratos deste processo"
+
+      - name: vl_total_original
+        description: "Soma de vl_original dos contratos deste processo"
+
+      - name: vl_total_atual
+        description: "Soma de vl_atual dos contratos deste processo"
+
+      - name: vl_total_variacao
+        description: "Soma de vl_variacao (escalada de custo) dos contratos deste processo"
+
+      - name: dt_primeiro_contrato
+        description: "Data de assinatura do contrato mais antigo do processo"
+
+      - name: dt_ultimo_contrato
+        description: "Data de assinatura do contrato mais recente do processo"

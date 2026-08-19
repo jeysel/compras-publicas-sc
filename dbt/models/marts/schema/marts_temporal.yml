@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: mart_contratos_temporal
+    description: >
+      Série temporal de valor contratado (spec 007), completa (achado spec
+      013): estende int_contratos_evolucao_anual (reaproveitado, não
+      recriado) com variação ano a ano, média móvel de 3 anos e recorte por
+      órgão/modalidade na mesma tabela. Grão: (tp_recorte, ano_assinatura,
+      mes_assinatura, cod_unidade_gestora, nm_modalidade) — as duas últimas
+      só preenchidas no recorte a que pertencem (nulo = "não se aplica a
+      este recorte", não dado ausente). Variação ano a ano usa LAG() com
+      guarda contra buraco de ano (só aceita o valor do LAG se o ano do LAG
+      for exatamente ano-1 — sem isso, LAG() pularia silenciosamente pro
+      ano disponível mais próximo em recortes com cobertura esparsa).
+      Média móvel usa janela RANGE sobre ano_assinatura (não ROWS), pelo
+      mesmo motivo: soma pelo valor do ano, não pela posição da linha.
+
+    columns:
+      - name: tp_recorte
+        description: "Nível de recorte: 'Geral', 'Órgão' ou 'Modalidade'"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Geral', 'Órgão', 'Modalidade']
+
+      - name: ano_assinatura
+        description: "Ano de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: mes_assinatura
+        description: "Mês de assinatura do contrato"
+        tests:
+          - not_null
+
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora — preenchido só quando tp_recorte = 'Órgão'"
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora — preenchido só quando tp_recorte = 'Órgão'"
+
+      - name: nm_modalidade
+        description: "Modalidade de licitação — preenchida só quando tp_recorte = 'Modalidade'"
+
+      - name: qt_contratos
+        description: "Quantidade de contratos no período/recorte"
+        tests:
+          - not_null
+
+      - name: vl_total_original
+        description: "Soma dos valores originais no período/recorte"
+
+      - name: vl_total_atual
+        description: "Soma dos valores atuais no período/recorte"
+
+      - name: vl_total_variacao
+        description: "Soma da variação (vl_atual - vl_original) no período/recorte"
+
+      - name: qt_contratos_acumulado_ano
+        description: "Quantidade acumulada de contratos no ano até o mês — só preenchido em tp_recorte = 'Geral' (herdado de int_contratos_evolucao_anual, não recalculado por recorte)"
+
+      - name: vl_acumulado_ano
+        description: "Valor acumulado no ano até o mês — só preenchido em tp_recorte = 'Geral'"
+
+      - name: vl_mesmo_mes_ano_anterior
+        description: "vl_total_atual do mesmo mês, ano-1, no mesmo recorte — null se o ano-1 não existir no recorte (buraco de cobertura)"
+
+      - name: vl_variacao_ano_anterior
+        description: "vl_total_atual - vl_mesmo_mes_ano_anterior — null se não houver ano-1 no recorte"
+
+      - name: perc_variacao_ano_anterior
+        description: "Percentual de variação sobre o mesmo mês do ano anterior — null se não houver ano-1 no recorte ou se o valor do ano anterior for zero"
+
+      - name: vl_media_movel_3anos
+        description: "Média de vl_total_atual dos últimos 3 anos-calendário (janela RANGE, não ROWS) para o mesmo mês/recorte"
