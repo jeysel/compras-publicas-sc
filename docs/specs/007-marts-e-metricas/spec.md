@@ -22,11 +22,92 @@ A versão anterior desta spec (extraída do backlog arquivado) assumia uma entid
 
 ## Investigação
 
-_Itens a confirmar antes de implementar (não bloqueiam o Design, mas bloqueiam Requirements definitivos):_
+Rodado contra `dbt/seeds/contratos.csv` real (76.041 linhas), não amostra. Os 3 itens abaixo, antes listados como "a confirmar", estão fechados.
 
-- Confirmar se `(cdunidadegestora, nuprocesso)` é chave estável pra agrupar contratos do mesmo processo — mesmo cuidado que levou à composição `(cdunidadegestora, nucontrato)` na spec 003 (não presumir que `nuprocesso` sozinho não colide entre unidades gestoras diferentes, sem testar).
-- Confirmar o nome exato da coluna de fornecedor/contratado em `contratos.csv` (`contratado`? `idcontratado`? — mencionado informalmente em investigações anteriores, nunca formalmente listado nesta spec) e se existe um identificador estável (CNPJ) além do nome.
-- Confirmar existência e valores de `nmmodalidade` (modalidade de licitação) em `contratos.csv` — necessário pras métricas agrupadas por modalidade.
+### Bloco 1 — `(cdunidadegestora, nuprocesso)` é chave estável pra agrupar contratos do mesmo processo?
+
+**Confirma a hipótese do Design — mesma colisão que já existia para `nucontrato` na spec 003, e a mesma correção resolve.**
+
+```
+nuprocesso puro: 42348 únicos de 76041 (33692 duplicados)
+(cdunidadegestora, nuprocesso): 44165 combinações únicas de 76041 linhas
+
+Distribuição de contratos por processo (usando a chave composta):
+1     35873
+2      4101
+3      1428
+4       769
+5       491
+6       317
+7       223
+8       171
+9       114
+10       89
+
+Maior número de contratos num único processo: 297
+```
+
+O `duplicated()` puro em `nuprocesso` mistura dois fenômenos diferentes: (a) processo real com múltiplos contratos vinculados — o comportamento esperado que justifica a entidade "Processo" — e (b) colisão de texto entre processos de unidades gestoras diferentes, que é o risco real que motivou o item. Rodei uma checagem adicional (não estava no bloco original, mas era necessária pra responder à pergunta feita no comentário do script) isolando (b): quantos valores de `nuprocesso` aparecem sob mais de uma `cdunidadegestora` distinta.
+
+Primeira rodada, ingênua, deu um número alarmante (1198 de 42348, 10,5% das linhas) — mas o valor de `nuprocesso` que mais colidia era `' '` (um espaço em branco), não um número de processo real. Refinei o filtro pra excluir placeholders (vazio, sem nenhum dígito, ou só zeros — ex.: `-`, `.`, `0`, `SED`, `S/N`):
+
+```
+Placeholders (vazio/sem dígito significativo/só zero): 4478 de 76041
+
+nuprocesso genuínos (com dígito, não-placeholder) usados por >1 UG: 1189 de 42283 únicos
+Linhas afetadas: 5711 de 71563 (7.98%)
+
+Amostra de nuprocesso genuíno colidindo entre UGs diferentes:
+'0001': 3 UGs distintas -> [160097, 440023, 440023]
+'0007/2017': 2 UGs distintas -> [410050, 410039]
+'0008/2017': 2 UGs distintas -> [410050, 440023]
+'001': 15 UGs distintas -> [160085, 160091, 160097, 410032, 410036, 410040, 410047, 410057, 440023, 440023, 450001, 540096, 540097, 610001, 730001]
+'001/2016': 3 UGs distintas -> [230023, 410001, 840001]
+```
+
+Mesmo depois de tirar o ruído de placeholder, a colisão genuína é real e não desprezível: ~8% das linhas com `nuprocesso` válido compartilham o número com outra unidade gestora (numeração local reinicia por órgão a cada ano — `001/2016` é um processo diferente em cada UG que o abriu). **Conclusão: `(cdunidadegestora, nuprocesso)` é necessário, `nuprocesso` sozinho não serve — exatamente a mesma lógica já registrada pra `nucontrato` na spec 003.** Também vale registrar como caso de borda: `nuprocesso` tem placeholders não-numéricos (`-`, `.`, `SED`, `S/N`, etc., ~4.478 linhas) além do já conhecido "ausente" — a entidade "Processo" precisa tratar isso, não só o caso vazio.
+
+### Bloco 2 — nome exato da coluna de fornecedor/contratado e identificador estável
+
+```
+Colunas candidatas a fornecedor: ['nucontrato', 'idcontratado', 'contratado', 'detipocontrato']
+
+--- idcontratado ---
+['27.087.458/0001-86', '18.490.362/0001-73', '16.572.041/0001-92', '13.366.571/0001-96', '13.366.571/0001-96']
+Nulos: 0 de 76041
+Únicos: 11406
+
+--- contratado ---
+['Guillherme Raineri de Souza', 'Atos Construtora Ltda', 'Leiber Silva Antonio', 'RML Administradora de Bens', 'RML Administradora de Bens']
+Nulos: 0 de 76041
+Únicos: 11317
+```
+
+`idcontratado` é o CNPJ/CPF (formato `NN.NNN.NNN/NNNN-NN`), sem nulos, é o identificador estável. `contratado` é o nome, também sem nulos, mas com menos valores únicos que `idcontratado` (11317 vs. 11406) — sinal de que o mesmo CNPJ pode aparecer com grafias de nome levemente diferentes (não investigado a fundo aqui; se a dimensão Fornecedor for chaveada por `idcontratado`, o `contratado` mais recente deve ser o atributo descritivo, mesmo padrão já usado pra `nmunidadegestora` em `cdunidadegestora`). **Fornecedor: chave = `idcontratado`, atributo descritivo = `contratado`.**
+
+### Bloco 3 — existência e valores de `nmmodalidade`
+
+```
+--- nmmodalidade ---
+Pregão Eletrônico - Lei 10.520                      28225
+Pregão Presencial - Lei 10.520                      13025
+Pregão Eletrônico Lei 14.133                          7982
+Dispensa de Licitação - Lei 8.666                     7050
+Dispensa de Licitação por Valor - Lei 8.666           4700
+Não Aplicável                                         3330
+Licitação Inexigível - Lei 8.666                      2269
+Dispensa de Licitação - Lei 14.133                    1181
+Licitação Inexigível - Lei 14.133                      773
+Concorrência - Lei 8.666                               695
+Dispensa de Licitação por Valor - Lei 14.133           675
+Convite - Lei 8.666                                    213
+Procedimento Licitatório (empresas) - Lei 13.303      125
+Tomada de Preços - Lei 8.666                            70
+Concorrência - Lei 14.133                               53
+Nulos: 5507 de 76041
+```
+
+Coluna existe, com valores consistentes (nome da modalidade + lei de referência — útil pra distinguir Lei 8.666 de Lei 14.133 no mesmo agrupamento). 5.507 nulos (7,2% das linhas) — a decidir na formalização dos Requirements se entra como categoria "Não informado" ou é excluído das métricas por modalidade.
 
 ## Requirements
 
@@ -66,6 +147,8 @@ _A formalizar em EARS após a Investigação acima. Rascunho funcional, por enti
 ## Casos de borda
 
 - Contrato sem `nuprocesso` preenchido (dispensa/inexigibilidade pode não ter processo licitatório formal) — a entidade "Processo" precisa lidar com isso sem quebrar (grupo de tamanho 1, ou uma categoria "sem processo formal").
+- `nuprocesso` com placeholder não-numérico (`-`, `.`, `SED`, `S/N`, `00`, etc. — 4.478 de 76.041 linhas, achado no Bloco 1 da Investigação) além do caso vazio já previsto acima — a entidade "Processo" não pode tratar esses valores como processo real nem agrupá-los entre si (senão gera "processos" fantasma juntando contratos não relacionados de UGs diferentes, como aconteceu na checagem ingênua do Bloco 1).
+- `nmmodalidade` ausente (5.507 de 76.041 linhas, achado no Bloco 3) — métricas agrupadas por modalidade precisam de categoria explícita "Não informado" ou exclusão deliberada, a decidir nos Requirements.
 - `vloriginal` ausente ou zero em algum contrato — a métrica de escalada de custo precisa de regra explícita pra esse caso (excluir do cálculo? tratar como 0% de escalada?), a decidir na formalização dos Requirements.
 
 ## Fora do escopo
