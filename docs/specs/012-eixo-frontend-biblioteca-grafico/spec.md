@@ -62,3 +62,60 @@ _A preencher conforme a implementação._
 - [[007-marts-e-metricas]]
 - [[009-automacao-da-ingestao]]
 - [[011-parametros-manifest]]
+
+# Adendo — Endpoints e Requirements da spec 012
+
+Colar nas seções **Design** (linha nova na tabela + subseção de endpoints) e **Requirements** de `docs/specs/012-eixo-frontend-biblioteca-grafico/spec.md`.
+
+---
+
+## Design (adendo — mapeamento de endpoints)
+
+Cada mart da spec 007 vira um endpoint FastAPI, servindo dado bruto em JSON (não pré-moldado pro `option` do ECharts) — decisão já registrada no Design original desta spec, reforçada aqui: mantém a API reaproveitável por qualquer consumidor futuro, não só o frontend deste projeto.
+
+| Mart (spec 007) | Endpoint | Filtros aceitos |
+|---|---|---|
+| `mart_escalada_custo` | `GET /api/v1/escalada-custo` | `cdunidadegestora`, `nmmodalidade`, `ano` |
+| `mart_diversidade_vencedores` | `GET /api/v1/diversidade-vencedores` | `cdunidadegestora`, `ano` |
+| `mart_contratos_temporal` | `GET /api/v1/contratos-temporal` | `cdunidadegestora`, `nmmodalidade`, `ano_inicio`, `ano_fim` |
+| `mart_concentracao_fornecedor` | `GET /api/v1/concentracao-fornecedor` | `cdunidadegestora`, `top_n` (default: 10) |
+
+Endpoints auxiliares (metadata, pra popular filtro no frontend — não são mart, são leitura direta de dimensão):
+
+| Fonte | Endpoint | Uso |
+|---|---|---|
+| `dim_orgao` | `GET /api/v1/orgaos` | Popular dropdown de órgão nos filtros |
+| `nmmodalidade` (distinct) | `GET /api/v1/modalidades` | Popular dropdown de modalidade, incluindo categoria "não informado" (spec 007, tratamento de nulo) |
+
+### Mascaramento de CPF — cautela extra, não exigência legal
+
+`idcontratado` (spec 007) mistura CNPJ (14 dígitos, pessoa jurídica) e CPF (11 dígitos, pessoa física). O dado já é público na fonte oficial do governo (portal de transparência) — não há obrigação legal identificada de ocultar. Decisão consciente do usuário: aplicar máscara mesmo assim, como camada extra de cautela, não como exigência de conformidade. Regra, aplicada na serialização Pydantic do endpoint `concentracao-fornecedor`:
+- 14 dígitos (CNPJ): exibido por completo, sem máscara.
+- 11 dígitos (CPF): mascarado, mostrando só os 3 primeiros e 2 últimos dígitos (ex.: `123.***.**-45`), resto oculto.
+
+## Requirements
+
+### Funcionais
+
+1. O sistema DEVE expor um endpoint FastAPI por mart definida na spec 007: `/api/v1/escalada-custo`, `/api/v1/diversidade-vencedores`, `/api/v1/contratos-temporal`, `/api/v1/concentracao-fornecedor`.
+
+2. Cada endpoint DEVE aceitar os filtros opcionais listados na tabela de Design acima via query parameters, retornando o conjunto completo (sem filtro) quando nenhum parâmetro for informado.
+
+3. Os endpoints DEVEM retornar dado bruto em formato JSON genérico (registros, não estrutura pré-moldada pro ECharts) — a transformação pro formato `option` do ECharts é responsabilidade do código TypeScript no frontend, não do backend.
+
+4. QUANDO o endpoint `concentracao-fornecedor` retornar um `idcontratado` de 11 dígitos (CPF), O sistema DEVE mascarar o valor conforme a regra definida no Design (3 primeiros + 2 últimos dígitos visíveis) — decisão de cautela extra do usuário, não exigência legal (o dado já é público na fonte oficial). QUANDO o valor tiver 14 dígitos (CNPJ), O sistema NÃO DEVE aplicar máscara.
+
+5. O sistema DEVE expor os endpoints auxiliares `/api/v1/orgaos` e `/api/v1/modalidades` para popular filtros no frontend, refletindo os valores reais das dimensões (incluindo a categoria "não informado" de `nmmodalidade`, definida na spec 007).
+
+6. Todo endpoint DEVE ter response schema definido via Pydantic, com `description` preenchida — usado tanto para a documentação automática (`/docs`) quanto como fonte para geração de tipos TypeScript (decisão já registrada no Design original desta spec).
+
+### Não-funcionais
+
+1. A regra de mascaramento de CPF DEVE ser implementada num único ponto reaproveitável (função/serializer), não duplicada em cada endpoint que expuser `idcontratado` — se outro endpoint futuro também expuser fornecedor, deve reusar a mesma função.
+
+2. O contrato de resposta de cada endpoint (schema Pydantic) DEVE permanecer estável o suficiente para gerar tipos TypeScript sem quebra frequente — mudança de schema é decisão registrada (spec nova ou adendo), não edição silenciosa.
+
+## Casos de borda
+
+- Filtro combinando `cdunidadegestora` + `nmmodalidade` que não retorna nenhuma linha (combinação real mas rara) — endpoint deve retornar lista vazia com `200 OK`, não erro.
+- `top_n` do endpoint de concentração maior que o número real de fornecedores do órgão filtrado — retornar todos os disponíveis, sem erro.
