@@ -50,13 +50,18 @@ CSV (Transparência SC)
 git clone https://github.com/jeysel/Analytics-Engineer.git
 cd Analytics-Engineer/compras-publicas
 
-# 2. Configure as variáveis de ambiente
+# 2. Ative o pre-commit hook local (bloqueia commit de IP/ARN/chave privada
+#    em arquivos de documentação — precisa rodar uma vez por clone, não se
+#    propaga sozinho; ver .githooks/pre-commit)
+git config core.hooksPath .githooks
+
+# 3. Configure as variáveis de ambiente
 cp .env.example .env
 
-# 3. Compila as imagens docker
+# 4. Compila as imagens docker
 docker compose build
 
-# 4. Sobe o PostgreSQL
+# 5. Sobe o PostgreSQL
 docker compose up postgres -d
 
 # Visualizar logs
@@ -72,17 +77,17 @@ docker logs compras_postgres
 # Validar dim_datas (deve retornar 5.844 linhas)
 # SELECT count(*) FROM raw.dim_datas;
 
-# 5. Instala dependências do dbt
+# 6. Instala dependências do dbt
 docker compose run --rm dbt deps
 
-# 6. Carrega os dados (seed)
+# 7. Carrega os dados (seed)
 docker compose run --rm dbt seed
 
 # Validar no PgAdmin:
 # SELECT count(*) FROM raw.contratos;
 # Esperado: ~76.000 linhas
 
-# 7. Executa e valida o staging
+# 8. Executa e valida o staging
 docker compose run --rm dbt build --select stg_contratos
 
 # Validar no PgAdmin:
@@ -91,7 +96,7 @@ docker compose run --rm dbt build --select stg_contratos
 #   WHERE table_schema = 'staging'
 #   ORDER BY table_name;
 
-# 8. Executa e valida o intermediate
+# 9. Executa e valida o intermediate
 docker compose run --rm dbt build --select tag:int
 
 # Validar no PgAdmin:
@@ -100,7 +105,7 @@ docker compose run --rm dbt build --select tag:int
 #   WHERE table_schema = 'intermediate'
 #   ORDER BY table_name;
 
-# 9. Executa os marts
+# 10. Executa os marts
 docker compose run --rm dbt build --select tag:marts
 
 # Validar no PgAdmin:
@@ -120,7 +125,7 @@ docker compose run --rm dbt build --select tag:marts
 # ORDER BY 4 DESC
 # LIMIT 10;
 
-# 10. Sobe o Evidence (desenvolvimento local)
+# 11. Sobe o Evidence (desenvolvimento local)
 cd evidence
 npm install
 npm run sources
@@ -130,7 +135,7 @@ npm run dev
 # Para buildar antes de publicar no GitHub Pages:
 npm run build
 
-# 11. Documentação do DBT (opcional)
+# 12. Documentação do DBT (opcional)
 # Gera a documentação com lineage graph e descrições dos modelos
 cd ..
 docker compose run --rm dbt docs generate
