@@ -165,6 +165,34 @@ corte. Essa etapa é nova nesta spec; não existia antes desta sessão.
 - Definir o passo a passo exato da validação pré-deploy — fica para quando
   o deploy real (specs 010/011) for de fato implementado.
 
+### Ponte k8s → Postgres fora do cluster (necessidade futura)
+
+Achado da investigação de deploy (sessão que revisou a spec 009): o Postgres
+compartilhado roda como container Docker no host, **fora do k3s**. Um
+workload k8s (pod) não alcança esse container pelo nome — precisa de uma
+ponte manual: um `Service`+`Endpoints` do Kubernetes apontando pro IP do
+container na rede bridge do Docker.
+
+**Não usada agora**: a rotina de ingestão (spec 009, revisada nesta mesma
+sessão) roda via crontab do host + `docker-compose run`, na mesma rede
+Docker do container `postgres` — alcança ele direto pelo nome (DNS do
+Docker), sem precisar da ponte.
+
+**Será necessária quando**: o `Deployment` do FastAPI (spec 012) for
+implementado como workload k8s de verdade (spec 010/011) — nesse momento,
+sim, um pod dentro do cluster vai precisar da ponte pra alcançar o Postgres.
+
+**Risco já identificado, a mitigar na implementação futura**: o exemplo
+observado nos projetos vizinhos usa IP fixo hard-coded no manifest de
+`Endpoints` (ex.: `<IP-fixo-do-container>`) — frágil, porque não há garantia de que o
+container mantenha o mesmo IP na bridge Docker após um restart/recriação.
+Mitigação a avaliar quando chegar a hora: IP estático configurado
+explicitamente no `docker-compose.yml` do Postgres (em vez de deixar o
+Docker atribuir dinamicamente), ou um pequeno script de sincronização que
+atualiza o `Endpoints` se o IP mudar. Não decidido agora — só registrado
+como pendência conhecida, não descoberta de surpresa quando a spec 012 for
+implementada.
+
 ### Pendências que permanecem em aberto após este fechamento
 
 - **Estabilidade da chave entre cargas do formato atual**: só temos um arquivo do formato atual (`contrato-demo.csv`). A validação de `(cdunidadegestora, nucontrato)` contra um segundo mês do formato atual ainda não foi feita — fica para quando a ingestão mensal rodar pela segunda vez, ou para um teste manual antecipado se o usuário preferir.

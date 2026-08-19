@@ -6,7 +6,7 @@ Decisão de arquitetura — fecha o eixo pipeline (specs 003-008).
 
 ## Status
 
-Design e Requirements (EARS) definidos em 2026-08-19 — pendente de aprovação/fechamento pelo usuário.
+**Decisão revertida nesta sessão** (achado de deploy real): "Onde a rotina roda" muda de `CronJob` k3s para **crontab do host + `docker-compose run`**, seguindo o precedente real dos dois projetos vizinhos (nenhum usa CronJob k8s para rotina agendada, mesmo tendo cluster/Argo CD disponíveis — ambos usam crontab do host). O resto do Design (cadência via `ETag`/`HEAD`, validação de schema antes do `dbt run`, sequenciamento num único script) permanece válido — só o mecanismo de execução muda.
 
 ## Resumo
 
@@ -16,7 +16,7 @@ Hoje a carga do CSV do portal SC é manual (download + colocar no lugar certo pr
 
 - Spec 004 decidiu **arquivo, não API** — mas isso descartou só a API de *consulta* (`datastore_search`), não necessariamente a possibilidade de baixar o arquivo via HTTP de forma automatizada. O link de download de um recurso CKAN (`.../download/contratos.csv`) é um arquivo estático servido por URL fixa — não depende do DataStore estar habilitado. Precisa confirmar que esse link é estável e automatizável antes de assumir que "automação" significa simular clique num navegador.
 - Publicação do portal é mensal (confirmado na investigação da spec 004/002).
-- Deploy já decidido: Argo CD observando o repo do app, workloads em k3s (fronteira definida no CLAUDE.md). Uma rotina agendada se encaixa naturalmente como `CronJob` do Kubernetes, mas isso não foi formalmente decidido — é a opção mais consistente com o que já existe, não uma conclusão automática.
+- Deploy já decidido: Argo CD observando o repo do app, workloads em k3s (fronteira definida no CLAUDE.md) — isso segue valendo para o futuro `Deployment` do FastAPI (spec 012). Uma rotina agendada se encaixa naturalmente como `CronJob` do Kubernetes, mas isso não foi formalmente decidido — é a opção mais consistente com o que já existe, não uma conclusão automática. **Nota (revertida nesta sessão):** essa hipótese foi testada no Bloco 3 abaixo e adotada inicialmente, mas depois revertida — a decisão final é crontab do host, não `CronJob`; ver Status.
 - Não sabemos ainda se existe hoje algum script (mesmo que rudimentar) que já automatiza parte do processo — precisa levantar antes de desenhar do zero.
 
 ## Investigação
@@ -78,6 +78,8 @@ NAME       CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
 
 **Achado:** não existe nenhum CronJob rodando no cluster hoje — não há padrão de outro projeto pra reaproveitar, seria o primeiro. CPU está em 7% de uso (155m) e memória em 49% — confirma o achado da spec 003 de que CPU é o recurso com mais folga no momento, não é o teto imediato pra um job leve de download+dbt.
 
+**Nota (adicionada nesta sessão):** o fato acima ("não existe CronJob no cluster") segue literalmente verdadeiro — mas a conclusão de que a ingestão *seria* esse primeiro CronJob foi revertida. A investigação de deploy desta sessão (spec 015, adendo da spec 003) achou que os dois projetos vizinhos, mesmo com Argo CD/k3s disponível, não usam `CronJob` k8s para nenhuma rotina agendada — ambos usam crontab do host. A decisão final desta spec segue esse precedente real; ver Status e Design.
+
 ### Bloco 4 — sequenciamento download → dbt run
 
 ```
@@ -96,21 +98,23 @@ completed	failure	Feat: Migração de evidence para streamlit + ajustes para cri
 
 Última execução (2026-04-28) falhou em 36s — consistente com o path quebrado. Ou seja: **não existe hoje nenhum `dbt run`/`dbt test` ativo em CI**, nem pro build do site estático. Qualquer automação de ingestão que planeje "reaproveitar" a execução dbt do GH Actions precisa primeiro decidir se conserta esse workflow ou se abandona GH Actions de vez em favor do CronJob k3s — não há infraestrutura dbt funcionando hoje pra reaproveitar como está.
 
+**Nota (adicionada nesta sessão):** a alternativa citada aqui ("CronJob k3s") foi descartada — ver Status. A conclusão sobre o workflow do GH Actions (consertar vs. abandonar) não depende de qual mecanismo de execução foi escolhido depois — segue "remover, não consertar" (Requirement funcional 9), agora em favor do crontab do host, não do CronJob.
+
 ## Requirements
 
 ### Funcionais
 
-1. O sistema DEVE executar a verificação de arquivo novo via `CronJob` no k3s, com o manifest vivendo no repo `compras-publicas`, conforme a fronteira definida em [[010-fronteira-deploy-argocd]].
+1. O sistema DEVE executar a verificação de arquivo novo via entrada de `crontab` no host, disparando `docker-compose run` de uma imagem publicada no GHCR (ver [[015-convencao-build-imagem]]). O arquivo `docker-compose.pipeline.yml` (ou nome equivalente à convenção do `infra`) e a entrada de `crontab` vivem no repo `infra` (privado), consistente com a fronteira de dado físico já estabelecida — não no repo `compras-publicas-sc`.
 
-2. O `CronJob` DEVE rodar em cadência diária, realizando um `HEAD` request ao link de download do portal antes de qualquer download completo do arquivo.
+2. A rotina (crontab do host) DEVE rodar em cadência diária, realizando um `HEAD` request ao link de download do portal antes de qualquer download completo do arquivo.
 
 3. QUANDO o `ETag` retornado for igual ao último valor salvo, O sistema DEVE encerrar sem baixar ou processar o arquivo (no-op).
 
 4. QUANDO o `ETag` for diferente do último valor salvo, O sistema DEVE baixar o arquivo e validar o schema mínimo (colunas esperadas presentes; contagem de linhas maior que zero) antes de acionar o `dbt run`.
 
-5. SE a validação de schema falhar, ENTÃO O sistema NÃO DEVE sobrescrever o dado já processado, NÃO DEVE atualizar o `ETag` salvo, e DEVE encerrar com erro visível (status do Job/CronJob consultável via `kubectl`/Argo CD).
+5. SE a validação de schema falhar, ENTÃO O sistema NÃO DEVE sobrescrever o dado já processado, NÃO DEVE atualizar o `ETag` salvo, e DEVE encerrar com erro visível (exit code não-zero do `docker-compose run`, refletido no log de arquivo — Requirement não-funcional 1).
 
-6. O sistema DEVE executar download, validação e `dbt run`/`dbt snapshot` como passos sequenciais de um único Job — não como Jobs ou CronJobs separados.
+6. O sistema DEVE executar download, validação e `dbt run`/`dbt snapshot` como passos sequenciais de uma única execução (`docker-compose run`) — não como execuções ou entradas de crontab separadas.
 
 7. O sistema DEVE armazenar o último `ETag` processado em uma tabela no Postgres já provisionado (spec 003), não em `ConfigMap` ou outro mecanismo de config do cluster.
 
@@ -120,41 +124,43 @@ completed	failure	Feat: Migração de evidence para streamlit + ajustes para cri
 
 ### Não-funcionais
 
-1. Falha do Job DEVE ficar visível via `kubectl`/Argo CD. Alertas ativos (notificação proativa) ficam explicitamente fora do escopo desta spec.
+1. Já que não há `CronJob`/Argo CD nesta rota, falha DEVE ficar visível via log do `docker-compose run` — redirecionar stdout/stderr pra um arquivo de log com rotação (ou usar o mecanismo de log que o `weather-pipeline` já usa, se houver um — confirmar na implementação). Alertas ativos (notificação proativa) ficam explicitamente fora do escopo desta spec.
 
 2. O merge por `(cdunidadegestora, nucontrato)` (spec 003) DEVE permanecer idempotente sob reprocessamento — reexecutar a mesma carga não pode gerar duplicata nem corromper dado já correto, mesmo em caso de `ETag` mudar sem alteração de conteúdo real.
 
 ## Design
 
-Primeiro `CronJob` do cluster — não existe nenhum outro pra copiar de referência, então esta implementação vira o padrão de fato pra qualquer automação agendada futura (inclusive de outros projetos). Documentado com um pouco mais de cuidado do que o mínimo por isso.
+Primeiro job agendado de produção do projeto — sem precedente de `CronJob` k8s nos projetos vizinhos (achado desta sessão), por isso a decisão de seguir o padrão real de crontab do host em vez de introduzir um mecanismo novo.
 
 | Decisão | Escolha | Razão |
 |---|---|---|
-| Onde a rotina roda | `CronJob` no k3s | Consistente com a fronteira já decidida (Argo CD observando este repo, workload roda em k3s). Recurso confirmado com folga real agora (CPU 7%, memória 49% — sem o aperto que preocupava na spec 003). Manifest vive no repo `compras-publicas` (mesma fronteira já definida no CLAUDE.md pra Deployment/Service — é workload da aplicação, não infra compartilhada). |
-| Cadência | Verificação frequente (proposta: diária), ação só quando há mudança real | `ETag`/`Last-Modified` estáveis (achado do Bloco 2) tornam isso barato: `CronJob` faz só um `HEAD`, compara o `ETag` contra o último valor conhecido (guardado numa tabela pequena no Postgres já provisionado — proposta `pipeline_metadata` ou similar, não `ConfigMap`, pra não misturar estado de aplicação com config do cluster). Se igual: no-op, log e sai. Se diferente: segue pro download. Evita reprocessar 76 mil+ linhas todo dia sem necessidade e detecta arquivo novo cedo, sem depender de "sei que é sempre início do mês". |
-| Sequenciamento | Um único Job, passos internos sequenciais: download → validação mínima de schema → `dbt run`/`dbt snapshot` → atualizar `ETag` salvo | São passos que só fazem sentido em conjunto (não há valor em ter o dado baixado sem processar, nem processar sem confirmar que o download foi bem-sucedido) — separar em dois CronJobs independentes adicionaria complexidade de orquestração sem benefício real nessa escala. |
+| Onde a rotina roda | **Crontab do host + `docker-compose run`** de uma imagem publicada no GHCR (ver [[015-convencao-build-imagem]]) | Nenhum projeto vizinho usa `CronJob` k8s para rotina agendada — ambos usam crontab do host, mesmo padrão do `weather-pipeline`. Motivo real descoberto nesta sessão: o Postgres compartilhado roda fora do k3s (container Docker no host); um `CronJob` k8s precisaria de uma ponte `Service`+`Endpoints` com IP fixo da bridge Docker, frágil a restart do container. Rodando via `docker-compose run` na mesma rede Docker do host, a ingestão alcança o `postgres` direto pelo nome do container (DNS interno do Docker), sem IP fixo, sem ponte. |
+| Cadência | Verificação frequente (proposta: diária), ação só quando há mudança real | `ETag`/`Last-Modified` estáveis (achado do Bloco 2) tornam isso barato: a rotina faz só um `HEAD`, compara o `ETag` contra o último valor conhecido (guardado numa tabela pequena no Postgres já provisionado — proposta `pipeline_metadata` ou similar, não `ConfigMap`, pra não misturar estado de aplicação com config do cluster). Se igual: no-op, log e sai. Se diferente: segue pro download. Evita reprocessar 76 mil+ linhas todo dia sem necessidade e detecta arquivo novo cedo, sem depender de "sei que é sempre início do mês". |
+| Sequenciamento | Uma única execução (`docker-compose run`), passos internos sequenciais: download → validação mínima de schema → `dbt run`/`dbt snapshot` → atualizar `ETag` salvo | São passos que só fazem sentido em conjunto (não há valor em ter o dado baixado sem processar, nem processar sem confirmar que o download foi bem-sucedido) — separar em duas execuções/entradas de crontab independentes adicionaria complexidade de orquestração sem benefício real nessa escala. |
 | Validação antes do `dbt run` | Checagem mínima de schema: colunas esperadas presentes, contagem de linhas não-zero, não é arquivo corrompido (tipo o `contratos-2022.csv` com aspas malformadas da spec 006) | Se falhar: o Job termina com erro, **não sobrescreve** o dado bom já processado, e o `ETag` salvo **não é atualizado** (tenta de novo no próximo ciclo, não fica preso presumindo que já processou). |
-| Workflow do GH Actions que roda dbt hoje (achado do Bloco 4 — quebrado desde a reestruturação do repo) | Remover, não consertar | A automação real passa a viver no CronJob do k3s; manter um segundo lugar (quebrado ou não) que também roda `dbt` duplica responsabilidade e cria ambiguidade sobre qual é a fonte de verdade da execução. Consistente com a fronteira já estabelecida (Actions não é mais o dono do deploy nem da execução de pipeline deste projeto). |
+| Workflow do GH Actions que roda dbt hoje (achado do Bloco 4 — quebrado desde a reestruturação do repo) | Remover, não consertar | A automação real passa a viver no job de crontab do host (spec 015); manter um segundo lugar (quebrado ou não) que também roda `dbt` duplica responsabilidade e cria ambiguidade sobre qual é a fonte de verdade da execução. Consistente com a fronteira já estabelecida (Actions não é mais o dono do deploy nem da execução de pipeline deste projeto). |
 
 ### Componentes afetados
 
-- `CronJob` manifest novo no repo `compras-publicas`.
-- Imagem de container com `dbt` + dependências de download (a construir — decidir registry na implementação, reaproveitando o padrão já usado pelos outros projetos se fizer sentido).
+- Dockerfile do job de ingestão no repo `compras-publicas`; `docker-compose.pipeline.yml` + entrada de crontab no repo `infra` (spec 015).
+- Imagem de container com `dbt` + dependências de download, publicada no GHCR seguindo a convenção da spec 015.
 - Tabela pequena no Postgres para guardar o último `ETag` processado.
 - Remoção do workflow `.github/workflows/*.yml` que rodava `dbt` (ou arquivamento, se preferir manter rastro histórico em vez de deletar puro).
 
 ## Casos de borda
 
 - `ETag` muda mas o conteúdo é funcionalmente idêntico (republicação sem mudança real): sem problema — o merge por chave (spec 003) é idempotente, reprocessar o mesmo dado não corrompe nada, só gasta um ciclo à toa.
-- Portal muda o `resource_id` sem aviso (endpoint de download passa a 404): o Job deve falhar de forma visível (`kubectl logs`/status do CronJob no Argo CD), não silenciosamente continuar servindo dado velho pra sempre sem sinalizar.
+- Portal muda o `resource_id` sem aviso (endpoint de download passa a 404): o Job deve falhar de forma visível (log de arquivo com rotação — Requirement não-funcional 1), não silenciosamente continuar servindo dado velho pra sempre sem sinalizar.
 - Primeira execução (sem `ETag` salvo ainda): tratar como "mudança", processar incondicionalmente.
+- Se o container `postgres` for recriado com nome de container diferente (não deveria acontecer numa operação normal, mas documentar): o `docker-compose run` da ingestão depende do nome do serviço/container estar estável na rede Docker do host — não do IP, mas ainda depende do nome não mudar.
 
 ## Fora do escopo
 
 - Mudança nas decisões de storage/chave/grão/backfill já fechadas (specs 003, 005, 006).
 - Automação de fontes além do portal SC (Betha ou outras) — fora de escopo por decisão explícita.
-- Alertas ativos (notificação em caso de falha) — não existe infra de alerta hoje; Job falho fica visível só via `kubectl`/Argo CD por enquanto. Pode virar spec própria depois.
+- Alertas ativos (notificação em caso de falha) — não existe infra de alerta hoje; falha fica visível só via log do `docker-compose run` por enquanto. Pode virar spec própria depois.
 - Consertar o workflow do GH Actions — decidido remover, não consertar.
+- A ponte `Service`+`Endpoints` (IP fixo da bridge Docker) permanece documentada como necessidade **futura**, não usada por este job — ver adendo da spec 003. Será necessária quando o `Deployment` do FastAPI (spec 012) for implementado como workload k8s de verdade.
 
 ## Referências de código
 
