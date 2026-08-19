@@ -121,6 +121,49 @@ Decisão de grão e chave confirmada em [[005-grao-do-dado-contrato-vs-aditivo]]
 | Histórico de mudança | `dbt snapshot` sobre campos que importam analiticamente (`situacao`, `vlatual`, `vladitado`, `dtfimatual`) | Snapshot mensal do estado atual pode alterar esses campos entre cargas (contrato aditivado, status mudando) — snapshot captura a mudança sem duplicar o dataset inteiro a cada carga |
 | Origem do dado | Arquivo CSV (não API) | [[004-origem-dados-api-vs-arquivo]] — CKAN do portal não tem DataStore habilitado, API indisponível para este recurso |
 | Escopo temporal | Definido em spec própria (backfill histórico separado do fluxo corrente) | Ver pendência aberta abaixo |
+| Dev local vs. validação pré-deploy | Dois ambientes distintos, não concorrentes: dev local descartável (`compras_postgres`, container próprio deste repo) para iteração; Postgres compartilhado do `infra` (schema dedicado, decisão original desta spec) só para validação pré-deploy, tratado com o mesmo cuidado de produção | Reprodutibilidade do portfólio (fluxo `git clone` → `docker compose up` não pode depender do repo privado `infra`) e isolamento de risco (iteração destrutiva de `dbt build`/`dbt test`, inclusive em loop por agente, não deve rodar contra recurso compartilhado com outros projetos) |
+
+### Ambiente de desenvolvimento vs. ambiente de produção — distinção formal
+
+A decisão original desta spec (schema/banco dedicado dentro do Postgres
+compartilhado, produção) não implica que o desenvolvimento do dia a dia deva
+rodar contra esse mesmo Postgres. São dois ambientes com propósitos
+diferentes, ambos válidos, não concorrentes:
+
+| Ambiente | Onde roda | Propósito | Descartável? |
+|---|---|---|---|
+| **Dev local** | `compras_postgres` (container próprio, `docker-compose.yml` deste repo) | Iteração rápida: `dbt build`/`dbt test` repetido, full-refresh, `DROP SCHEMA`, qualquer operação destrutiva sem medo | Sim — recriar do zero é trivial (`docker compose up postgres -d` + `dbt seed`) |
+| **Validação pré-deploy** | Postgres compartilhado do projeto `infra` (schema dedicado, spec 003 original) | Confirmar, antes do corte de produção, que o schema/permissão/isolamento se comportam como esperado no ambiente real, compartilhado com `jeysel-auth`/`weather-analytics` | Não — é o ambiente real, tratado com o mesmo cuidado de produção |
+
+#### Por que não desenvolver direto contra o Postgres compartilhado do `infra`
+
+1. **Reprodutibilidade do portfólio**: o README de `compras-publicas-sc`
+   documenta um fluxo (`git clone` → `docker compose up` → `dbt build`) que
+   qualquer pessoa roda sozinha, sem acesso a nada privado. Acoplar o dev do
+   dia a dia ao projeto `infra` (privado) quebraria esse fluxo pra qualquer
+   avaliador externo do portfólio.
+2. **Iteração destrutiva sem risco**: testes de dbt em loop (inclusive
+   rodados por agente, como o Claude Code fazendo várias rodadas de
+   `dbt build`/`dbt test` numa sessão) podem envolver operação destrutiva
+   por natureza. Contra um container descartável, sem consequência. Contra o
+   Postgres compartilhado — mesmo com schema isolado — um erro de teste vira,
+   na pior hipótese, contenção de recurso ou efeito colateral nos ambientes
+   de dev de outros projetos.
+
+#### O que muda no fluxo de deploy
+
+Antes de qualquer deploy real pra produção (specs 010/011, ainda não
+implementadas em código), fica formalizada uma etapa explícita de
+**validação contra o schema real** no Postgres compartilhado do `infra` —
+não pra desenvolver ali, só pra confirmar isolamento/permissão antes do
+corte. Essa etapa é nova nesta spec; não existia antes desta sessão.
+
+#### Fora do escopo deste adendo
+
+- Migrar o dev local pra depender do `infra` — decidido explicitamente que
+  não, pelos dois motivos acima.
+- Definir o passo a passo exato da validação pré-deploy — fica para quando
+  o deploy real (specs 010/011) for de fato implementado.
 
 ### Pendências que permanecem em aberto após este fechamento
 
