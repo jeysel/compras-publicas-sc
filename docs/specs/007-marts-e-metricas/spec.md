@@ -6,7 +6,7 @@ Decisão de arquitetura — substitui a versão anterior (rascunho extraído do 
 
 ## Status
 
-Design definido. Requirements (EARS) a formalizar.
+Design definido. Requirements (EARS) a formalizar. Implementação parcial (specs 013/014): `mart_concentracao_fornecedor`, `fl_aditivo_inconsistente` e a correção de consolidação de modalidade estão feitos e validados; `dim_processo`, `mart_diversidade_vencedores`, `mart_escalada_custo` e `mart_contratos_temporal` completo ainda não.
 
 ## Resumo
 
@@ -109,6 +109,8 @@ Nulos: 5507 de 76041
 
 Coluna existe, com valores consistentes (nome da modalidade + lei de referência — útil pra distinguir Lei 8.666 de Lei 14.133 no mesmo agrupamento). 5.507 nulos (7,2% das linhas) — a decidir na formalização dos Requirements se entra como categoria "Não informado" ou é excluído das métricas por modalidade.
 
+**Nota de correção (2026-08-19, sessão specs 013/014):** a tabela acima lista só as 15 maiores categorias, não o total — era uma amostra truncada do script de investigação original, não declarada como tal. Contagem real, confirmada por query direta: **25 categorias brutas não-nulas** em `nmmodalidade` (mais os 5.507 nulos). Após a consolidação por lei que `int_contratos_por_modalidade.sql` já implementa (funde pares Lei 8.666/Lei 14.133 da mesma modalidade): **22 categorias** (mais "Não informado" pros nulos e "Não Aplicável" como categoria própria da fonte — 23 se contadas separado, 22 se "Não informado"/"Não Aplicável" forem tratadas como não-modalidade). Nesta sessão também foi corrigido um bug de consolidação: o `CASE WHEN` buscava o literal `'Pregão Presencial Lei 14.133'` (sem hífen), mas o valor real na fonte é `'Pregão Presencial - Lei 14.133'` (com hífen) — 31 contratos escapavam da fusão por isso; corrigido em `dbt/models/intermediate/int_contratos_por_modalidade.sql`.
+
 ## Requirements
 
 _A formalizar em EARS após a Investigação acima. Rascunho funcional, por entidade/métrica:_
@@ -122,10 +124,10 @@ _A formalizar em EARS após a Investigação acima. Rascunho funcional, por enti
 
 ### Métricas
 
-- **Escalada de custo por aditivo** (substitui a Story 10 "licitado vs. contratado"): `vlatual - vloriginal` (e equivalente em dias: `diasatuais - diasoriginais`) por contrato, agregável por órgão/modalidade/período. Mede o quanto um contrato cresceu do valor original pro atual — proxy honesto de "sobrepreço via aditivo", com o dado que realmente existe (ao contrário de "economia vs. licitado", que exigiria dado inexistente).
-- **Diversidade de vencedores por processo** (substitui a Story 11 "competitividade"): contagem de fornecedores distintos vinculados a contratos do mesmo `(cdunidadegestora, nuprocesso)`. Renomeada deliberadamente — mede quantos fornecedores diferentes **venceram** itens/lotes de um processo, não quantos **participaram/concorreram** (esse dado não existe). Nome antigo ("competitividade") seria enganoso.
-- **Séries temporais de valor contratado** (Stories 15/16, adaptadas): evolução do valor contratado (não licitado) por ano/modalidade/órgão, com window functions (`SUM() OVER`, `LAG()` pra variação ano a ano, média móvel) — tecnicamente idêntico ao que o backlog original propunha, só ancorado em `vlatual`/`vloriginal` em vez de um "valor licitado" inexistente.
-- **Concentração de gasto por fornecedor** (aprovada nesta sessão — não estava no backlog original): quanto do gasto total de um órgão (ou do estado) se concentra nos top N fornecedores. Totalmente construível só com `contratos.csv`.
+- **Escalada de custo por aditivo** (substitui a Story 10 "licitado vs. contratado"): `vlatual - vloriginal` (e equivalente em dias: `diasatuais - diasoriginais`) por contrato, agregável por órgão/modalidade/período. Mede o quanto um contrato cresceu do valor original pro atual — proxy honesto de "sobrepreço via aditivo", com o dado que realmente existe (ao contrário de "economia vs. licitado", que exigiria dado inexistente). **Decisão adicional (sessão specs 013/014):** `vl_variacao` (`vl_atual - vl_original`, já materializado em `stg_contratos`) é a métrica oficial. O campo `vl_aditado` da fonte diverge dela em ~24% dos contratos com aditivo (976 de 1951, na medição original sem tolerância — 975/976 com tolerância de R$0,01, ver `stg_contratos.fl_aditivo_inconsistente`), por magnitude grande demais pra ser arredondamento — sinal de qualidade de dado da fonte. `vl_aditado` não foi descartado; virou sinal auxiliar de qualidade via a coluna booleana `fl_aditivo_inconsistente` em `stg_contratos`.
+- **Diversidade de vencedores por processo** (substitui a Story 11 "competitividade"): contagem de fornecedores distintos vinculados a contratos do mesmo `(cdunidadegestora, nuprocesso)`. Renomeada deliberadamente — mede quantos fornecedores diferentes **venceram** itens/lotes de um processo, não quantos **participaram/concorreram** (esse dado não existe). Nome antigo ("competitividade") seria enganoso. **Ainda não implementada** — depende da entidade Processo (`dim_processo`), que também não existe ainda (achado da spec 013).
+- **Séries temporais de valor contratado** (Stories 15/16, adaptadas): evolução do valor contratado (não licitado) por ano/modalidade/órgão, com window functions (`SUM() OVER`, `LAG()` pra variação ano a ano, média móvel) — tecnicamente idêntico ao que o backlog original propunha, só ancorado em `vlatual`/`vloriginal` em vez de um "valor licitado" inexistente. **Parcialmente coberta** por `int_contratos_evolucao_anual.sql` (soma acumulada mensal), sem `LAG()` nem média móvel ainda (achado da spec 013).
+- **Concentração de gasto por fornecedor** (aprovada nesta sessão — não estava no backlog original): quanto do gasto total de um órgão (ou do estado) se concentra nos top N fornecedores. Totalmente construível só com `contratos.csv`. **Implementada nesta sessão** como `mart_concentracao_fornecedor` (grão `cod_unidade_gestora` + `id_contratado`, com visão por órgão e por estado) — não existia nem parcialmente antes (achado da spec 013). Distinta de `dim_fornecedores.perc_concentracao`, que já existia no pipeline legado mas mede concentração *interna* do fornecedor (maior contrato dele / total dele), não concentração de mercado — as duas são mantidas em paralelo, com a diferença documentada nos respectivos `schema.yml`.
 
 ## Design
 
@@ -138,11 +140,16 @@ _A formalizar em EARS após a Investigação acima. Rascunho funcional, por enti
 | Métrica "competitividade" | Renomeada para "diversidade de vencedores por processo", com semântica ajustada | Mede vencedores, não participantes — nome precisa refletir a limitação real do dado |
 | Séries temporais | Mantidas, ancoradas em valor contratado | Window functions continuam plenamente aplicáveis; só a base de valor muda |
 | Concentração de gasto por fornecedor | Aprovada como métrica nova (não estava no backlog original) | Construível só com dado já disponível; complementa a leitura de competitividade/diversidade de vencedores com outro ângulo (concentração de mercado) |
+| `vl_variacao` vs. `vl_aditado` (achado spec 013/014) | `vl_variacao` é a métrica oficial de escalada de custo; `vl_aditado` mantido, não descartado, sinalizado via `fl_aditivo_inconsistente` | As duas colunas divergem em ~24% dos contratos com aditivo, em magnitude grande demais pra ser arredondamento — não são intercambiáveis, e a fonte (Transparência SC) não permite reconciliar sem mais investigação |
+| Camada de implementação | Sem camada `core` — convenção real do projeto (achado spec 013) é `staging → intermediate → marts`, dimensões/fatos convivem em `marts/` | O pipeline dbt já existente (pré-spec, achado da spec 013) usa essa convenção; specs novas seguem o que já está em produção, não recriam uma camada `core` que não existe no projeto |
 
 ### Componentes afetados
 
-- Models dbt de camada `core`: `dim_orgao`, `dim_processo` (ou `int_processo` se ficar como intermediate), `dim_fornecedor`.
-- Models dbt de camada `marts`: `mart_escalada_custo`, `mart_diversidade_vencedores`, `mart_contratos_temporal`, `mart_concentracao_fornecedor`.
+Convenção real do projeto (achado spec 013): `staging → intermediate → marts`, sem camada `core` separada.
+
+- **Implementado nesta sessão**: `int_concentracao_fornecedor_por_orgao`, `int_concentracao_fornecedor_estado` (intermediate) e `mart_concentracao_fornecedor` (marts); `stg_contratos.fl_aditivo_inconsistente` (staging).
+- **Ainda não implementado** (fora do escopo desta sessão): `dim_processo` (ou equivalente intermediate), `mart_diversidade_vencedores` (depende de `dim_processo`), `mart_escalada_custo` como model dedicado (a métrica existe como coluna `vl_variacao` em `stg_contratos`/`fct_contratos`, não como mart própria), `mart_contratos_temporal` completo (parcialmente coberto por `int_contratos_evolucao_anual`, sem `LAG()`/média móvel).
+- `dim_orgao`/`dim_fornecedor` da Investigação já existem no pipeline legado como `dim_orgaos`/`dim_fornecedores` (achado spec 013) — compatíveis em espírito, nome no plural; não foram renomeados nesta sessão.
 
 ## Casos de borda
 
@@ -159,7 +166,11 @@ _A formalizar em EARS após a Investigação acima. Rascunho funcional, por enti
 
 ## Referências de código
 
-_A preencher conforme a implementação._
+- `dbt/models/staging/stg_contratos.sql` — coluna `fl_aditivo_inconsistente`.
+- `dbt/models/intermediate/int_contratos_por_modalidade.sql` — bug de consolidação de "Pregão Presencial - Lei 14.133" corrigido.
+- `dbt/models/intermediate/int_concentracao_fornecedor_por_orgao.sql`, `int_concentracao_fornecedor_estado.sql`.
+- `dbt/models/marts/mart_concentracao_fornecedor.sql`.
+- Ainda pendente (não implementado nesta sessão): `dim_processo`, `mart_diversidade_vencedores`, `mart_escalada_custo`, `mart_contratos_temporal` completo.
 
 ## Ver também
 
@@ -168,3 +179,5 @@ _A preencher conforme a implementação._
 - [[005-grao-do-dado-contrato-vs-aditivo]]
 - [[006-backfill-historico]]
 - [[008-qualidade-e-documentacao]]
+- [[013-levantamento-dbt-legado]]
+- [[014-cobertura-dim-ramos]] — feature `dim_ramos` fora do escopo original desta spec, mas relevante o suficiente pra linkar (decisão de manter, registrada lá)

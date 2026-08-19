@@ -61,7 +61,27 @@ models:
         description: "Valor total dos aditivos em R$"
  
       - name: vl_variacao
-        description: "Diferença entre valor atual e valor original (vl_atual - vl_original)"
+        description: >
+          Diferença entre valor atual e valor original (vl_atual - vl_original).
+          Métrica oficial de escalada de custo (decisão spec 013/014) — usar
+          esta coluna, não vl_aditado, para medir quanto um contrato cresceu.
+
+      - name: vl_aditado
+        description: >
+          Valor total dos aditivos, como reportado pela fonte (Transparência SC).
+          NÃO é redundante com vl_variacao nem confiável como substituto dela:
+          achado da spec 013/014 mostrou que diverge de vl_variacao em ~24% dos
+          contratos com aditivo (976 de 1951), por >= R$100.000 em boa parte
+          desses casos — sinal de qualidade de dado da fonte, não arredondamento.
+          Mantido na tabela, não descartado; usar fl_aditivo_inconsistente para
+          filtrar/sinalizar os casos divergentes.
+
+      - name: fl_aditivo_inconsistente
+        description: >
+          Sinalizador de qualidade de dado: true quando |vl_variacao - vl_aditado|
+          > R$0,01; false quando batem; null quando o contrato não tem aditivo
+          (vl_aditado nulo ou zero). Não indica erro do contrato em si — indica
+          que as duas colunas de valor de aditivo da fonte não se conciliam.
  
       - name: ds_situacao
         description: "Situação atual do contrato (ativo, encerrado, etc.)"

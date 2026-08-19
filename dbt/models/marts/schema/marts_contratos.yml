@@ -194,7 +194,12 @@ models:
         description: "Soma dos valores atuais dos contratos"
 
       - name: perc_concentracao
-        description: "Percentual do maior contrato sobre o total"
+        description: >
+          Percentual do maior contrato individual do fornecedor sobre o total
+          contratado por ele (concentração INTERNA — o fornecedor depende de
+          um contrato-âncora?). Não confundir com mart_concentracao_fornecedor,
+          que mede concentração de MERCADO (fornecedor sobre o total do
+          órgão/estado) — métrica diferente, mantida em paralelo, spec 013/014.
 
       - name: porte_fornecedor
         description: "Classificação por porte: Micro, Pequeno, Médio, Grande"

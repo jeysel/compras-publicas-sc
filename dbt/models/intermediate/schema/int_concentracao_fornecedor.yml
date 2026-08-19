@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: int_concentracao_fornecedor_por_orgao
+    description: >
+      Gasto total por fornecedor dentro de cada órgão (cod_unidade_gestora),
+      com ranking e percentual sobre o total gasto pelo órgão. Grão:
+      (cod_unidade_gestora, id_contratado).
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: id_contratado
+        description: "Identificador do fornecedor (CNPJ/CPF)"
+        tests:
+          - not_null
+
+      - name: vl_total_fornecedor_orgao
+        description: "Soma de vl_atual dos contratos deste fornecedor com este órgão"
+        tests:
+          - not_null
+
+      - name: vl_total_orgao
+        description: "Soma de vl_atual de todos os fornecedores deste órgão"
+
+      - name: rank_no_orgao
+        description: "Ranking do fornecedor por gasto dentro do órgão (1 = maior)"
+
+      - name: perc_sobre_total_orgao
+        description: "Percentual do gasto do órgão concentrado neste fornecedor"
+
+  - name: int_concentracao_fornecedor_estado
+    description: >
+      Gasto total por fornecedor somando todos os órgãos (visão estadual),
+      com ranking e percentual sobre o total gasto pelo estado. Grão:
+      id_contratado.
+
+    columns:
+      - name: id_contratado
+        description: "Identificador do fornecedor (CNPJ/CPF)"
+        tests:
+          - not_null
+          - unique
+
+      - name: vl_total_fornecedor_estado
+        description: "Soma de vl_atual de todos os contratos deste fornecedor, todos os órgãos"
+        tests:
+          - not_null
+
+      - name: vl_total_estado
+        description: "Soma de vl_atual de todos os contratos do estado"
+
+      - name: rank_estado
+        description: "Ranking do fornecedor por gasto no estado inteiro (1 = maior)"
+
+      - name: perc_sobre_total_estado
+        description: "Percentual do gasto total do estado concentrado neste fornecedor"

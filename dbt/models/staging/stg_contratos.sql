@@ -93,9 +93,27 @@ renamed as (
         extract(month from cast(dtassinatura as date))  as mes_assinatura,
         cast(vlatual as numeric(18,2))
             - cast(vloriginal as numeric(18,2))         as vl_variacao
- 
+
     from source
- 
+
+),
+
+com_flags as (
+
+    select
+        *,
+        -- vl_variacao (vl_atual - vl_original) é a métrica oficial de escalada
+        -- de custo (spec 013/014). vl_aditado diverge dela em ~24% dos
+        -- contratos com aditivo, em magnitude acima de arredondamento —
+        -- sinal de qualidade de dado da fonte, não descartado, só marcado.
+        case
+            when vl_aditado is null or vl_aditado = 0        then null
+            when abs(vl_variacao - vl_aditado) > 0.01         then true
+            else false
+        end                                              as fl_aditivo_inconsistente
+
+    from renamed
+
 )
- 
-select * from renamed
+
+select * from com_flags

@@ -22,7 +22,7 @@ normalizado as (
             ) then 'Pregão Eletrônico - Leis 10.520/2002 e 14.133/2021'
             when nm_modalidade in (
                 'Pregão Presencial - Lei 10.520',
-                'Pregão Presencial Lei 14.133'
+                'Pregão Presencial - Lei 14.133'
             ) then 'Pregão Presencial - Leis 10.520/2002 e 14.133/2021'
             when nm_modalidade in (
                 'Dispensa de Licitação - Lei 8.666',

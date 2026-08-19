@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: mart_concentracao_fornecedor
+    description: >
+      Concentração de gasto por fornecedor — visão por órgão e por estado
+      (spec 007). Distinto de dim_fornecedores.perc_concentracao, que mede
+      concentração INTERNA do fornecedor (maior contrato dele / total dele).
+      Esta mart mede concentração de MERCADO: quanto do gasto do órgão (ou
+      do estado) está concentrado em cada fornecedor. Grão:
+      (cod_unidade_gestora, id_contratado). Não existia (nem parcialmente)
+      antes da spec 013/014.
+
+    columns:
+      - name: cod_unidade_gestora
+        description: "Código da unidade gestora"
+        tests:
+          - not_null
+
+      - name: nm_unidade_gestora
+        description: "Nome da unidade gestora (atributo descritivo, não chave)"
+
+      - name: id_contratado
+        description: "Identificador do fornecedor (CNPJ/CPF)"
+        tests:
+          - not_null
+
+      - name: nm_contratado
+        description: "Nome/razão social do fornecedor (atributo descritivo, não chave)"
+
+      - name: vl_total_fornecedor_orgao
+        description: "Soma de vl_atual dos contratos deste fornecedor com este órgão"
+        tests:
+          - not_null
+
+      - name: vl_total_orgao
+        description: "Soma de vl_atual de todos os fornecedores deste órgão"
+
+      - name: rank_no_orgao
+        description: "Ranking do fornecedor por gasto dentro do órgão (1 = maior)"
+
+      - name: perc_sobre_total_orgao
+        description: "Percentual do gasto do órgão concentrado neste fornecedor"
+
+      - name: vl_total_fornecedor_estado
+        description: "Soma de vl_atual de todos os contratos deste fornecedor, todos os órgãos"
+
+      - name: vl_total_estado
+        description: "Soma de vl_atual de todos os contratos do estado"
+
+      - name: rank_estado
+        description: "Ranking do fornecedor por gasto no estado inteiro (1 = maior)"
+
+      - name: perc_sobre_total_estado
+        description: "Percentual do gasto total do estado concentrado neste fornecedor"

@@ -3,10 +3,15 @@ version: 2
 models:
   - name: dim_ramos
     description: >
-      Dimensão de ramos de atividade classificados por palavras-chave do objeto do contrato.
-      Cada contrato é classificado em uma das 16 categorias (ex: Alimentação, TI, Obras) 
-      com base no campo ds_objeto do staging. Contratos com objetos atípicos são agrupados 
-      em "Outros". Inclui ranking e percentuais sobre o total.
+      Classificação HEURÍSTICA por palavra-chave do objeto do contrato (ds_objeto)
+      em 18 categorias (ex: Alimentação, TI, Obras) + "Outros" como residual.
+      NÃO é dado cadastral oficial (não vem de CNAE ou classificação declarada
+      pelo fornecedor/órgão) — é aproximação por texto livre, com limite conhecido
+      e aceito: 26,68% dos contratos (20.289 de 76.041) caem em "Outros" por não
+      casar com nenhuma palavra-chave. Decisão de manter como está, sem expandir
+      cobertura por ora, registrada em [[014-cobertura-dim-ramos]]. Usar com essa
+      ressalva — não tratar "Outros" como "sem classificação válida", e sim como
+      limite conhecido da heurística. Inclui ranking e percentuais sobre o total.
 
     columns:
       - name: ramo_atividade
