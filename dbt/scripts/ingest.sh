@@ -8,8 +8,13 @@
 # 2. Compara com o último ETag salvo em control.pipeline_metadata.
 # 3. Igual -> no-op (exit 0, sem baixar o corpo).
 # 4. Diferente (ou primeira execução) -> baixa o arquivo completo.
-# 5. Valida schema mínimo (header confere com o contratos.csv atual, linhas > 0)
-#    antes de sobrescrever seeds/contratos.csv. Falha aqui não toca em nada.
+# 5. Valida schema mínimo (subconjunto case-insensitive: toda coluna do
+#    contratos.csv atual presente no baixado, linhas > 0 — spec 017) antes de
+#    sobrescrever seeds/contratos.csv. Falha aqui não toca em nada.
+# 5.1. Processa o CSV baixado via process_csv.py (spec 019): filtra pro
+#      subconjunto de colunas já conhecido (nunca --full-refresh automático) e
+#      tenta reparar/quarentenar linhas malformadas, em vez de deixar o
+#      `dbt seed` travar nelas. Só o arquivo FILTRADO substitui seeds/contratos.csv.
 # 6. dbt seed --select contratos && dbt build.
 # 7. Só se 6 for bem-sucedido: grava o novo ETag em pipeline_metadata.
 # 8. Log em arquivo + stdout.
@@ -24,9 +29,15 @@ set -euo pipefail
 DOWNLOAD_URL="https://dados.sc.gov.br/dataset/93dab950-e805-4388-8418-cfb3b73f1623/resource/8bb98383-7043-4d2f-ae32-9377656e71ee/download/contratos.csv"
 SEED_FILE="/usr/app/dbt/seeds/contratos.csv"
 TMP_FILE="/tmp/contratos_download.csv"
+FILTERED_FILE="/tmp/contratos_filtrado.csv"
 LOG_DIR="/var/log/compras-publicas"
 LOG_FILE="${LOG_DIR}/ingest-$(date +%Y%m%d).log"
+# Mesmo volume já usado pro LOG_DIR (spec 019) — precisa sobreviver entre
+# execuções do container efêmero, por isso não vive em /tmp.
+QUARANTINE_FILE="${LOG_DIR}/contratos_quarentena.csv"
 ETAG_CHAVE="contratos_etag"
+
+export QUARANTINE_FILE
 
 mkdir -p "$LOG_DIR"
 
@@ -113,22 +124,64 @@ fi
 # Comparação contra o header do contratos.csv ATUAL (não contra
 # stg_contratos.yml — aquele arquivo documenta as colunas renomeadas de
 # saída do model de staging, não o header bruto do CSV do portal).
-header_novo=$(head -n 1 "$TMP_FILE")
-header_atual=$(head -n 1 "$SEED_FILE")
+#
+# Checagem de SUBCONJUNTO, case-insensitive (spec 017, achado spec 016): toda
+# coluna que aparece no header do seed ATUAL precisa existir no header do CSV
+# baixado — colunas extras (aditivas) e diferença de maiúscula/minúscula são
+# toleradas. Ainda rejeita qualquer coluna ESPERADA ausente (arquivo
+# corrompido/truncado continua barrado).
+# tr -d '\r': o seed committado usa CRLF e o download real do portal usa LF
+# — sem isso, `$(...)` preserva o \r à direita (só engole \n), o último nome
+# de coluna sai como "diasatuais\r" e nunca bate com "diasatuais", mesmo
+# quando a coluna existe (achado real, spec 019, Cenário 5: bloqueava 100%
+# das execuções contra o portal real, não é caso de borda raro).
+header_novo=$(head -n 1 "$TMP_FILE" | tr -d '\r')
+header_atual=$(head -n 1 "$SEED_FILE" | tr -d '\r')
 linhas=$(($(wc -l < "$TMP_FILE") - 1))
 
-if [[ "$header_novo" != "$header_atual" ]]; then
-    fail "Validação de schema falhou: header do CSV baixado diverge do header atual de ${SEED_FILE}. contratos.csv e pipeline_metadata NÃO foram alterados. Novo: [${header_novo}] | Atual: [${header_atual}]"
+mapfile -t cols_novo < <(echo "$header_novo" | tr '[:upper:]' '[:lower:]' | tr ';' '\n')
+mapfile -t cols_atual < <(echo "$header_atual" | tr '[:upper:]' '[:lower:]' | tr ';' '\n')
+
+declare -A cols_novo_set
+for c in "${cols_novo[@]}"; do cols_novo_set["$c"]=1; done
+
+faltando=()
+for c in "${cols_atual[@]}"; do
+    if [[ -z "${cols_novo_set[$c]:-}" ]]; then
+        faltando+=("$c")
+    fi
+done
+
+if [[ ${#faltando[@]} -gt 0 ]]; then
+    fail "Validação de schema falhou: colunas esperadas ausentes no CSV baixado (comparação case-insensitive): ${faltando[*]}. contratos.csv e pipeline_metadata NÃO foram alterados."
 fi
 
 if [[ "$linhas" -le 0 ]]; then
     fail "Validação de schema falhou: CSV baixado tem 0 linhas de dado. contratos.csv e pipeline_metadata NÃO foram alterados."
 fi
 
-log "Validação de schema OK: header confere, ${linhas} linhas de dado."
+log "Validação de schema OK: todas as ${#cols_atual[@]} colunas esperadas presentes (case-insensitive). Colunas no arquivo novo: ${#cols_novo[@]}."
 
-mv "$TMP_FILE" "$SEED_FILE"
-log "contratos.csv atualizado."
+# ── 5.1. Filtro de coluna + reparo/quarentena de linha (spec 019) ──────────
+# Nunca sobrescreve SEED_FILE com o TMP_FILE bruto — process_csv.py seleciona
+# só as colunas já conhecidas (novas ficam de fora até incorporação
+# deliberada, spec própria) e tenta reparar linhas malformadas (aspas
+# escapadas fora do padrão RFC4180) antes de quarentená-las. Nunca roda
+# `dbt seed --full-refresh` como consequência disso — o seed incremental
+# funciona porque o arquivo já chega filtrado pro schema conhecido.
+resumo=$(python3 /usr/app/dbt/scripts/process_csv.py "$SEED_FILE" "$TMP_FILE" "$FILTERED_FILE") \
+    || fail "process_csv.py falhou (erro de processamento, não é quarentena). contratos.csv e pipeline_metadata NÃO foram alterados."
+log "$resumo"
+
+if [[ "$resumo" =~ \|\ ([0-9]+)\ em\ quarentena ]]; then
+    n_quarentena="${BASH_REMATCH[1]}"
+    if [[ "$n_quarentena" -gt 0 ]]; then
+        log "AVISO: ${n_quarentena} linha(s) foram para quarentena nesta execução (${QUARANTINE_FILE})."
+    fi
+fi
+
+mv "$FILTERED_FILE" "$SEED_FILE"
+log "contratos.csv atualizado (filtrado via process_csv.py)."
 
 # ── 6. dbt seed + dbt build ────────────────────────────────────────────────
 cd /usr/app/dbt

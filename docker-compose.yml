@@ -93,6 +93,37 @@ services:
       - compras_network
     profiles: ["dbt"]
 
+  # ── Pipeline de ingestão (spec 009/015/019) ─────────────────────────────────
+  # Mesma imagem publicada em produção (Dockerfile.pipeline) — aqui só para
+  # teste local de ingest.sh de ponta a ponta. Em produção quem sobe este
+  # container é docker-compose.pipeline.yml no repo infra (privado), via
+  # crontab do host, não este arquivo.
+  #
+  # ./logs:/var/log/compras-publicas — mesmo volume usado pro log da rotina
+  # (LOG_DIR em ingest.sh) e pro arquivo de quarentena (spec 019, mesmo
+  # diretório, sem volume adicional necessário) — sobrevive ao --rm do
+  # container efêmero.
+  pipeline:
+    build:
+      context: .
+      dockerfile: dbt/Dockerfile.pipeline
+    container_name: compras_pipeline
+    env_file: .env
+    environment:
+      POSTGRES_HOST:     postgres
+      POSTGRES_PORT:     5432
+      POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
+      POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
+    volumes:
+      - ./logs:/var/log/compras-publicas
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - compras_network
+    profiles: ["pipeline"]
+
 # ── Rede compartilhada ───────────────────────────────────────────────────────
 networks:
   compras_network:
