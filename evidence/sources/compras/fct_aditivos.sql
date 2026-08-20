@@ -1,1 +1,0 @@
-select * from marts.fct_aditivos

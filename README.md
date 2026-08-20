@@ -18,8 +18,10 @@ CSV (Transparência SC)
   ├── intermediate → regras de negócio
   └── marts        → métricas analíticas
        ↓
-    Evidence → GitHub Pages
+    (frontend em transição — ver nota abaixo)
 ```
+
+> **Frontend em transição:** o dashboard anterior (Evidence.dev, publicado via GitHub Pages) foi removido deste repositório. O novo frontend (FastAPI + ECharts, spec 012) ainda não foi implementado — o projeto está temporariamente sem apresentação pública além do pipeline dbt/PostgreSQL. Ver `docs/specs/012-eixo-frontend-biblioteca-grafico/spec.md` e `docs/specs/013-levantamento-dbt-legado/spec.md` (Caso de borda 3) para o histórico da decisão.
 
 ## 🧱 Stack
 
@@ -27,10 +29,9 @@ CSV (Transparência SC)
 |---|---|
 | Banco de dados | PostgreSQL 17 |
 | Transformação | dbt-core 1.9 |
-| Visualização | Evidence.dev |
+| Visualização | *(em transição — spec 012, não implementado)* |
 | Orquestração local | Docker Compose |
 | CI/CD | GitHub Actions |
-| Publicação | GitHub Pages |
 
 ---
 
@@ -122,19 +123,8 @@ docker compose run --rm dbt build --select tag:marts
 # ORDER BY 4 DESC
 # LIMIT 10;
 
-# 11. Sobe o Evidence (desenvolvimento local)
-cd evidence
-npm install
-npm run sources
-npm run dev
-# Acesse: http://localhost:3000
-
-# Para buildar antes de publicar no GitHub Pages:
-npm run build
-
-# 12. Documentação do DBT (opcional)
+# 11. Documentação do DBT (opcional)
 # Gera a documentação com lineage graph e descrições dos modelos
-cd ..
 docker compose run --rm dbt docs generate
 
 # Sobe o servidor de documentação
@@ -162,34 +152,10 @@ compras-publicas/
 │   ├── dbt_project.yml
 │   ├── profiles.yml
 │   └── Dockerfile
-├── evidence/
-│   ├── pages/           # Dashboards (index, orgaos, fornecedores...)
-│   └── sources/         # Conexão com PostgreSQL
 ├── docs/                # Arquitetura e decisões
 ├── docker-compose.yml
 └── .env.example
 ```
-
----
-
-## 📊 Dashboard
-
-Acesse o dashboard publicado: **[GitHub Pages](https://jeysel.github.io/Analytics-Engineer/compras-publicas)**
-
-### Páginas disponíveis
-
-| Página | Conteúdo |
-|---|---|
-| Home | KPIs gerais, evolução anual, top 10 |
-| Órgãos Públicos | Ranking por valor e quantidade |
-| Fornecedores | Ranking, porte, concentração |
-| Modalidades | Distribuição e taxa de aditivos |
-| Evolução Temporal | Série temporal mensal e anual |
-| Aditivos Contratuais | Tipos, faixas e maiores aditivos |
-| Ramos de Atividade | Classificação por setor econômico |
-| Fornecedores por Ramo | Análise cruzada com filtro dinâmico |
-| Tecnologia da Informação | Análise detalhada do setor de TI |
-| Contratos Não Classificados | Contratos de nicho e atípicos |
 
 ---
 

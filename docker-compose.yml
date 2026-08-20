@@ -7,7 +7,6 @@ version: "3.9"
 #   postgres  → banco de dados (Ubuntu 24.04 + PostgreSQL 17)
 #   dbt       → transformações (staging → intermediate → marts)
 #   pgadmin   → interface visual para consultas no PostgreSQL
-#   evidence  → dashboards estáticos (GitHub Pages)
 #
 # Rede: todos os serviços compartilham a rede "compras_network"
 #
@@ -16,7 +15,6 @@ version: "3.9"
 #   docker compose up pgadmin -d                       # sobe o PgAdmin
 #   docker compose run --rm dbt dbt seed               # carrega CSVs
 #   docker compose run --rm dbt dbt build              # transforma + testa
-#   docker compose --profile evidence up evidence -d   # sobe o dashboard
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -134,4 +132,3 @@ volumes:
   pgdata:
   pglog:
   pgadmin_data:
-  evidence_node_modules:

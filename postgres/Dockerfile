@@ -56,7 +56,7 @@ RUN chmod +x /entrypoint.sh
 
 # ── Rede ─────────────────────────────────────────────────────────────────────
 # Este container opera na rede "compras_network" definida no docker-compose.yml
-# Os demais serviços (dbt, pgadmin, evidence) acessam pelo hostname "postgres"
+# Os demais serviços (dbt, pgadmin) acessam pelo hostname "postgres"
  
 EXPOSE 5432
  
