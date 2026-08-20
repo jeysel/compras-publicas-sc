@@ -79,18 +79,7 @@ gosu postgres psql -U postgres -tc \
 gosu postgres psql -U postgres --command \
     "GRANT ALL PRIVILEGES ON DATABASE ${DB} TO ${USER};"
 
-# ── 6. Executa scripts SQL de inicialização ──────────────────────────────────
-if [ -d /opt/init ]; then
-    for f in /opt/init/*.sql; do
-        echo ">>> Executando script: $(basename $f)"
-        gosu postgres psql \
-            -U postgres \
-            -d "${DB}" \
-            -f "$f"
-    done
-fi
-
-# ── 7. Para o servidor temporário ────────────────────────────────────────────
+# ── 6. Para o servidor temporário ────────────────────────────────────────────
 echo ">>> Parando servidor temporário..."
 gosu postgres ${PG_BIN}/pg_ctl \
     -D "${PGDATA}" \
@@ -98,7 +87,7 @@ gosu postgres ${PG_BIN}/pg_ctl \
 
 echo ">>> Setup concluído! Iniciando servidor principal..."
 
-# ── 8. Inicia o servidor principal (foreground) ──────────────────────────────
+# ── 7. Inicia o servidor principal (foreground) ──────────────────────────────
 exec gosu postgres ${PG_BIN}/postgres \
     -D "${PGDATA}" \
     -c "listen_addresses=*"

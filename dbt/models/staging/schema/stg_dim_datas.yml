@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_dim_datas
+    description: >
+      Spinha de datas gerada via dbt_utils.date_spine (spec 020), independente
+      dos dados de contratos. Período: 2015-01-01 a 2030-12-31.
+
+    columns:
+      - name: dt_data
+        description: "Data no formato DATE"
+        tests:
+          - not_null
+          - unique

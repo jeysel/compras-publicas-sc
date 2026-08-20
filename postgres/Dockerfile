@@ -50,8 +50,7 @@ ENV PG_VERSION=${PG_VERSION} \
     POSTGRES_PASSWORD=cp_pass \
     POSTGRES_PORT=5432
  
-# ── Scripts de inicialização e entrypoint ────────────────────────────────────
-COPY init/         /opt/init/
+# ── Entrypoint ────────────────────────────────────────────────────────────────
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

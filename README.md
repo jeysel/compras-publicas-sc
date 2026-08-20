@@ -74,9 +74,6 @@ docker logs compras_postgres
 # Username: cp_user
 # Password: cp_pass
 
-# Validar dim_datas (deve retornar 5.844 linhas)
-# SELECT count(*) FROM raw.dim_datas;
-
 # 6. Instala dependências do dbt
 docker compose run --rm dbt deps
 
@@ -154,13 +151,10 @@ compras-publicas/
 ├── .github/workflows/   # CI/CD — GitHub Actions
 ├── postgres/
 │   ├── Dockerfile       # Ubuntu 24.04 + PostgreSQL 17
-│   ├── entrypoint.sh    # Inicialização do cluster
-│   └── init/
-│       └── 01_init.sql  # Schemas + dim_datas (2015-2030)
+│   └── entrypoint.sh    # Inicialização do cluster
 ├── dbt/
 │   ├── models/
-│   │   ├── sources.yml
-│   │   ├── staging/     # Padronização dos dados brutos
+│   │   ├── staging/     # Padronização dos dados brutos + dim_datas (date_spine)
 │   │   ├── intermediate/# Regras de negócio
 │   │   └── marts/       # Tabelas analíticas finais
 │   ├── seeds/           # CSV dos contratos SC
