@@ -7,6 +7,7 @@ version: "3.9"
 #   postgres  → banco de dados (Ubuntu 24.04 + PostgreSQL 17)
 #   dbt       → transformações (staging → intermediate → marts)
 #   pgadmin   → interface visual para consultas no PostgreSQL
+#   api       → FastAPI, serving layer das marts (spec 012)
 #
 # Rede: todos os serviços compartilham a rede "compras_network"
 #
@@ -15,6 +16,7 @@ version: "3.9"
 #   docker compose up pgadmin -d                       # sobe o PgAdmin
 #   docker compose run --rm dbt dbt seed               # carrega CSVs
 #   docker compose run --rm dbt dbt build              # transforma + testa
+#   docker compose --profile api up api -d             # sobe a API
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -121,6 +123,32 @@ services:
     networks:
       - compras_network
     profiles: ["pipeline"]
+
+  # ── API (FastAPI, spec 012) ─────────────────────────────────────────────────
+  # Serving layer, lê as marts já materializadas pelo dbt. Perfil próprio —
+  # não sobe por padrão, igual ao dbt/pipeline.
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: compras_api
+    env_file: .env
+    environment:
+      POSTGRES_HOST:     postgres
+      POSTGRES_PORT:     5432
+      POSTGRES_DB:       ${POSTGRES_DB:-compras_publicas}
+      POSTGRES_USER:     ${POSTGRES_USER:-cp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cp_pass}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/usr/app/api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - compras_network
+    profiles: ["api"]
 
 # ── Rede compartilhada ───────────────────────────────────────────────────────
 networks:

@@ -6,7 +6,9 @@ Decisão de arquitetura — abre o eixo frontend (último dos três definidos no
 
 ## Status
 
-Design principal fechado: biblioteca de gráfico (ECharts), backend (FastAPI), estratégia de renderização (Jinja2 + TypeScript sem framework, tipos gerados via OpenAPI). Requirements (EARS) ainda não formalizados. Bloqueado para fechamento completo até a spec 007 (marts/métricas) sair do rascunho — os endpoints concretos dependem do que ela definir.
+Design principal fechado: biblioteca de gráfico (ECharts), backend (FastAPI), estratégia de renderização (Jinja2 + TypeScript sem framework, tipos gerados via OpenAPI). Requirements (EARS) formalizados no adendo abaixo.
+
+**API FastAPI implementada e validada (2026-08-20)** — os 6 endpoints (`escalada-custo`, `diversidade-vencedores`, `contratos-temporal`, `concentracao-fornecedor`, `orgaos`, `modalidades`) existem em `api/`, testados contra o Postgres de dev real (curl + teste unitário de mascaramento, ver Referências de código). Pendente: camada de renderização (Jinja2 + TypeScript + ECharts) — consome esta API, ainda não implementada.
 
 ## Resumo
 
@@ -41,7 +43,7 @@ _A preencher após a Investigação e fechamento da spec 007._
 
 ### Componentes afetados
 
-- Nenhuma mudança de código ainda — spec de decisão, implementação fica para depois do fechamento da spec 007.
+- `api/` (novo) — implementado 2026-08-20, ver Referências de código.
 
 ## Casos de borda
 
@@ -55,7 +57,27 @@ _A preencher após a Investigação e fechamento da spec 007._
 
 ## Referências de código
 
-_A preencher conforme a implementação._
+Implementado 2026-08-20:
+
+- `api/app/main.py` — app FastAPI, lifespan (abre/fecha pool de conexão), registra os 6 routers sob prefixo `/api/v1`.
+- `api/app/config.py` — `Settings` (pydantic-settings), lê `POSTGRES_HOST/PORT/USER/PASSWORD/DB` do `.env`, mesma convenção da spec 003/009.
+- `api/app/db.py` — `AsyncConnectionPool` (psycopg 3, `psycopg_pool`), decisão justificada: driver oficial, suporte async nativo, API quase idêntica sync/async, dispensa ORM (marts já são tabelas simples).
+- `api/app/masking.py` + `api/tests/test_masking.py` — `classify_id_contratado`/`mask_id_contratado`; 6 testes unitários, todos passando (`python -m pytest api/tests/test_masking.py -v`).
+- `api/app/schemas/*.py` — um Pydantic model por mart/dimensão, colunas confirmadas via `\d marts.<tabela>` no Postgres de dev (não presumidas a partir do `.yml`, que estava desatualizado para `dim_orgaos`/`dim_modalidades` — tabela real tem mais colunas).
+- `api/app/routers/*.py` — um router por endpoint, SQL parametrizado (`%(nome)s`, nunca f-string com valor), `WHERE` condicional conforme filtro informado.
+- `api/Dockerfile`, `docker-compose.yml` (serviço `api`, `profiles: ["api"]`, porta 8000) — mesma convenção Ubuntu 24.04 do serviço `dbt`.
+- `api/requirements.txt` — decisão: `requirements.txt` em vez de `pyproject.toml`, por consistência com os demais serviços Python do ecossistema do usuário (`airflow/requirements.txt`, `streamlit/requirements.txt` em weather-analytics), não por convenção já existente neste repo (que não tinha nenhuma até aqui).
+
+Validação real (`docker compose --profile api up api -d`, container `compras_api` up e saudável):
+
+```
+GET /api/v1/orgaos            → 200, dado real (187 órgãos em marts.dim_orgaos)
+GET /api/v1/escalada-custo    → 200, dado real (76.041 linhas em marts.mart_escalada_custo)
+GET /api/v1/concentracao-fornecedor?top_n=5  → 200, dado real
+GET /docs                     → 200
+```
+
+Mascaramento conferido visualmente (`cod_unidade_gestora=310002`, órgão com fornecedores pessoa física): 59 de 200 linhas retornadas com `id_contratado` no formato `***.NNN.NNN-**` (ex.: `***.476.371-**`), exatamente como chega da mart — nenhuma transformação adicional aplicada, confirma o achado de Design.
 
 ## Ver também
 
@@ -73,25 +95,44 @@ Colar nas seções **Design** (linha nova na tabela + subseção de endpoints) e
 
 Cada mart da spec 007 vira um endpoint FastAPI, servindo dado bruto em JSON (não pré-moldado pro `option` do ECharts) — decisão já registrada no Design original desta spec, reforçada aqui: mantém a API reaproveitável por qualquer consumidor futuro, não só o frontend deste projeto.
 
-| Mart (spec 007) | Endpoint | Filtros aceitos |
-|---|---|---|
-| `mart_escalada_custo` | `GET /api/v1/escalada-custo` | `cdunidadegestora`, `nmmodalidade`, `ano` |
-| `mart_diversidade_vencedores` | `GET /api/v1/diversidade-vencedores` | `cdunidadegestora`, `ano` |
-| `mart_contratos_temporal` | `GET /api/v1/contratos-temporal` | `cdunidadegestora`, `nmmodalidade`, `ano_inicio`, `ano_fim` |
-| `mart_concentracao_fornecedor` | `GET /api/v1/concentracao-fornecedor` | `cdunidadegestora`, `top_n` (default: 10) |
+| Mart (spec 007) | Endpoint | Filtros aceitos | Implementado em |
+|---|---|---|---|
+| `mart_escalada_custo` | `GET /api/v1/escalada-custo` | `cod_unidade_gestora`, `nm_modalidade`, `ano` | `api/app/routers/escalada_custo.py` |
+| `mart_diversidade_vencedores` | `GET /api/v1/diversidade-vencedores` | `cod_unidade_gestora` (sem `ano` — mart não tem coluna de ano, grão é processo, confirmado 2026-08-20) | `api/app/routers/diversidade_vencedores.py` |
+| `mart_contratos_temporal` | `GET /api/v1/contratos-temporal` | `cod_unidade_gestora`, `nm_modalidade`, `ano_inicio`, `ano_fim` | `api/app/routers/contratos_temporal.py` |
+| `mart_concentracao_fornecedor` | `GET /api/v1/concentracao-fornecedor` | `cod_unidade_gestora`, `top_n` (default: 10) | `api/app/routers/concentracao_fornecedor.py` |
+
+Nomes de query param corrigidos pra `snake_case` (`cod_unidade_gestora`, `nm_modalidade`) na implementação — os nomes originais desta tabela (`cdunidadegestora`, `nmmodalidade`) eram placeholder informal, não bateram com a convenção de coluna real das marts (confirmada via `\d` no Postgres de dev, 2026-08-20).
 
 Endpoints auxiliares (metadata, pra popular filtro no frontend — não são mart, são leitura direta de dimensão):
 
-| Fonte | Endpoint | Uso |
-|---|---|---|
-| `dim_orgao` | `GET /api/v1/orgaos` | Popular dropdown de órgão nos filtros |
-| `nmmodalidade` (distinct) | `GET /api/v1/modalidades` | Popular dropdown de modalidade, incluindo categoria "não informado" (spec 007, tratamento de nulo) |
+| Fonte | Endpoint | Uso | Implementado em |
+|---|---|---|---|
+| `dim_orgaos` | `GET /api/v1/orgaos` | Popular dropdown de órgão nos filtros | `api/app/routers/orgaos.py` |
+| `dim_modalidades` | `GET /api/v1/modalidades` | Popular dropdown de modalidade, incluindo categoria "Não informado" (spec 007, tratamento de nulo) | `api/app/routers/modalidades.py` |
 
 ### Mascaramento de CPF — cautela extra, não exigência legal
 
-`idcontratado` (spec 007) mistura CNPJ (14 dígitos, pessoa jurídica) e CPF (11 dígitos, pessoa física). O dado já é público na fonte oficial do governo (portal de transparência) — não há obrigação legal identificada de ocultar. Decisão consciente do usuário: aplicar máscara mesmo assim, como camada extra de cautela, não como exigência de conformidade. Regra, aplicada na serialização Pydantic do endpoint `concentracao-fornecedor`:
-- 14 dígitos (CNPJ): exibido por completo, sem máscara.
-- 11 dígitos (CPF): mascarado, mostrando só os 3 primeiros e 2 últimos dígitos (ex.: `123.***.**-45`), resto oculto.
+**Achado na implementação (2026-08-20), corrige a premissa original abaixo:** a premissa de que `id_contratado` chegaria como dígitos crus (11 ou 14) estava errada. Confirmado via `psql` direto em `marts.mart_concentracao_fornecedor` (27.849 linhas):
+
+```
+                  categoria                  |  qt   | distintos
+---------------------------------------------+-------+-----------
+ CNPJ formatado (18 chars, com pontuação)    | 27117 |     10731
+ CPF pré-mascarado (14 chars, com pontuação) |   700 |       651
+ outro/malformado                            |    32 |        24
+```
+
+- CNPJ chega formatado com pontuação (`00.000.000/0001-91`, 18 caracteres), **sem máscara** — igual ao que a decisão original já previa (exibir por completo).
+- CPF chega **já mascarado na própria fonte** (portal de transparência), no formato `***.006.069-**` (14 caracteres, com pontuação) — extremos ocultos, bloco do meio visível. O padrão é o **oposto** do desenhado originalmente (`123.***.**-45`, extremos visíveis) e os dígitos reais das pontas não estão disponíveis: é impossível remontar o formato original a partir do que a fonte entrega.
+- 32 linhas (24 valores distintos) não batem com nenhum dos dois formatos — ids curtos (`6`, `505`, `9876544`) que não são CPF nem CNPJ; ver Casos de borda.
+
+Decisão tomada em resposta a este achado: **`masking.py` não reaplica máscara** — CPF já chega mascarado da fonte, CNPJ já chega completo por decisão já registrada aqui. A função vira uma identificação/normalização (reconhece o formato pelo padrão de pontuação, não por contagem de dígitos crus) para uso futuro (ex.: filtrar/agrupar por tipo de pessoa), sem transformar o valor exibido. Regra efetiva, aplicada na serialização Pydantic do endpoint `concentracao-fornecedor`:
+- CNPJ (`NN.NNN.NNN/NNNN-NN`): exibido como veio da mart, sem alteração.
+- CPF (`***.NNN.NNN-**`): exibido como veio da mart — já mascarado pela fonte, nenhuma máscara adicional aplicada.
+- Formato não reconhecido (nem CPF nem CNPJ): exibido como veio da mart, sem tratamento especial (ver Casos de borda).
+
+~~Premissa original (não confirmada contra o dado real, mantida riscada para histórico):~~ ~~`idcontratado` (spec 007) mistura CNPJ (14 dígitos, pessoa jurídica) e CPF (11 dígitos, pessoa física)... 11 dígitos (CPF): mascarado, mostrando só os 3 primeiros e 2 últimos dígitos (ex.: `123.***.**-45`), resto oculto.~~ O dado já é público na fonte oficial do governo (portal de transparência) — não há obrigação legal identificada de ocultar; a intenção de cautela extra do usuário permanece válida, só que já satisfeita pela própria fonte para CPF.
 
 ## Requirements
 
@@ -103,7 +144,7 @@ Endpoints auxiliares (metadata, pra popular filtro no frontend — não são mar
 
 3. Os endpoints DEVEM retornar dado bruto em formato JSON genérico (registros, não estrutura pré-moldada pro ECharts) — a transformação pro formato `option` do ECharts é responsabilidade do código TypeScript no frontend, não do backend.
 
-4. QUANDO o endpoint `concentracao-fornecedor` retornar um `idcontratado` de 11 dígitos (CPF), O sistema DEVE mascarar o valor conforme a regra definida no Design (3 primeiros + 2 últimos dígitos visíveis) — decisão de cautela extra do usuário, não exigência legal (o dado já é público na fonte oficial). QUANDO o valor tiver 14 dígitos (CNPJ), O sistema NÃO DEVE aplicar máscara.
+4. ~~QUANDO o endpoint `concentracao-fornecedor` retornar um `idcontratado` de 11 dígitos (CPF), O sistema DEVE mascarar o valor conforme a regra definida no Design (3 primeiros + 2 últimos dígitos visíveis)... QUANDO o valor tiver 14 dígitos (CNPJ), O sistema NÃO DEVE aplicar máscara.~~ **Corrigido (achado 2026-08-20, ver Design):** QUANDO o endpoint `concentracao-fornecedor` retornar um `id_contratado` no formato CPF pré-mascarado pela fonte (`***.NNN.NNN-**`), O sistema NÃO DEVE reaplicar máscara — o valor já vem oculto da origem. QUANDO o valor estiver no formato CNPJ (`NN.NNN.NNN/NNNN-NN`), O sistema NÃO DEVE aplicar máscara — exibido por completo, como já prescrito. QUANDO o valor não corresponder a nenhum dos dois formatos, O sistema DEVE expor o valor como veio da mart, sem tratamento especial (ver Casos de borda).
 
 5. O sistema DEVE expor os endpoints auxiliares `/api/v1/orgaos` e `/api/v1/modalidades` para popular filtros no frontend, refletindo os valores reais das dimensões (incluindo a categoria "não informado" de `nmmodalidade`, definida na spec 007).
 
@@ -119,3 +160,4 @@ Endpoints auxiliares (metadata, pra popular filtro no frontend — não são mar
 
 - Filtro combinando `cdunidadegestora` + `nmmodalidade` que não retorna nenhuma linha (combinação real mas rara) — endpoint deve retornar lista vazia com `200 OK`, não erro.
 - `top_n` do endpoint de concentração maior que o número real de fornecedores do órgão filtrado — retornar todos os disponíveis, sem erro.
+- `id_contratado` que não bate com o formato CPF pré-mascarado nem com o formato CNPJ (32 linhas / 24 valores distintos confirmados em `mart_concentracao_fornecedor`, achado 2026-08-20 — ver Design): valores curtos e não identificados (`6`, `505`, `9876544`), provável sinal de qualidade de dado na fonte, não CPF/CNPJ real. Decisão: API expõe como está, sem filtrar ou corrigir — camada de serving não trata dado da mart. Se for necessário investigar a origem desses valores, é pendência de levantamento na camada dbt (spec própria), não desta API.

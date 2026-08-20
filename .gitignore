@@ -12,6 +12,7 @@ build/
 venv/
 env/
 .Python
+.pytest_cache/
 Ambiente.md
 
 # -- DBT -------------
