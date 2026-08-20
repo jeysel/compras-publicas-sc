@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: pipeline_metadata
+    description: >
+      Tabela de controle da rotina de ingestão (spec 009). Guarda estado
+      entre execuções — hoje, o último ETag processado do CSV do portal
+      (chave 'contratos_etag'). Não é dado de negócio: não referenciar em
+      models de staging/intermediate/marts. Linhas são escritas pelo script
+      de ingestão via psql, não pelo próprio model dbt (ver comentário no
+      .sql sobre por que a tabela é sempre recriada vazia).
+
+    columns:
+      - name: chave
+        description: "Identificador do valor de controle (ex.: 'contratos_etag')"
+
+      - name: valor
+        description: "Valor de controle associado à chave"
+
+      - name: atualizado_em
+        description: "Timestamp da última atualização deste valor"

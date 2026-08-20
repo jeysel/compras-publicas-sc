@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Compras Públicas — Imagem da rotina de ingestão (spec 009 / spec 015)
+#
+# Base: Ubuntu 24.04, mesmo padrão do dbt/Dockerfile (dev) — dbt-core 1.9 +
+# dbt-postgres 1.9. Adiciona curl (download do CSV) e postgresql-client
+# (psql, usado pelo script pra ler/gravar control.pipeline_metadata).
+#
+# Contexto de build: raiz do repo, não ./dbt — este Dockerfile referencia
+# dbt/ explicitamente (ver docs/specs/009-automacao-da-ingestao/spec.md).
+# ─────────────────────────────────────────────────────────────────────────────
+FROM ubuntu:24.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# ── Sistema base ──────────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    locales \
+    tzdata \
+    python3 \
+    python3-pip \
+    python3-venv \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Locale e timezone Brasil
+RUN locale-gen pt_BR.UTF-8
+ENV LANG=pt_BR.UTF-8 \
+    LANGUAGE=pt_BR:pt \
+    LC_ALL=pt_BR.UTF-8 \
+    TZ=America/Sao_Paulo
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# ── Virtualenv + DBT ──────────────────────────────────────────────────────────
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --no-cache-dir \
+    dbt-core==1.9.* \
+    dbt-postgres==1.9.*
+
+WORKDIR /usr/app/dbt
+ENV DBT_PROFILES_DIR=/usr/app/dbt
+
+# Projeto dbt completo — o script de ingestão sobrescreve seeds/contratos.csv
+# em runtime, depois de validado, antes de rodar dbt seed/dbt build.
+COPY dbt/ .
+
+# dbt_packages é gitignored (não commitado) — resolver as dependências
+# (dbt_utils) em build time, não a cada execução do job.
+RUN dbt deps
+
+RUN chmod +x scripts/ingest.sh && mkdir -p /var/log/compras-publicas
+
+# ── Rede ─────────────────────────────────────────────────────────────────────
+# Mesma rede Docker do docker-compose.yml deste repo (compras_network) em
+# dev/teste local; em produção, mesma rede do host via docker-compose.pipeline.yml
+# do repo infra (spec 009) — alcança o container "postgres" pelo nome (DNS Docker).
+
+ENTRYPOINT ["/usr/app/dbt/scripts/ingest.sh"]
