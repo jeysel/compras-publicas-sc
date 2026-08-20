@@ -2,6 +2,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # ingest.sh — rotina de ingestão do CSV de contratos (spec 009)
 #
+# 0. Bootstrap: garante que control.pipeline_metadata existe (DDL idempotente,
+#    fora do dbt — ver comentário no bloco abaixo sobre a causa raiz).
 # 1. HEAD no link do portal, extrai ETag.
 # 2. Compara com o último ETag salvo em control.pipeline_metadata.
 # 3. Igual -> no-op (exit 0, sem baixar o corpo).
@@ -53,6 +55,22 @@ psql_query() {
 }
 
 log "=== Início da rotina de ingestão ==="
+
+# ── 0. Bootstrap: garantir que a tabela de controle existe ─────────────────
+# Fora do dbt de propósito (achado real: table do dbt faz DROP+CREATE a cada
+# build, inadequado pra estado operacional mutável — mesma causa raiz do
+# bug do post_hook/constraint documentado antes). DDL idempotente, roda
+# sempre, primeira execução ou não — sem custo real quando a tabela já existe.
+psql_query "
+    create schema if not exists control;
+    create table if not exists control.pipeline_metadata (
+        chave varchar primary key,
+        valor varchar,
+        atualizado_em timestamp
+    );
+" > /dev/null || fail "Bootstrap de control.pipeline_metadata falhou"
+
+log "Bootstrap: control.pipeline_metadata confirmada."
 
 # ── 1. HEAD no portal, extrai ETag ────────────────────────────────────────
 if [[ -n "${INGEST_TEST_SOURCE_OVERRIDE:-}" ]]; then
@@ -124,12 +142,9 @@ if ! dbt build 2>&1 | tee -a "$LOG_FILE"; then
 fi
 
 # ── 7. Atualizar ETag (só chega aqui se dbt seed + dbt build tiveram sucesso) ─
-# A constraint precisa existir pro ON CONFLICT funcionar. dbt build recria a
-# tabela do zero a cada execução (ver comentário no .sql do model) — garantir
-# a constraint aqui, depois que o swap do dbt já terminou de vez.
-psql_query "create unique index if not exists pipeline_metadata_chave_key on control.pipeline_metadata (chave);" > /dev/null \
-    || fail "dbt build teve sucesso mas a criação da constraint de pipeline_metadata falhou"
-
+# A constraint (primary key) já existe desde o bootstrap (passo 0) — a
+# tabela não é mais gerenciada pelo dbt, então não há swap recriando-a a
+# cada execução.
 psql_query "
     insert into control.pipeline_metadata (chave, valor, atualizado_em)
     values (:'etag_chave', :'etag_valor', now())

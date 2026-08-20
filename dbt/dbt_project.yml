@@ -33,11 +33,6 @@ models:
       +schema: marts
       +tags: ["marts"]
 
-    control:
-      +materialized: table
-      +schema: control
-      +tags: ["control"]
-
 seeds:
   compras_publicas:
     +schema: raw

@@ -138,13 +138,14 @@ Primeiro job agendado de produção do projeto — sem precedente de `CronJob` k
 | Cadência | Verificação frequente (proposta: diária), ação só quando há mudança real | `ETag`/`Last-Modified` estáveis (achado do Bloco 2) tornam isso barato: a rotina faz só um `HEAD`, compara o `ETag` contra o último valor conhecido (guardado numa tabela pequena no Postgres já provisionado — proposta `pipeline_metadata` ou similar, não `ConfigMap`, pra não misturar estado de aplicação com config do cluster). Se igual: no-op, log e sai. Se diferente: segue pro download. Evita reprocessar 76 mil+ linhas todo dia sem necessidade e detecta arquivo novo cedo, sem depender de "sei que é sempre início do mês". |
 | Sequenciamento | Uma única execução (`docker-compose run`), passos internos sequenciais: download → validação mínima de schema → `dbt run`/`dbt snapshot` → atualizar `ETag` salvo | São passos que só fazem sentido em conjunto (não há valor em ter o dado baixado sem processar, nem processar sem confirmar que o download foi bem-sucedido) — separar em duas execuções/entradas de crontab independentes adicionaria complexidade de orquestração sem benefício real nessa escala. |
 | Validação antes do `dbt run` | Checagem mínima de schema: colunas esperadas presentes, contagem de linhas não-zero, não é arquivo corrompido (tipo o `contratos-2022.csv` com aspas malformadas da spec 006) | Se falhar: o Job termina com erro, **não sobrescreve** o dado bom já processado, e o `ETag` salvo **não é atualizado** (tenta de novo no próximo ciclo, não fica preso presumindo que já processou). |
+| Onde vive `control.pipeline_metadata` | **Fora do dbt** — DDL idempotente (`create schema if not exists` / `create table if not exists`, com `primary key` já na criação) rodada pelo próprio `ingest.sh` no início de toda execução, não um model dbt | Achado de implementação: um model dbt materializado como `table` faz DROP+CREATE (swap) a cada `dbt build`, o que é incompatível com guardar estado mutável que precisa persistir entre execuções — é a mesma causa raiz do bug anterior do `post_hook` colidindo com o swap (ver comentário histórico removido do antigo `pipeline_metadata.sql`). Um schema 100% virgem expôs isso na prática: a primeira execução falhava porque a tabela de controle só existia depois do passo 6 (`dbt build`), mas era consultada no passo 2 (checagem de `ETag`). Bootstrap DDL resolve porque roda sempre, antes de qualquer consulta, sem depender do dbt ter rodado antes. |
 | Workflow do GH Actions que roda dbt hoje (achado do Bloco 4 — quebrado desde a reestruturação do repo) | Remover, não consertar | A automação real passa a viver no job de crontab do host (spec 015); manter um segundo lugar (quebrado ou não) que também roda `dbt` duplica responsabilidade e cria ambiguidade sobre qual é a fonte de verdade da execução. Consistente com a fronteira já estabelecida (Actions não é mais o dono do deploy nem da execução de pipeline deste projeto). |
 
 ### Componentes afetados
 
 - Dockerfile do job de ingestão no repo `compras-publicas`; `docker-compose.pipeline.yml` + entrada de crontab no repo `infra` (spec 015).
 - Imagem de container com `dbt` + dependências de download, publicada no GHCR seguindo a convenção da spec 015.
-- Tabela pequena no Postgres para guardar o último `ETag` processado.
+- `control.pipeline_metadata`: **não é mais um model dbt** (`dbt/models/control/pipeline_metadata.sql` e `dbt/models/control/schema/pipeline_metadata.yml` foram removidos, junto com o bloco `control:` de `dbt_project.yml`). A tabela agora é criada e mantida via DDL idempotente no próprio `dbt/scripts/ingest.sh` (passo 0, bootstrap), fora do controle do dbt.
 - Remoção do workflow `.github/workflows/*.yml` que rodava `dbt` (ou arquivamento, se preferir manter rastro histórico em vez de deletar puro).
 
 ## Casos de borda
@@ -154,6 +155,7 @@ Primeiro job agendado de produção do projeto — sem precedente de `CronJob` k
 - Primeira execução (sem `ETag` salvo ainda): tratar como "mudança", processar incondicionalmente.
 - Se o container `postgres` for recriado com nome de container diferente (não deveria acontecer numa operação normal, mas documentar): o `docker-compose run` da ingestão depende do nome do serviço/container estar estável na rede Docker do host — não do IP, mas ainda depende do nome não mudar.
 - **Falha parcial entre `dbt seed` e `dbt build`** (achado da implementação): se `dbt seed` tiver sucesso (sobrescrevendo `raw.contratos` com o dado novo) mas `dbt build` falhar na sequência (ex.: teste dbt pega inconsistência real no dado), `pipeline_metadata` não é atualizado (correto), mas `raw.contratos` já reflete o dado novo enquanto `staging`/`marts` podem estar num estado inconsistente até a próxima execução bem-sucedida. A próxima execução trata como "mudança" de novo (ETag salvo continua o antigo) e tenta reprocessar — resolve sozinho se a causa foi transitória; se for problema real de dado, o pipeline continua tentando e falhando visivelmente no log até intervenção manual. Não corrigido nesta sessão (exigiria mecanismo tipo schema shadow/blue-green, desproporcional ao tamanho atual do projeto) — registrado como limitação conhecida.
+- **Corrigido**: primeira execução contra schema 100% virgem (achado do handoff do repo `infra`) — `ingest.sh` falhava porque `control.pipeline_metadata` só existia depois do `dbt build` (passo 6), mas era consultada já no passo 2 (checagem de `ETag`), antes de `pipeline_metadata` ter sido criada pela primeira vez. Causa raiz: usar model `table` do dbt (que faz DROP+CREATE a cada build) para guardar estado operacional mutável que precisa persistir entre execuções e existir *antes* do primeiro `dbt build` — mesma causa raiz do bug anterior do `post_hook` colidindo com o swap de tabela (linha acima). Corrigido tirando `pipeline_metadata` do dbt inteiramente e criando a tabela via DDL idempotente (`create schema if not exists` / `create table if not exists ... primary key`) no passo 0 do `ingest.sh`, antes de qualquer consulta. Validado contra schema genuinamente virgem (`drop schema control cascade`, sem a tabela nem o schema existirem) — bootstrap cria ambos, trata como primeira execução, processa normalmente; reexecuções seguintes recebem `NOTICE: already exists, skipping` do Postgres e seguem idempotentes.
 
 ## Fora do escopo
 
@@ -165,7 +167,8 @@ Primeiro job agendado de produção do projeto — sem precedente de `CronJob` k
 
 ## Referências de código
 
-_A preencher conforme a implementação._
+- `dbt/scripts/ingest.sh` — rotina completa (bootstrap, HEAD/ETag, download, validação, `dbt seed`/`dbt build`, atualização de `pipeline_metadata`).
+- `dbt/Dockerfile.pipeline` — imagem do job (spec 015).
 
 ## Ver também
 
