@@ -27,6 +27,15 @@ models:
       - name: nm_modalidade
         description: "Modalidade de licitação (valor bruto da fonte)"
 
+      - name: nm_modalidade_norm
+        description: >
+          Modalidade de licitação normalizada (spec 025) — mesmo CASE de
+          int_contratos_por_modalidade.sql, funde variantes de lei da mesma
+          modalidade (ex.: Pregão Eletrônico Lei 10.520/Lei 14.133 numa única
+          categoria) e usa 'Não informado' para nulo. Usada pelos relatórios
+          de variação de custo/prazo por modalidade — nm_modalidade bruto não
+          agrega de forma consistente com dim_modalidades.
+
       - name: ano_assinatura
         description: "Ano de assinatura do contrato"
 

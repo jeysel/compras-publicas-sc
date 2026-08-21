@@ -24,6 +24,33 @@ com_variacao as (
         -- ── Dimensões de agregação (órgão/modalidade/período) ─────────────
         nm_unidade_gestora,
         nm_modalidade,
+
+        -- Normalização de modalidade (mesmo CASE de int_contratos_por_modalidade.sql,
+        -- spec 025) — fatia variantes de lei da mesma modalidade em uma única
+        -- categoria, pra agregação por modalidade bater com dim_modalidades.
+        case
+            when nm_modalidade in (
+                'Pregão Eletrônico - Lei 10.520',
+                'Pregão Eletrônico Lei 14.133'
+            ) then 'Pregão Eletrônico - Leis 10.520/2002 e 14.133/2021'
+            when nm_modalidade in (
+                'Pregão Presencial - Lei 10.520',
+                'Pregão Presencial - Lei 14.133'
+            ) then 'Pregão Presencial - Leis 10.520/2002 e 14.133/2021'
+            when nm_modalidade in (
+                'Dispensa de Licitação - Lei 8.666',
+                'Dispensa de Licitação - Lei 14.133'
+            ) then 'Dispensa de Licitação - Leis 8.666/1993 e 14.133/2021'
+            when nm_modalidade in (
+                'Licitação Inexigível - Lei 8.666',
+                'Licitação Inexigível - Lei 14.133'
+            ) then 'Licitação Inexigível - Leis 8.666/1993 e 14.133/2021'
+            when nm_modalidade in (
+                'Dispensa de Licitação por Valor - Lei 8.666'
+            ) then 'Dispensa por Valor - Lei 8.666/1993'
+            else coalesce(nm_modalidade, 'Não informado')
+        end                                              as nm_modalidade_norm,
+
         ano_assinatura,
         mes_assinatura,
         dt_assinatura,
