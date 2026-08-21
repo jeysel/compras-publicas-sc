@@ -20,15 +20,24 @@ _adapter = TypeAdapter(list[DiversidadeVencedores])
 )
 async def get_diversidade_vencedores(
     cod_unidade_gestora: str | None = Query(None, description="Código da unidade gestora"),
+    limit: int = Query(
+        200_000,
+        ge=1,
+        le=200_000,
+        description=(
+            "Teto de segurança — não é paginação. O frontend consome o dataset completo "
+            "(grão é processo, não é 'top N'); volume real em staging é ~51812 linhas (2026-08-21)."
+        ),
+    ),
 ) -> Response:
     conditions = []
-    params: dict = {}
+    params: dict = {"limit": limit}
     if cod_unidade_gestora is not None:
         conditions.append("cod_unidade_gestora = %(cod_unidade_gestora)s")
         params["cod_unidade_gestora"] = cod_unidade_gestora
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-    sql = f"SELECT * FROM marts.mart_diversidade_vencedores {where} ORDER BY cod_unidade_gestora, nu_processo"
+    sql = f"SELECT * FROM marts.mart_diversidade_vencedores {where} ORDER BY cod_unidade_gestora, nu_processo LIMIT %(limit)s"
 
     async with get_connection() as conn:
         async with conn.cursor() as cur:

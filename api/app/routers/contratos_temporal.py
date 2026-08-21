@@ -19,9 +19,18 @@ async def get_contratos_temporal(
     nm_modalidade: str | None = Query(None, description="Modalidade de licitação"),
     ano_inicio: int | None = Query(None, description="Ano inicial do período (inclusive)"),
     ano_fim: int | None = Query(None, description="Ano final do período (inclusive)"),
+    limit: int = Query(
+        100_000,
+        ge=1,
+        le=100_000,
+        description=(
+            "Teto de segurança — não é paginação. O frontend consome a série completa "
+            "(agregado, não é 'top N'); volume real em staging é ~10810 linhas (2026-08-21)."
+        ),
+    ),
 ) -> Response:
     conditions = []
-    params: dict = {}
+    params: dict = {"limit": limit}
     if cod_unidade_gestora is not None:
         conditions.append("cod_unidade_gestora = %(cod_unidade_gestora)s")
         params["cod_unidade_gestora"] = cod_unidade_gestora
@@ -40,6 +49,7 @@ async def get_contratos_temporal(
         SELECT * FROM marts.mart_contratos_temporal
         {where}
         ORDER BY tp_recorte, ano_assinatura, mes_assinatura, cod_unidade_gestora, nm_modalidade
+        LIMIT %(limit)s
     """
 
     async with get_connection() as conn:
