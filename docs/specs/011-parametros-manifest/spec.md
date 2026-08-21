@@ -89,11 +89,13 @@ Não é um comando de cluster — confirmado diretamente pelo usuário (2026-08-
 3. O `Deployment` DEVE declarar `requests` de `cpu: 100m` / `memory: 128Mi`, seguindo o valor idêntico observado nos dois projetos existentes (Bloco 2).
 4. O `Deployment` DEVE declarar `limits` na mesma ordem de grandeza observada (`cpu` entre `250m` e `500m`, `memory: 256Mi`) — valor exato a fechar na implementação, sem exceder o teto que causaria pressão de CPU dado o headroom atual (spec 009: 7% de uso).
 5. O `CronJob` DEVE declarar `requests`/`limits` próprios, distintos dos do `Deployment` — o pico de uso do `dbt run` é maior e mais curto que o uso contínuo do `Deployment`, então não DEVE herdar o mesmo perfil de recurso sem ajuste.
-6. O host do `Ingress` de `compras-publicas` DEVE seguir a convenção `compras-publicas.<domínio-existente>`, consistente com o domínio-base já usado pelos outros dois projetos do cluster. Valor literal do domínio fica registrado só no mono-repo de infra privado.
+6. O host do `Ingress` de `compras-publicas` DEVE ser `contratos-sc.jeysel.dev` (decisão consciente, 2026-08-21 — não segue mais a convenção automática `compras-publicas.<domínio-existente>` registrada originalmente nesta spec). Como o domínio agora é o próprio endereço público do portfólio, não há mais razão pra manter o valor redigido/abstraído no repo público — diferente do que foi feito antes com IP e identity, que eram dado operacional não destinado à divulgação.
 
 ### Não-funcionais
 
 1. Nenhum nome de projeto vizinho, host `.internal`, ou valor literal de domínio DEVE ser registrado neste repo público (`compras-publicas`) — consistente com a remediação das specs 002/003 e com o CLAUDE.md ("Nunca detalhe operacional físico aqui").
+
+   Exceção (2026-08-21): o domínio final do Ingress (`contratos-sc.jeysel.dev`, Requirement funcional 6) é a exceção deliberada a esta regra — é o próprio endereço público de divulgação do portfólio, não dado operacional de infraestrutura como IP, identity ou nome de projeto vizinho. A regra continua valendo pra todo o resto (IP, identity, nome de host interno, nome de projeto vizinho).
 2. Os valores de `requests`/`limits` propostos DEVEM permanecer dentro do headroom confirmado na spec 009 (CPU 7%, memória 49% em uso) somados aos dos dois projetos existentes — não é uma verificação nova desta spec, mas os valores não DEVEM ser fechados na implementação sem checar `kubectl top nodes` de novo se o tempo entre a decisão e a implementação for grande.
 
 ## Design
@@ -101,7 +103,7 @@ Não é um comando de cluster — confirmado diretamente pelo usuário (2026-08-
 | Decisão | Escolha | Razão |
 |---|---|---|
 | Namespace | `production`/`staging` já existentes (compartilhado, não dedicado) | Padrão real confirmado no Bloco 1 — os dois projetos existentes compartilham namespace por ambiente; a hipótese original de namespace dedicado por projeto não correspondia à prática real do cluster |
-| Domínio/host | `compras-publicas.<domínio-existente>` | Mesmo domínio-base dos outros dois projetos (confirmado pelo usuário, Bloco 3); resolução real (proxy/DNS externo → Ingress) segue a mesma camada já usada pelos outros dois, sem mudança de arquitetura de rede |
+| Domínio/host | **`contratos-sc.jeysel.dev`** — mudança consciente do padrão original (`compras-publicas.<domínio-existente>`), decidida em 2026-08-21 | Nome mais descritivo/direto pro propósito do site (contratos públicos de SC) do que o nome técnico do projeto — decisão de branding pro portfólio público, não segue mais a convenção automática de "nome do projeto = subdomínio" usada pelos outros dois projetos. Resolução real (proxy/DNS externo → Ingress) continua na mesma camada já usada pelos outros dois — muda só o nome do host, não o mecanismo. |
 | `requests`/`limits` do `Deployment` | `requests: cpu 100m / memory 128Mi`; `limits: cpu 250-500m / memory 256Mi` (valor exato a fechar na implementação) | Replica a proporção real observada nos dois projetos existentes (Bloco 2) — não é valor inventado, é o padrão já validado em produção no mesmo cluster |
 | `requests`/`limits` do `CronJob` | Perfil próprio, distinto do `Deployment` (a definir na implementação da spec 009) | Job de ingestão tem pico de uso maior e mais curto (download + `dbt run`) que o `Deployment` contínuo — herdar o mesmo perfil de recurso seria ou insuficiente no pico ou desperdício no resto do tempo |
 
