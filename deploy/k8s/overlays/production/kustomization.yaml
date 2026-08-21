@@ -7,13 +7,9 @@ resources:
   - ../../base
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
-# não deve seguir `latest` automaticamente (spec 015). newTag abaixo AINDA É
-# PLACEHOLDER — o bloqueio de CI foi resolvido (commit 0ff2418 corrigiu a
-# regra *.json do .gitignore que excluía web/package-lock.json) e já existe
-# imagem publicada no GHCR, mas promoção real para produção deve usar um SHA
+# não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
-# Substituir quando houver um SHA validado.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: pending-ci-fix
+    newTag: 0ff2418
