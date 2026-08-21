@@ -85,6 +85,8 @@ Nulos: 0 de 76041
 
 `idcontratado` é o CNPJ/CPF (formato `NN.NNN.NNN/NNNN-NN`), sem nulos, é o identificador estável. `contratado` é o nome, também sem nulos, mas com menos valores únicos que `idcontratado` (11317 vs. 11406) — sinal de que o mesmo CNPJ pode aparecer com grafias de nome levemente diferentes (não investigado a fundo aqui; se a dimensão Fornecedor for chaveada por `idcontratado`, o `contratado` mais recente deve ser o atributo descritivo, mesmo padrão já usado pra `nmunidadegestora` em `cdunidadegestora`). **Fornecedor: chave = `idcontratado`, atributo descritivo = `contratado`.**
 
+**Nota de conhecimento de domínio (2026-08-20):** confirmado por quem já trabalhou no sistema de origem — `idcontratado` pode ser legitimamente **CNPJ ou CPF**, não é exclusivo de pessoa jurídica. O Estado contrata pessoa física diretamente em alguns casos (ex.: psicólogos na área de saúde, contratados de forma direta, não via empresa intermediária). As 700 linhas em formato de CPF pré-mascarado encontradas na investigação da spec 012 (`***.NNN.NNN-**`) são **esperadas**, não sinal de dado corrompido — corrige a suposição implícita anterior de que `idcontratado` seria só CNPJ. Não muda nenhuma decisão já tomada (chave de `dim_fornecedor` continua `idcontratado`, mascaramento continua passthrough — [[012-eixo-frontend-biblioteca-grafico]]) — só formaliza que a heterogeneidade de formato é esperada por natureza do negócio, não erro de dado a investigar.
+
 ### Bloco 3 — existência e valores de `nmmodalidade`
 
 ```

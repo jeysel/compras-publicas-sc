@@ -241,6 +241,8 @@ Endpoints auxiliares (metadata, pra popular filtro no frontend — não são mar
 - CPF chega **já mascarado na própria fonte** (portal de transparência), no formato `***.006.069-**` (14 caracteres, com pontuação) — extremos ocultos, bloco do meio visível. O padrão é o **oposto** do desenhado originalmente (`123.***.**-45`, extremos visíveis) e os dígitos reais das pontas não estão disponíveis: é impossível remontar o formato original a partir do que a fonte entrega.
 - 32 linhas (24 valores distintos) não batem com nenhum dos dois formatos — ids curtos (`6`, `505`, `9876544`) que não são CPF nem CNPJ; ver Casos de borda.
 
+**Nota de conhecimento de domínio (2026-08-20, formalizada em [[007-marts-e-metricas]]):** as 700 linhas em formato CPF não são anomalia — `idcontratado` pode ser legitimamente CPF ou CNPJ, porque o Estado contrata pessoa física diretamente em alguns casos (ex.: psicólogos na área de saúde). Não muda a decisão de mascaramento abaixo, só confirma que a heterogeneidade de formato é esperada por natureza do negócio.
+
 Decisão tomada em resposta a este achado: **`masking.py` não reaplica máscara** — CPF já chega mascarado da fonte, CNPJ já chega completo por decisão já registrada aqui. A função vira uma identificação/normalização (reconhece o formato pelo padrão de pontuação, não por contagem de dígitos crus) para uso futuro (ex.: filtrar/agrupar por tipo de pessoa), sem transformar o valor exibido. Regra efetiva, aplicada na serialização Pydantic do endpoint `concentracao-fornecedor`:
 - CNPJ (`NN.NNN.NNN/NNNN-NN`): exibido como veio da mart, sem alteração.
 - CPF (`***.NNN.NNN-**`): exibido como veio da mart — já mascarado pela fonte, nenhuma máscara adicional aplicada.
