@@ -12,4 +12,4 @@ resources:
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: f668075
+    newTag: 0e956b7
