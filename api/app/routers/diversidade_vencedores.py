@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
+from pydantic import TypeAdapter
 
 from app.db import get_connection
 from app.schemas.diversidade_vencedores import DiversidadeVencedores
 
 router = APIRouter(tags=["diversidade-vencedores"])
+
+_adapter = TypeAdapter(list[DiversidadeVencedores])
 
 
 @router.get(
@@ -17,7 +20,7 @@ router = APIRouter(tags=["diversidade-vencedores"])
 )
 async def get_diversidade_vencedores(
     cod_unidade_gestora: str | None = Query(None, description="Código da unidade gestora"),
-) -> list[dict]:
+) -> Response:
     conditions = []
     params: dict = {}
     if cod_unidade_gestora is not None:
@@ -30,4 +33,9 @@ async def get_diversidade_vencedores(
     async with get_connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(sql, params)
-            return await cur.fetchall()
+            rows = await cur.fetchall()
+
+    # Retorna Response já serializado (bypassa a revalidação/jsonable_encoder
+    # do response_model, que duplicava toda a lista em memória — causa do
+    # OOM em produção em 2026-08-21 mesmo com dataset pequeno).
+    return Response(content=_adapter.dump_json(_adapter.validate_python(rows)), media_type="application/json")

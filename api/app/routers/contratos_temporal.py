@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
+from pydantic import TypeAdapter
 
 from app.db import get_connection
 from app.schemas.contratos_temporal import ContratosTemporal
 
 router = APIRouter(tags=["contratos-temporal"])
+
+_adapter = TypeAdapter(list[ContratosTemporal])
 
 
 @router.get(
@@ -16,7 +19,7 @@ async def get_contratos_temporal(
     nm_modalidade: str | None = Query(None, description="Modalidade de licitação"),
     ano_inicio: int | None = Query(None, description="Ano inicial do período (inclusive)"),
     ano_fim: int | None = Query(None, description="Ano final do período (inclusive)"),
-) -> list[dict]:
+) -> Response:
     conditions = []
     params: dict = {}
     if cod_unidade_gestora is not None:
@@ -42,4 +45,9 @@ async def get_contratos_temporal(
     async with get_connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(sql, params)
-            return await cur.fetchall()
+            rows = await cur.fetchall()
+
+    # Retorna Response já serializado (bypassa a revalidação/jsonable_encoder
+    # do response_model, que duplicava toda a lista em memória — causa do
+    # OOM em produção em 2026-08-21 mesmo com dataset pequeno).
+    return Response(content=_adapter.dump_json(_adapter.validate_python(rows)), media_type="application/json")
