@@ -1,0 +1,30 @@
+# Ponte pro Postgres compartilhado, fora do k3s (container Docker no host,
+# rede bridge própria). Mesmo padrão dos vizinhos (jeysel-auth,
+# weather-analytics) — Service+Endpoints combinados num único arquivo, cada
+# projeto mantém sua própria cópia, não compartilhada.
+#
+# IP confirmado ao vivo via `docker inspect postgres` em 2026-08-21 (ver
+# spec 022, Requirement 6) — já mudou uma vez antes, não presumir estável
+# entre um restart/recriação do container e outro.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+subsets:
+  - addresses:
+      - ip: 172.18.0.2
+    ports:
+      - port: 5432

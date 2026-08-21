@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: staging
+
+resources:
+  - ../../base
+
+# Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
+# não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
+# primeiro build bem-sucedido de compras-publicas-api no GHCR (commit 0ff2418,
+# que corrigiu o bloqueio de web/package-lock.json pela regra *.json do
+# .gitignore). Atualizar aqui a cada novo SHA que se queira validar em staging.
+images:
+  - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
+    newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
+    newTag: 0ff2418
