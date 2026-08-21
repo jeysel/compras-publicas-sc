@@ -8,10 +8,10 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# primeiro build bem-sucedido de compras-publicas-api no GHCR (commit 0ff2418,
-# que corrigiu o bloqueio de web/package-lock.json pela regra *.json do
-# .gitignore). Atualizar aqui a cada novo SHA que se queira validar em staging.
+# build de compras-publicas-api no GHCR (commit 0ebd704, move dedup/top-N de
+# concentracao-fornecedor para SQL, elimina top_n=30000 sem limite). Atualizar
+# aqui a cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 0ff2418
+    newTag: 0ebd704
