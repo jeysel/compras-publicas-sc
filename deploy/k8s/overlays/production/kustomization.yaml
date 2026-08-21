@@ -9,7 +9,12 @@ resources:
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
+#
+# ed97294 (spec 025 — redesign de frontend: navbar multi-página, 9 templates
+# Jinja2, 3 endpoints novos de relatório) validado funcionalmente em staging
+# (9 páginas + 3 endpoints novos 200, dbt build + grants corrigidos) em
+# 2026-08-21.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 0e956b7
+    newTag: ed97294
