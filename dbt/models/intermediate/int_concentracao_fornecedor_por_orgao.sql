@@ -12,6 +12,11 @@ with base as (
         sum(vl_atual)                                   as vl_total_fornecedor_orgao
 
     from {{ ref('stg_contratos') }}
+    -- exclui linhas com fl_valor_suspeito=true (spec 021, REQ-11): grão
+    -- deste model já é agregado (SUM por órgão/fornecedor), filtro
+    -- client-side é impossível depois daqui — precisa acontecer antes do
+    -- SUM, mesmo padrão já validado em int_contratos_evolucao_*.
+    where coalesce(fl_valor_suspeito, false) = false
     group by 1, 2
 
 ),

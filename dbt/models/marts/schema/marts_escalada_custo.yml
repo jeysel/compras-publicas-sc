@@ -77,3 +77,14 @@ models:
           diverge de vl_variacao em mais de R$0,01, null quando vl_aditado
           é nulo/zero. Coluna de contexto, não usada como filtro nesta mart
           — decisão de excluir ou não fica com quem consome.
+
+      - name: fl_valor_suspeito
+        description: >
+          Sinal de valor implausível em vl_original/vl_atual (spec 021), três
+          padrões de corrupção distintos (ver stg_contratos.fl_valor_suspeito
+          para os critérios). Coluna de contexto, não usada como filtro nesta
+          mart — decisão de excluir ou não fica com quem consome (frontend
+          spec 012 filtra no gráfico escalada-custo). mart_concentracao_fornecedor
+          NÃO recebeu esta coluna — grão já agregado por fornecedor (SUM antes
+          da mart), mesmo problema de mart_contratos_temporal; tratamento fica
+          pendente de spec de Design (ver spec 021, caso de borda registrado).

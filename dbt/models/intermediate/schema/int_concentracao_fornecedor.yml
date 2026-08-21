@@ -6,6 +6,9 @@ models:
       Gasto total por fornecedor dentro de cada órgão (cod_unidade_gestora),
       com ranking e percentual sobre o total gasto pelo órgão. Grão:
       (cod_unidade_gestora, id_contratado).
+      Linhas com fl_valor_suspeito=true (spec 021, REQ-11) são excluídas do
+      SUM antes deste model — grão já agregado aqui, não dá pra filtrar
+      depois (mesmo padrão de int_contratos_evolucao_*).
 
     columns:
       - name: cod_unidade_gestora
@@ -37,6 +40,9 @@ models:
       Gasto total por fornecedor somando todos os órgãos (visão estadual),
       com ranking e percentual sobre o total gasto pelo estado. Grão:
       id_contratado.
+      Linhas com fl_valor_suspeito=true (spec 021, REQ-11) são excluídas do
+      SUM antes deste model — grão já agregado aqui, não dá pra filtrar
+      depois (mesmo padrão de int_contratos_evolucao_*).
 
     columns:
       - name: id_contratado

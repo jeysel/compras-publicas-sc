@@ -1,0 +1,70 @@
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font: 18px/145% var(--sans);
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --border: #2e303a;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+h1 {
+  font-size: 32px;
+  color: var(--text-h);
+  margin: 24px;
+}
+
+h2 {
+  font-size: 22px;
+  color: var(--text-h);
+  max-width: 1126px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+.chart {
+  width: 100%;
+  max-width: 1126px;
+  height: 420px;
+  margin: 0 auto;
+}
+
+.chart-legend {
+  max-width: 1126px;
+  margin: 8px auto 0;
+  padding: 0 24px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.chart-legend a {
+  color: inherit;
+}
+
+#metodologia {
+  max-width: 1126px;
+  margin: 0 auto 40px;
+  padding: 0 24px;
+  font-size: 15px;
+}

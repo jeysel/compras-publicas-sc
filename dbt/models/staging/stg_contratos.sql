@@ -110,7 +110,35 @@ com_flags as (
             when vl_aditado is null or vl_aditado = 0        then null
             when abs(vl_variacao - vl_aditado) > 0.01         then true
             else false
-        end                                              as fl_aditivo_inconsistente
+        end                                              as fl_aditivo_inconsistente,
+
+        -- fl_valor_suspeito (spec 021): três padrões de corrupção de valor,
+        -- nenhum coberto por fl_aditivo_inconsistente (calculado a partir de
+        -- aditivo, não de magnitude absoluta). Padrão A: só vl_original
+        -- explode (razão original/atual > 100x, ex. CT-00269/2022, 4.378x).
+        -- Padrão C: só vl_atual explode, inverso de A (vl_atual > R$500mi
+        -- com razão bem distante de 1 — exclui padrão B, que também tem
+        -- vl_atual alto mas com os dois campos praticamente iguais).
+        -- Padrão B: os dois campos explodem juntos (razão ≈ 1, ambos na
+        -- casa de bilhões) — não é pego por nenhum teste de razão, então
+        -- não dá pra generalizar por limiar; lista fechada dos 4 nu_contrato
+        -- confirmados por inspeção manual linha a linha (spec 021, item 1:
+        -- objeto/órgão de cada um é incompatível com um contrato genuíno na
+        -- casa de bilhões — nenhum é obra de infraestrutura ou PPP real).
+        case
+            when vl_original is null or vl_atual is null           then null
+            when vl_original / nullif(vl_atual, 0) > 100            then true
+            when vl_atual > 500000000
+                and abs(vl_original / nullif(vl_atual, 0) - 1) >= 0.01
+                                                                     then true
+            when nu_contrato in (
+                '2024CT010186', -- Piata Comercio de Pecas, R$10,50 bi
+                '2022CT005403', -- VS Vida Saudavel Solucoes, R$6,48 bi
+                '2020CT004866', -- Claro S A, R$6,27 bi
+                '2025CT003501'  -- Functional Technological Garment, R$4,47 bi
+            )                                                        then true
+            else false
+        end                                              as fl_valor_suspeito
 
     from renamed
 

@@ -27,6 +27,9 @@ mensal as (
 
     from contratos
     where ano_assinatura is not null
+      -- exclui linhas com fl_valor_suspeito=true (spec 021) — mesmo motivo
+      -- de int_contratos_evolucao_anual.sql, filtro precisa vir antes do SUM.
+      and coalesce(fl_valor_suspeito, false) = false
     group by 1, 2, 3
 
 )

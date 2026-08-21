@@ -123,6 +123,35 @@ Decisão de grão e chave confirmada em [[005-grao-do-dado-contrato-vs-aditivo]]
 | Escopo temporal | Definido em spec própria (backfill histórico separado do fluxo corrente) | Ver pendência aberta abaixo |
 | Dev local vs. validação pré-deploy | Dois ambientes distintos, não concorrentes: dev local descartável (`compras_postgres`, container próprio deste repo) para iteração; Postgres compartilhado do `infra` (schema dedicado, decisão original desta spec) só para validação pré-deploy, tratado com o mesmo cuidado de produção | Reprodutibilidade do portfólio (fluxo `git clone` → `docker compose up` não pode depender do repo privado `infra`) e isolamento de risco (iteração destrutiva de `dbt build`/`dbt test`, inclusive em loop por agente, não deve rodar contra recurso compartilhado com outros projetos) |
 
+### Chave real do sistema de origem (conhecimento de domínio, 2026-08-20)
+
+Confirmado por quem já trabalhou no sistema de origem: a chave primária real
+de contrato no **SIGEF** é composta por **três campos**:
+`cdunidadegestora + cdgestao + nucontrato` — não dois. A numeração de
+`nucontrato` reinicia a cada ano por unidade gestora (confirma o achado
+empírico já registrado nesta spec), com exceção ocasional de anos em que a
+sequência não foi zerada por falha operacional do sistema de origem.
+
+**Decisão (2026-08-20): manter a chave em dois campos**
+(`cdunidadegestora`, `nucontrato`) por enquanto — não corrigir para os três
+campos agora. Motivo: nenhuma colisão real foi observada em todos os testes
+já feitos (specs 003, 005, 006, 007) com o dado atualmente carregado. A
+correção só será aplicada se o **backfill histórico** (ainda não iniciado)
+encontrar uma colisão real que os dois campos não resolvam — não
+preventivamente.
+
+**Nota adicional de proveniência do dado**: o portal de Dados Abertos SC não
+publica dado direto de cada secretaria/órgão — o **CIASC** consolida,
+trata e disponibiliza os dados de todos os órgãos do estado, que usam
+sistemas diferentes entre si (nem todos usam o SIGEF). Isso explica a
+origem do formato observado de `nucontrato` (`CT-00012/2026/SEA` — o `/SEA`
+é acréscimo do tratamento do CIASC, redundante com `cdunidadegestora`/
+`nmunidadegestora`, não faz parte do número real do SIGEF, que é
+`CT-NNNN-AAAA`) e por que o formato pode variar conforme o sistema de
+origem de cada órgão. Não há controle sobre o processo de tratamento do
+CIASC — tratado como caixa-preta confiável apenas na medida em que os
+achados empíricos já confirmam (specs 003/005/006).
+
 ### Ambiente de desenvolvimento vs. ambiente de produção — distinção formal
 
 A decisão original desta spec (schema/banco dedicado dentro do Postgres

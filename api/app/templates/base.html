@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compras Públicas SC</title>
+    <link rel="stylesheet" href="/static/main.css" />
+  </head>
+  <body data-page="home">
+    <h1>Compras Públicas SC</h1>
+
+    <section>
+      <h2>Escalada de custo — contratos</h2>
+      <div id="chart-escalada-custo" class="chart"></div>
+      <p id="legenda-escalada-custo" class="chart-legend"></p>
+    </section>
+
+    <section>
+      <h2>Diversidade de vencedores</h2>
+      <div id="chart-diversidade-vencedores" class="chart"></div>
+    </section>
+
+    <section>
+      <h2>Série temporal de contratos</h2>
+      <div id="chart-contratos-temporal" class="chart"></div>
+      <p id="legenda-contratos-temporal" class="chart-legend"></p>
+    </section>
+
+    <section>
+      <h2>Concentração de fornecedores</h2>
+      <div id="chart-concentracao-fornecedor" class="chart"></div>
+      <p id="legenda-concentracao-fornecedor" class="chart-legend"></p>
+    </section>
+
+    <section id="metodologia">
+      <h2>Metodologia</h2>
+      <p>
+        Contratos com <code>fl_aditivo_inconsistente = true</code> têm
+        divergência, acima de arredondamento, entre o valor de aditivo
+        registrado na fonte (<code>vl_aditado</code>) e a variação calculada
+        (<code>vl_atual - vl_original</code>) — sinal de qualidade de dado da
+        fonte, não um erro de cálculo deste sistema (ver spec 013/014). Por
+        padrão, esses contratos são excluídos das agregações de valor onde a
+        granularidade do dado permite o filtro (ex.: escalada de custo).
+        Quando a agregação já vem pronta de uma mart sem essa granularidade
+        (ex.: série temporal), a exclusão ainda não é possível e fica
+        registrada como pendência.
+      </p>
+    </section>
+
+    <script type="module" src="/static/main.js"></script>
+  </body>
+</html>

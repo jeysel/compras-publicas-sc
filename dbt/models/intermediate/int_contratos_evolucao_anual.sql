@@ -29,6 +29,11 @@ mensal as (
 
     from contratos
     where ano_assinatura is not null
+      -- exclui linhas com fl_valor_suspeito=true (spec 021): 146 linhas,
+      -- grão deste model já é agregado (SUM por ano/mês), filtro
+      -- client-side é impossível depois daqui — precisa acontecer antes do
+      -- SUM. Confirmado: reverte o sinal de 2022/10 de -R$23,6bi p/ +R$1,15mi.
+      and coalesce(fl_valor_suspeito, false) = false
     group by 1, 2
 
 ),

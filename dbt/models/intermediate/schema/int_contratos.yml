@@ -171,7 +171,9 @@ models:
   - name: int_contratos_evolucao_anual
     description: >
       Evolução mensal de contratos por ano de assinatura.
-      Inclui totais acumulados dentro do ano.
+      Inclui totais acumulados dentro do ano. Exclui linhas com
+      fl_valor_suspeito=true (spec 021) do SUM — grão agregado, filtro
+      precisa vir antes da soma, não dá pra aplicar depois na mart.
 
     columns:
       - name: ano_assinatura
@@ -221,6 +223,8 @@ models:
       Evolução mensal de contratos por ano de assinatura, recortada por
       órgão (spec 007 — recorte que faltava em int_contratos_evolucao_anual,
       achado spec 013). Grão: (ano_assinatura, mes_assinatura, cod_unidade_gestora).
+      Exclui linhas com fl_valor_suspeito=true (spec 021) do SUM, mesmo
+      motivo de int_contratos_evolucao_anual.
 
     columns:
       - name: ano_assinatura
@@ -264,7 +268,9 @@ models:
       modalidade (spec 007 — recorte que faltava em int_contratos_evolucao_anual,
       achado spec 013). nm_modalidade bruta (sem a normalização Lei
       8.666/14.133 de int_contratos_por_modalidade — propósito diferente).
-      Grão: (ano_assinatura, mes_assinatura, nm_modalidade).
+      Grão: (ano_assinatura, mes_assinatura, nm_modalidade). Exclui linhas
+      com fl_valor_suspeito=true (spec 021) do SUM, mesmo motivo de
+      int_contratos_evolucao_anual.
 
     columns:
       - name: ano_assinatura

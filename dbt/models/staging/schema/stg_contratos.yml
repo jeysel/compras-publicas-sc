@@ -82,7 +82,22 @@ models:
           > R$0,01; false quando batem; null quando o contrato não tem aditivo
           (vl_aditado nulo ou zero). Não indica erro do contrato em si — indica
           que as duas colunas de valor de aditivo da fonte não se conciliam.
- 
+
+      - name: fl_valor_suspeito
+        description: >
+          Sinalizador de valor implausível em vl_original/vl_atual (spec 021,
+          146 linhas confirmadas, 3 padrões de corrupção distintos, nenhum
+          coberto por fl_aditivo_inconsistente). True quando: (a) padrão A —
+          vl_original / vl_atual > 100 (só vl_original explode); (b) padrão C —
+          vl_atual > R$500.000.000 com razão vl_original/vl_atual distante de 1
+          (só vl_atual explode, exclui padrão B); (c) padrão B — nu_contrato
+          está na lista fechada de 4 contratos confirmados por inspeção manual
+          (os dois campos explodem juntos, razão ≈ 1, ambos na casa de bilhões;
+          não generalizável por limiar — ver comentário no model). Null quando
+          vl_original ou vl_atual é nulo; false quando nenhum critério bate.
+          Não corrige o valor, só sinaliza — decisão de tratamento (excluir de
+          agregação, corrigir por heurística) fica com quem consome a coluna.
+
       - name: ds_situacao
         description: "Situação atual do contrato (ativo, encerrado, etc.)"
         tests:

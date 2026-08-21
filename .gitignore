@@ -48,6 +48,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# ── web/ (Vite, spec 012) — build output servido pelo FastAPI ─────────────────
+api/app/static/
+
 # ── IDEs e editores ───────────────────────────────────────────────────────────
 .vscode/settings.json
 .idea/

@@ -28,3 +28,7 @@ class EscaladaCusto(BaseModel):
         None,
         description="Sinal de qualidade de dado (spec 013/014): true quando vl_aditado diverge de vl_variacao",
     )
+    fl_valor_suspeito: bool | None = Field(
+        None,
+        description="Sinal de valor implausível em vl_original/vl_atual (spec 021): três padrões de corrupção de valor, ver mart",
+    )

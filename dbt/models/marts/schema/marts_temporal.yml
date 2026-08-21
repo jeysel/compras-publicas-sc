@@ -15,6 +15,10 @@ models:
       ano disponível mais próximo em recortes com cobertura esparsa).
       Média móvel usa janela RANGE sobre ano_assinatura (não ROWS), pelo
       mesmo motivo: soma pelo valor do ano, não pela posição da linha.
+      Linhas com fl_valor_suspeito=true (spec 021) são excluídas do SUM nos
+      três int_contratos_evolucao_* de origem — grão já agregado aqui, não
+      dá pra filtrar depois (nenhuma coluna fl_valor_suspeito nesta mart,
+      diferente de mart_escalada_custo).
 
     columns:
       - name: tp_recorte

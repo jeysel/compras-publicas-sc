@@ -52,7 +52,10 @@ com_variacao as (
         end                                              as tp_variacao,
 
         -- ── Sinal de qualidade (contexto, não filtro — spec 013/014) ─────
-        fl_aditivo_inconsistente
+        fl_aditivo_inconsistente,
+
+        -- ── Valor implausível (contexto, não filtro — spec 021) ──────────
+        fl_valor_suspeito
 
     from contratos
 
