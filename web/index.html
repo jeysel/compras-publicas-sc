@@ -46,6 +46,17 @@
         (ex.: série temporal), a exclusão ainda não é possível e fica
         registrada como pendência.
       </p>
+      <p>
+        Contratos com <code>fl_valor_suspeito = true</code> têm valor
+        (<code>vl_original</code> ou <code>vl_atual</code>) implausível para
+        o objeto contratado — por exemplo, um contrato registrado com valor
+        milhares de vezes maior que o valor atual do mesmo contrato. A
+        investigação confirmou que se trata de erro de dado da fonte
+        (portal/SICOP), não deste sistema. Por padrão, contratos com essa
+        flag são excluídos das agregações de valor exibidas nos gráficos
+        (ver spec 021 para o detalhe técnico completo, incluindo os padrões
+        de corrupção identificados e a magnitude do problema no dataset).
+      </p>
     </section>
 
     <script type="module" src="/src/main.ts"></script>
