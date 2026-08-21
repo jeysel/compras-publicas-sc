@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Ranking de órgãos por qualidade de dado — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Relatórios / Ranking de órgãos por qualidade de dado</div>
+<h1>Ranking de órgãos por qualidade de dado</h1>
+<p class="page-intro">
+  Proporção de contratos com inconsistência de aditivo ou valor implausível, por órgão contratante. Um percentual
+  mais alto indica maior necessidade de revisão de dado na fonte — não reflete, por si, qualidade da execução
+  contratual.
+</p>
+<div class="table-card">
+  <table id="tabela-qualidade-dado-orgao" class="data-table">
+    <thead>
+      <tr>
+        <th>Órgão</th>
+        <th class="num">Contratos</th>
+        <th class="num">% aditivo inconsistente</th>
+        <th class="num">% valor suspeito</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+{% endblock %}

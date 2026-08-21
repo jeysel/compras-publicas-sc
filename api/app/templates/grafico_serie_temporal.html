@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Série temporal — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Gráficos / Série temporal</div>
+<h1>Valor contratado por mês de assinatura</h1>
+<p class="page-intro">
+  Valor atual total dos contratos, agrupado por ano e mês de assinatura. Esta série já chega pré-agregada dos
+  modelos analíticos, no grão ano/mês.
+</p>
+<div class="chart-card">
+  <div id="chart-contratos-temporal" class="chart"></div>
+</div>
+<p id="legenda-contratos-temporal" class="chart-legend"></p>
+{% endblock %}

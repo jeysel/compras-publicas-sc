@@ -73,7 +73,7 @@ export interface paths {
         };
         /**
          * Get Concentracao Fornecedor
-         * @description Concentração de gasto por fornecedor (mart_concentracao_fornecedor, spec 007/013/014). Com cod_unidade_gestora informado, ordena e limita por rank_no_orgao (ranking dentro do órgão). Sem cod_unidade_gestora, ordena e limita por rank_estado (ranking no estado inteiro) — como o grão da mart é (órgão, fornecedor), um mesmo fornecedor pode aparecer mais de uma vez, uma por órgão.
+         * @description Concentração de gasto por fornecedor (mart_concentracao_fornecedor, spec 007/013/014/024). Com cod_unidade_gestora informado, ordena e limita por rank_no_orgao (ranking dentro do órgão) — grão (órgão, fornecedor) já é único nesse caso. Sem cod_unidade_gestora, deduplica por id_contratado (DISTINCT ON) antes de ordenar e limitar por rank_estado — o grão da mart é (órgão, fornecedor), um mesmo fornecedor tem uma linha por órgão com que contratou, mas rank_estado/vl_total_fornecedor_estado já vêm pré-agregados por fornecedor (idênticos em todas as linhas dele), então a dedup no SQL não altera o valor exibido.
          */
         get: operations["get_concentracao_fornecedor_api_v1_concentracao_fornecedor_get"];
         put?: never;
@@ -116,6 +116,66 @@ export interface paths {
          * @description Lista de modalidades de licitação (dim_modalidades, spec 007) — usada para popular filtro de modalidade no frontend, incluindo a categoria 'Não informado'.
          */
         get: operations["get_modalidades_api_v1_modalidades_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/qualidade-dado-orgao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Qualidade Dado Orgao
+         * @description Ranking de órgãos por qualidade de dado (spec 025) — agrega fl_aditivo_inconsistente/fl_valor_suspeito por cod_unidade_gestora direto no SQL sobre marts.mart_escalada_custo. As duas flags são a métrica aqui, não um filtro — nenhum contrato é excluído da contagem.
+         */
+        get: operations["get_qualidade_dado_orgao_api_v1_qualidade_dado_orgao_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/variacao-custo-modalidade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Variacao Custo Modalidade
+         * @description Variação de custo por modalidade (spec 025) — agrega perc_variacao por nm_modalidade_norm direto no SQL sobre marts.mart_escalada_custo. Considera só contratos com vl_variacao <> 0 (proxy de 'teve aditivo que mudou valor' — vl_aditado não é exposto pela mart, spec 013/014). Exclui contratos com fl_aditivo_inconsistente ou fl_valor_suspeito, mesmo critério do gráfico escalada-custo.
+         */
+        get: operations["get_variacao_custo_modalidade_api_v1_variacao_custo_modalidade_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/variacao-prazo-modalidade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Variacao Prazo Modalidade
+         * @description Variação de prazo por modalidade (spec 025) — agrega dias_variacao por nm_modalidade_norm direto no SQL sobre marts.mart_escalada_custo. Considera só contratos com dias_variacao <> 0 (proxy de 'teve aditivo que mudou prazo'). Exclui contratos com fl_aditivo_inconsistente ou fl_valor_suspeito, mesmo critério do gráfico escalada-custo.
+         */
+        get: operations["get_variacao_prazo_modalidade_api_v1_variacao_prazo_modalidade_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -643,6 +703,44 @@ export interface components {
              */
             ds_perfil_contratacao?: string | null;
         };
+        /** QualidadeDadoOrgao */
+        QualidadeDadoOrgao: {
+            /**
+             * Cod Unidade Gestora
+             * @description Código da unidade gestora
+             */
+            cod_unidade_gestora: string;
+            /**
+             * Nm Unidade Gestora
+             * @description Nome da unidade gestora
+             */
+            nm_unidade_gestora?: string | null;
+            /**
+             * Qt Contratos
+             * @description Total de contratos do órgão em mart_escalada_custo
+             */
+            qt_contratos: number;
+            /**
+             * Qt Aditivo Inconsistente
+             * @description Quantidade de contratos com fl_aditivo_inconsistente = true
+             */
+            qt_aditivo_inconsistente: number;
+            /**
+             * Perc Aditivo Inconsistente
+             * @description Percentual de contratos com fl_aditivo_inconsistente = true
+             */
+            perc_aditivo_inconsistente: string;
+            /**
+             * Qt Valor Suspeito
+             * @description Quantidade de contratos com fl_valor_suspeito = true
+             */
+            qt_valor_suspeito: number;
+            /**
+             * Perc Valor Suspeito
+             * @description Percentual de contratos com fl_valor_suspeito = true
+             */
+            perc_valor_suspeito: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -651,6 +749,42 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VariacaoCustoModalidade */
+        VariacaoCustoModalidade: {
+            /**
+             * Nm Modalidade
+             * @description Modalidade de licitação normalizada (nm_modalidade_norm, spec 025)
+             */
+            nm_modalidade: string;
+            /**
+             * Qt Contratos Com Aditivo
+             * @description Quantidade de contratos com vl_variacao <> 0, excluindo fl_aditivo_inconsistente/fl_valor_suspeito
+             */
+            qt_contratos_com_aditivo: number;
+            /**
+             * Perc Variacao Media
+             * @description Média de perc_variacao entre os contratos com aditivo de valor
+             */
+            perc_variacao_media: string;
+        };
+        /** VariacaoPrazoModalidade */
+        VariacaoPrazoModalidade: {
+            /**
+             * Nm Modalidade
+             * @description Modalidade de licitação normalizada (nm_modalidade_norm, spec 025)
+             */
+            nm_modalidade: string;
+            /**
+             * Qt Contratos Com Aditivo Prazo
+             * @description Quantidade de contratos com dias_variacao <> 0, excluindo fl_aditivo_inconsistente/fl_valor_suspeito
+             */
+            qt_contratos_com_aditivo_prazo: number;
+            /**
+             * Dias Variacao Media
+             * @description Média de dias_variacao entre os contratos com aditivo de prazo
+             */
+            dias_variacao_media: string;
         };
     };
     responses: never;
@@ -670,6 +804,8 @@ export interface operations {
                 nm_modalidade?: string | null;
                 /** @description Ano de assinatura do contrato */
                 ano?: number | null;
+                /** @description Teto de segurança — não é paginação. O frontend consome o dataset completo (grão é contrato, 1:1 com raw.contratos); volume real em dev é ~76041 linhas, teto de raw.contratos confirmado em 95508 linhas (spec 019, 2026-08-21). */
+                limit?: number;
             };
             header?: never;
             path?: never;
@@ -702,6 +838,8 @@ export interface operations {
             query?: {
                 /** @description Código da unidade gestora */
                 cod_unidade_gestora?: string | null;
+                /** @description Teto de segurança — não é paginação. O frontend consome o dataset completo (grão é processo, não é 'top N'); volume real em staging é ~51812 linhas (2026-08-21). */
+                limit?: number;
             };
             header?: never;
             path?: never;
@@ -740,6 +878,8 @@ export interface operations {
                 ano_inicio?: number | null;
                 /** @description Ano final do período (inclusive) */
                 ano_fim?: number | null;
+                /** @description Teto de segurança — não é paginação. O frontend consome a série completa (agregado, não é 'top N'); volume real em staging é ~10810 linhas (2026-08-21). */
+                limit?: number;
             };
             header?: never;
             path?: never;
@@ -837,6 +977,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Modalidade"][];
+                };
+            };
+        };
+    };
+    get_qualidade_dado_orgao_api_v1_qualidade_dado_orgao_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualidadeDadoOrgao"][];
+                };
+            };
+        };
+    };
+    get_variacao_custo_modalidade_api_v1_variacao_custo_modalidade_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariacaoCustoModalidade"][];
+                };
+            };
+        };
+    };
+    get_variacao_prazo_modalidade_api_v1_variacao_prazo_modalidade_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariacaoPrazoModalidade"][];
                 };
             };
         };

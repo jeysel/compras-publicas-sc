@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Variação de custo por modalidade — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Relatórios / Variação de custo por modalidade</div>
+<h1>Variação de custo por modalidade de licitação</h1>
+<p class="page-intro">
+  Variação média percentual entre valor original e valor atual dos contratos com aditivo, por modalidade.
+  Contratos com valor implausível ou aditivo inconsistente são excluídos.
+</p>
+<div class="chart-card">
+  <div id="chart-variacao-custo-modalidade" class="chart"></div>
+</div>
+<div class="table-card">
+  <table id="tabela-variacao-custo-modalidade" class="data-table">
+    <thead>
+      <tr>
+        <th>Modalidade</th>
+        <th class="num">Contratos c/ aditivo</th>
+        <th class="num">Variação média</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+{% endblock %}

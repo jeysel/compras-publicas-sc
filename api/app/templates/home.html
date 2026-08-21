@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block title %}Compras Públicas SC — Painel de transparência{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Painel de transparência · Estado de Santa Catarina</p>
+  <p class="lead">
+    Este painel acompanha contratos públicos firmados pelo Estado a partir de 2016, com base em dados abertos
+    disponibilizados pelo Portal de Transparência oficial, a partir dos sistemas de gestão do Estado. Antes dos
+    gráficos, dois achados que moldaram como estes dados são tratados.
+  </p>
+</section>
+
+<section class="findings">
+  <div class="finding-card finding-fornecedor">
+    <div class="finding-label">Achado · Fornecedor</div>
+    <div class="finding-value" id="achado-maior-fornecedor-valor">—</div>
+    <p class="finding-desc" id="achado-maior-fornecedor-desc">Carregando…</p>
+    <a class="finding-link" href="/graficos/concentracao-fornecedor">Ver ranking completo →</a>
+  </div>
+  <div class="finding-card finding-concentracao">
+    <div class="finding-label">Achado · Concentração</div>
+    <div class="finding-value" id="achado-concentracao-valor">—</div>
+    <p class="finding-desc" id="achado-concentracao-desc">Carregando…</p>
+    <a class="finding-link" href="/graficos/concentracao-fornecedor">Ver ranking completo →</a>
+  </div>
+</section>
+
+<section class="link-section">
+  <h2>Explorar por gráfico</h2>
+  <p class="section-desc">Cada gráfico tem uma página própria, com contexto e critérios de exclusão de dado.</p>
+  <div class="link-grid">
+    <a class="link-card" href="/graficos/escalada-custo">
+      <div class="link-card-title">Escalada de custo</div>
+      <div class="link-card-desc">Variação de valor por aditivo, por ano de assinatura.</div>
+    </a>
+    <a class="link-card" href="/graficos/diversidade-vencedores">
+      <div class="link-card-title">Diversidade de vencedores</div>
+      <div class="link-card-desc">Concorrência efetiva por processo licitatório.</div>
+    </a>
+    <a class="link-card" href="/graficos/serie-temporal">
+      <div class="link-card-title">Série temporal</div>
+      <div class="link-card-desc">Valor contratado mês a mês, a partir de 2016.</div>
+    </a>
+    <a class="link-card" href="/graficos/concentracao-fornecedor">
+      <div class="link-card-title">Concentração de fornecedores</div>
+      <div class="link-card-desc">Top 10 fornecedores por gasto no estado.</div>
+    </a>
+  </div>
+</section>
+
+<section class="link-section">
+  <h2>Relatórios</h2>
+  <p class="section-desc">Análises comparativas entre órgãos e modalidades de licitação.</p>
+  <div class="link-list">
+    <a class="list-row" href="/relatorios/qualidade-dado-orgao">
+      <div>
+        <div class="list-row-title">Ranking de órgãos por qualidade de dado</div>
+        <div class="list-row-desc">Inconsistência de aditivo e valor suspeito por órgão.</div>
+      </div>
+      <span class="list-row-arrow">→</span>
+    </a>
+    <a class="list-row" href="/relatorios/variacao-custo-modalidade">
+      <div>
+        <div class="list-row-title">Variação de custo por modalidade</div>
+        <div class="list-row-desc">Variação média de valor entre modalidades de licitação.</div>
+      </div>
+      <span class="list-row-arrow">→</span>
+    </a>
+    <a class="list-row" href="/relatorios/variacao-prazo-modalidade">
+      <div>
+        <div class="list-row-title">Variação de prazo</div>
+        <div class="list-row-desc">Dias médios acrescidos por aditivo, por modalidade.</div>
+      </div>
+      <span class="list-row-arrow">→</span>
+    </a>
+  </div>
+</section>
+{% endblock %}

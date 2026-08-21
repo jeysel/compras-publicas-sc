@@ -66,6 +66,6 @@ export async function renderContratosTemporal(containerId: string, legendaId: st
       "ou vl_atual, spec 021) antes da soma — filtro aplicado na camada de dado, " +
       "não no cliente. Ainda não exclui contratos com inconsistência de aditivo " +
       "detectada na fonte — a granularidade desta mart não permite esse filtro " +
-      'no cliente; correção pendente na camada dbt (ver <a href="#metodologia">metodologia</a>).',
+      'no cliente; correção pendente na camada dbt (ver <a href="/metodologia">metodologia</a>).',
   );
 }

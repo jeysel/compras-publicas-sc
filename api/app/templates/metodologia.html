@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block title %}Metodologia — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Metodologia</div>
+<h1>Metodologia</h1>
+
+<section class="methodology">
+  <h2>Fonte e período</h2>
+  <p>
+    Dados extraídos dos sistemas de gestão do Estado de Santa Catarina, disponibilizados pelo Portal de
+    Transparência oficial, cobrindo contratos assinados a partir de 2016. O grão original da fonte é o aditivo
+    contratual; contratos sem aditivo aparecem como um único registro.
+  </p>
+
+  <h2>Aditivo inconsistente</h2>
+  <p>
+    Contratos com <code>fl_aditivo_inconsistente = true</code> têm divergência, acima de arredondamento, entre o
+    valor de aditivo registrado na fonte (<code>vl_aditado</code>) e a variação calculada
+    (<code>vl_atual - vl_original</code>) — sinal de qualidade de dado da fonte, não um erro de cálculo deste
+    sistema (ver spec 013/014). Por padrão, esses contratos são excluídos das agregações de valor onde a
+    granularidade do dado permite o filtro (ex.: escalada de custo, variação de custo/prazo por modalidade).
+    Quando a agregação já vem pronta de uma mart sem essa granularidade (ex.: série temporal), a exclusão ainda
+    não é possível e fica registrada como pendência.
+  </p>
+
+  <h2>Valor suspeito</h2>
+  <p>
+    Contratos com <code>fl_valor_suspeito = true</code> têm valor (<code>vl_original</code> ou
+    <code>vl_atual</code>) implausível para o objeto contratado — por exemplo, um contrato registrado com valor
+    milhares de vezes maior que o valor atual do mesmo contrato. A investigação confirmou que se trata de erro de
+    dado da fonte, não deste sistema. Por padrão, contratos com essa flag são excluídos das agregações de valor
+    exibidas nos gráficos e relatórios (ver spec 021 para o detalhe técnico completo, incluindo os padrões de
+    corrupção identificados e a magnitude do problema no dataset).
+  </p>
+
+  <h2>Cobertura de prazo (dias originais/atuais)</h2>
+  <p>
+    Os campos de prazo original e atual do contrato (usados no relatório de variação de prazo por modalidade)
+    estão preenchidos em só cerca de 7% dos contratos — lacuna confirmada na fonte, não introduzida por este
+    sistema (spec 025). Os poucos contratos com esse dado preenchido estão concentrados quase todos na modalidade
+    "Não informado"; nenhuma modalidade nomeada (Pregão Eletrônico, Dispensa, etc.) tem cobertura relevante desse
+    campo hoje. O relatório reflete essa limitação diretamente, em vez de omiti-la.
+  </p>
+
+  <h2>Normalização de modalidade</h2>
+  <p>
+    Modalidades de licitação registradas sob leis diferentes para o mesmo instituto (ex.: Pregão Eletrônico das
+    Leis 10.520/2002 e 14.133/2021) são tratadas como uma única categoria nos relatórios e gráficos agrupados por
+    modalidade, para refletir a mudança de legislação sem fragmentar a mesma modalidade em categorias distintas.
+  </p>
+
+  <h2>Limitações conhecidas</h2>
+  <p>
+    Alguns modelos analíticos já somam valores no grão ano/mês ou por fornecedor antes que o filtro de aditivo
+    inconsistente possa ser aplicado por linha — nesses casos (ex.: série temporal), a exclusão fica pendente de
+    correção na camada de transformação de dado e é sinalizada na página do respectivo gráfico. A exclusão de
+    valor suspeito, por outro lado, já ocorre na camada de dado para todos os agregados.
+  </p>
+
+  <h2>Atualização</h2>
+  <p>O pipeline é reprocessado periodicamente a partir de nova extração da fonte.</p>
+</section>
+{% endblock %}

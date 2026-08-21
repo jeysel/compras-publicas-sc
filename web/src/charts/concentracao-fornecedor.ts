@@ -59,6 +59,6 @@ export async function renderConcentracaoFornecedor(containerId: string, legendaI
     legendaId,
     "Este ranking já exclui contratos com valor implausível (vl_original " +
       "ou vl_atual, spec 021) antes da soma — filtro aplicado na camada de " +
-      "dado, não no cliente (ver <a href=\"#metodologia\">metodologia</a>).",
+      "dado, não no cliente (ver <a href=\"/metodologia\">metodologia</a>).",
   );
 }

@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block title %}Concentração de fornecedores — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Gráficos / Concentração de fornecedores</div>
+<h1>Top 10 fornecedores por gasto no estado</h1>
+<p class="page-intro">
+  Soma do valor atual dos contratos por fornecedor, considerando todos os órgãos do estado.
+</p>
+<div class="chart-card">
+  <div id="chart-concentracao-fornecedor" class="chart"></div>
+</div>
+<p id="legenda-concentracao-fornecedor" class="chart-legend"></p>
+{% endblock %}

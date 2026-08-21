@@ -85,6 +85,6 @@ export async function renderEscaladaCusto(containerId: string, legendaId: string
     legendaId,
     `${totalExcluidos} de ${dados.length} contratos excluídos desta agregação por ` +
       `inconsistência de dado (${excluidosAditivo.length} por aditivo, ${excluidosValor.length} ` +
-      `por valor implausível; ver <a href="#metodologia">metodologia</a>).`,
+      `por valor implausível; ver <a href="/metodologia">metodologia</a>).`,
   );
 }

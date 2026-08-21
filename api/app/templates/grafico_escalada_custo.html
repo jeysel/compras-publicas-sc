@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block title %}Escalada de custo — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Gráficos / Escalada de custo</div>
+<h1>Escalada de custo por ano de assinatura</h1>
+<p class="page-intro">
+  Soma da variação de valor (valor atual menos valor original) dos aditivos contratuais, agrupada pelo ano de
+  assinatura do contrato original. Mede o quanto os contratos firmados em cada ano acabaram custando além do
+  previsto.
+</p>
+<div class="chart-card">
+  <div id="chart-escalada-custo" class="chart"></div>
+</div>
+<p id="legenda-escalada-custo" class="chart-legend"></p>
+{% endblock %}

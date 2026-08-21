@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Compras Públicas SC{% endblock %}</title>
+    <link rel="stylesheet" href="/static/main.css" />
+  </head>
+  <body data-page="{{ page }}">
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <a class="navbar-brand" href="/">Compras Públicas SC</a>
+        <ul class="navbar-links">
+          <li><a href="/" class="{{ 'active' if page == 'home' else '' }}">Início</a></li>
+          <li class="dropdown">
+            <span class="dropdown-toggle {{ 'active' if page.startswith('grafico-') else '' }}" tabindex="0"
+              >Gráficos <span class="caret">▾</span></span
+            >
+            <ul class="dropdown-menu">
+              <li><a href="/graficos/escalada-custo">Escalada de custo</a></li>
+              <li><a href="/graficos/diversidade-vencedores">Diversidade de vencedores</a></li>
+              <li><a href="/graficos/serie-temporal">Série temporal</a></li>
+              <li><a href="/graficos/concentracao-fornecedor">Concentração de fornecedores</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <span class="dropdown-toggle {{ 'active' if page.startswith('relatorio-') else '' }}" tabindex="0"
+              >Relatórios <span class="caret">▾</span></span
+            >
+            <ul class="dropdown-menu">
+              <li><a href="/relatorios/qualidade-dado-orgao">Ranking de órgãos por qualidade de dado</a></li>
+              <li><a href="/relatorios/variacao-custo-modalidade">Variação de custo por modalidade</a></li>
+              <li><a href="/relatorios/variacao-prazo-modalidade">Variação de prazo</a></li>
+            </ul>
+          </li>
+          <li><a href="/metodologia" class="{{ 'active' if page == 'metodologia' else '' }}">Metodologia</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>{% block content %}{% endblock %}</main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span
+          >Fonte: sistemas de gestão do Estado, com os dados disponibilizados no Portal de Transparência oficial ·
+          a partir de 2016</span
+        >
+        <a href="/metodologia">Metodologia →</a>
+      </div>
+    </footer>
+
+    <script type="module" src="/static/main.js"></script>
+  </body>
+</html>

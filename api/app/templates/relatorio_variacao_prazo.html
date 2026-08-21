@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Variação de prazo por modalidade — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Relatórios / Variação de prazo</div>
+<h1>Variação de prazo por modalidade de licitação</h1>
+<p class="page-intro">
+  Média de dias acrescidos ao prazo original por aditivo de prazo, por modalidade de licitação.
+</p>
+<p class="warning-box">
+  Atenção: os campos de prazo original/atual estão preenchidos em só cerca de 7% dos contratos na fonte (Portal de
+  Transparência), concentrados quase todos na modalidade "Não informado". As demais modalidades não aparecem nesta
+  tabela por falta de dado na fonte, não por ausência de aditivo de prazo — ver <a href="/metodologia">metodologia</a>.
+</p>
+<div class="chart-card">
+  <div id="chart-variacao-prazo-modalidade" class="chart"></div>
+</div>
+<div class="table-card">
+  <table id="tabela-variacao-prazo-modalidade" class="data-table">
+    <thead>
+      <tr>
+        <th>Modalidade</th>
+        <th class="num">Contratos c/ aditivo de prazo</th>
+        <th class="num">Dias médios acrescidos</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+{% endblock %}
