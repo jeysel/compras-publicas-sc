@@ -76,6 +76,9 @@ pipeline/logs/
 # ── Credenciais (ampliado para repo público) ──────────────────────────────────
 *.json
 !*.json.example
+!web/package.json
+!web/package-lock.json
+!web/tsconfig.json
 
 # ── Arquivos locais ───────────────────────────────────────────────────────────
 Claude.md
