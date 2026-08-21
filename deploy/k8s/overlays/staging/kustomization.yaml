@@ -8,14 +8,13 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag f668075 — SHA do push que incluiu
-# bf3cb27, teto de segurança/limit em contratos-temporal e
-# diversidade-vencedores, complementando o fix de serialização 046c738; CI
-# builda por push, não por commit individual, então a tag da imagem é o SHA
-# do HEAD do push, não do commit bf3cb27 em si — confirmado por
-# ancestralidade git que bf3cb27 está incluído). Atualizar aqui a cada novo
-# SHA que se queira validar em staging.
+# build de compras-publicas-api no GHCR (tag 0e956b7 — SHA do push do fix de
+# streaming em escalada-custo, cursor server-side + StreamingResponse,
+# substituindo o TypeAdapter não-streaming que piorava o OOM sob 512Mi;
+# commit 0e956b7 == HEAD do push == GITHUB_SHA do build, confirmado via
+# `gh run view --json headSha`, sem ambiguidade de ancestralidade desta vez).
+# Atualizar aqui a cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: f668075
+    newTag: 0e956b7
