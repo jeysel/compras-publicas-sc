@@ -7,40 +7,19 @@ type ConcentracaoFornecedor = components["schemas"]["ConcentracaoFornecedor"];
 
 const TOP_N_EXIBIDO = 10;
 
-function topFornecedoresDistintos(dados: ConcentracaoFornecedor[], limite: number): ConcentracaoFornecedor[] {
-  // Grão da mart é (cod_unidade_gestora, id_contratado): um fornecedor que
-  // contratou com vários órgãos aparece uma vez por órgão, todas as linhas
-  // repetindo o mesmo rank_estado/vl_total_fornecedor_estado (achado spec
-  // 012, router já documenta isso). "ORDER BY rank_estado LIMIT N" no
-  // backend não garante N fornecedores distintos — dedup fica pro cliente.
-  const porFornecedor = new Map<string, ConcentracaoFornecedor>();
-  for (const linha of dados) {
-    if (!porFornecedor.has(linha.id_contratado)) {
-      porFornecedor.set(linha.id_contratado, linha);
-    }
-  }
-
-  return Array.from(porFornecedor.values())
-    .sort((a, b) => Number(b.vl_total_fornecedor_estado ?? 0) - Number(a.vl_total_fornecedor_estado ?? 0))
-    .slice(0, limite);
-}
-
 export async function renderConcentracaoFornecedor(containerId: string, legendaId: string): Promise<void> {
   const container = document.getElementById(containerId);
   if (container === null) return;
 
-  // top_n precisa cobrir a mart inteira (27.849 linhas): a duplicação por
-  // órgão não é uniforme — um único fornecedor pode ocupar 126+ linhas
-  // (achado spec 012, confirmado via psql), então nenhum top_n pequeno
-  // garante 10 fornecedores distintos após o dedup abaixo.
-  const resposta = await fetch("/api/v1/concentracao-fornecedor?top_n=30000");
+  // Dedup por id_contratado + top-N já acontece no SQL (spec 024) — a API
+  // devolve só as linhas necessárias, não a mart inteira.
+  const resposta = await fetch(`/api/v1/concentracao-fornecedor?top_n=${TOP_N_EXIBIDO}`);
   if (!resposta.ok) {
     container.textContent = `Erro ao carregar dados (HTTP ${resposta.status})`;
     return;
   }
 
-  const dados = (await resposta.json()) as ConcentracaoFornecedor[];
-  const top = topFornecedoresDistintos(dados, TOP_N_EXIBIDO);
+  const top = (await resposta.json()) as ConcentracaoFornecedor[];
 
   const chart = echarts.init(container);
   chart.setOption({

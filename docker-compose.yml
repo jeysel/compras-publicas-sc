@@ -129,8 +129,8 @@ services:
   # não sobe por padrão, igual ao dbt/pipeline.
   api:
     build:
-      context: ./api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api/Dockerfile
     container_name: compras_api
     env_file: .env
     environment:
