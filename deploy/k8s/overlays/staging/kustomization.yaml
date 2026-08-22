@@ -8,12 +8,12 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag ed97294 — spec 025, redesign de
-# frontend: navbar multi-página, 9 templates Jinja2, 3 endpoints novos de
-# relatório; commit ed97294 == HEAD do push == GITHUB_SHA do build, confirmado
-# via `gh run list --commit`, sem outros commits no mesmo push).
+# build de compras-publicas-api no GHCR (tag ef10ab4 — responsividade mobile,
+# paginação client-side e ordenação nos relatórios; commit ef10ab4 == HEAD do
+# push == GITHUB_SHA do build, confirmado via `gh run view` (headSha exato,
+# run 32539138369, conclusion success)).
 # Atualizar aqui a cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: ed97294
+    newTag: ef10ab4
