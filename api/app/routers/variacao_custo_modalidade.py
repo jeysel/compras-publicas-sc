@@ -28,7 +28,7 @@ async def get_variacao_custo_modalidade() -> list[dict]:
           AND fl_aditivo_inconsistente IS NOT TRUE
           AND fl_valor_suspeito IS NOT TRUE
         GROUP BY nm_modalidade_norm
-        ORDER BY perc_variacao_media DESC
+        ORDER BY qt_contratos_com_aditivo DESC
     """
 
     async with get_connection() as conn:

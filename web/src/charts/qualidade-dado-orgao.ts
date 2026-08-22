@@ -1,11 +1,13 @@
 import type { components } from "../api-types";
 import { formatarPercentual } from "./format";
+import { criarPaginador } from "./pagination";
 
 type QualidadeDadoOrgao = components["schemas"]["QualidadeDadoOrgao"];
 
-export async function renderQualidadeDadoOrgao(tableId: string): Promise<void> {
+export async function renderQualidadeDadoOrgao(tableId: string, botaoId: string): Promise<void> {
   const table = document.getElementById(tableId);
   const tbody = table?.querySelector("tbody");
+  const botao = document.getElementById(botaoId) as HTMLButtonElement | null;
   if (table === null || tbody == null) return;
 
   const resposta = await fetch("/api/v1/qualidade-dado-orgao");
@@ -21,12 +23,16 @@ export async function renderQualidadeDadoOrgao(tableId: string): Promise<void> {
   const linhas = (await resposta.json()) as QualidadeDadoOrgao[];
 
   tbody.textContent = "";
-  for (const linha of linhas) {
-    const row = tbody.insertRow();
-    row.insertCell().textContent = linha.nm_unidade_gestora ?? linha.cod_unidade_gestora;
-    row.insertCell().textContent = String(linha.qt_contratos);
-    row.insertCell().textContent = formatarPercentual(Number(linha.perc_aditivo_inconsistente));
-    row.insertCell().textContent = formatarPercentual(Number(linha.perc_valor_suspeito));
-    for (const cell of Array.from(row.cells).slice(1)) cell.classList.add("num");
-  }
+  criarPaginador(
+    linhas,
+    tbody,
+    (linha, row) => {
+      row.insertCell().textContent = linha.nm_unidade_gestora ?? linha.cod_unidade_gestora;
+      row.insertCell().textContent = String(linha.qt_contratos);
+      row.insertCell().textContent = formatarPercentual(Number(linha.perc_aditivo_inconsistente));
+      row.insertCell().textContent = formatarPercentual(Number(linha.perc_valor_suspeito));
+      for (const cell of Array.from(row.cells).slice(1)) cell.classList.add("num");
+    },
+    botao,
+  );
 }

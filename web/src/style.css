@@ -457,6 +457,32 @@ section {
   text-decoration: none;
 }
 
+.table-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.btn-ver-mais {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.btn-ver-mais:hover {
+  background: var(--border);
+}
+
+.btn-ver-mais[hidden] {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .findings,
   .link-grid {
@@ -467,5 +493,61 @@ section {
     flex-direction: column;
     gap: 8px;
     text-align: center;
+  }
+
+  .navbar-inner {
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .navbar-brand {
+    font-size: 14px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .navbar-links {
+    flex: 1;
+    overflow-x: auto;
+  }
+
+  .navbar-links a,
+  .navbar-links .dropdown-toggle {
+    padding: 10px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  main {
+    padding: 0 16px 32px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+
+  .finding-value {
+    font-size: 30px;
+  }
+
+  .chart-card {
+    padding: 16px 8px;
+  }
+
+  .chart {
+    height: 320px;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    font-size: 13px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
   }
 }

@@ -1,12 +1,18 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
+import { criarPaginador } from "./pagination";
 
 type VariacaoPrazoModalidade = components["schemas"]["VariacaoPrazoModalidade"];
 
-export async function renderVariacaoPrazoModalidade(containerId: string, tableId: string): Promise<void> {
+export async function renderVariacaoPrazoModalidade(
+  containerId: string,
+  tableId: string,
+  botaoId: string,
+): Promise<void> {
   const container = document.getElementById(containerId);
   const table = document.getElementById(tableId);
   const tbody = table?.querySelector("tbody");
+  const botao = document.getElementById(botaoId) as HTMLButtonElement | null;
   if (container === null || table === null || tbody == null) return;
 
   const resposta = await fetch("/api/v1/variacao-prazo-modalidade");
@@ -38,11 +44,15 @@ export async function renderVariacaoPrazoModalidade(containerId: string, tableId
   window.addEventListener("resize", () => chart.resize());
 
   tbody.textContent = "";
-  for (const linha of ordenadas) {
-    const row = tbody.insertRow();
-    row.insertCell().textContent = linha.nm_modalidade;
-    row.insertCell().textContent = String(linha.qt_contratos_com_aditivo_prazo);
-    row.insertCell().textContent = `${linha.dias_variacao_media} dias`;
-    for (const cell of Array.from(row.cells).slice(1)) cell.classList.add("num");
-  }
+  criarPaginador(
+    ordenadas,
+    tbody,
+    (linha, row) => {
+      row.insertCell().textContent = linha.nm_modalidade;
+      row.insertCell().textContent = String(linha.qt_contratos_com_aditivo_prazo);
+      row.insertCell().textContent = `${linha.dias_variacao_media} dias`;
+      for (const cell of Array.from(row.cells).slice(1)) cell.classList.add("num");
+    },
+    botao,
+  );
 }

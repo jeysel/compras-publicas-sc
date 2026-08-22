@@ -31,7 +31,7 @@ async def get_qualidade_dado_orgao() -> list[dict]:
             ) AS perc_valor_suspeito
         FROM marts.mart_escalada_custo
         GROUP BY cod_unidade_gestora, nm_unidade_gestora
-        ORDER BY perc_aditivo_inconsistente DESC, perc_valor_suspeito DESC
+        ORDER BY qt_contratos DESC
     """
 
     async with get_connection() as conn:
