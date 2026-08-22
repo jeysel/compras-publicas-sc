@@ -10,11 +10,13 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# ed97294 (spec 025 — redesign de frontend: navbar multi-página, 9 templates
-# Jinja2, 3 endpoints novos de relatório) validado funcionalmente em staging
-# (9 páginas + 3 endpoints novos 200, dbt build + grants corrigidos) em
-# 2026-08-21.
+# ef10ab4 (responsividade mobile, paginação client-side de 30 em 30 nos 3
+# relatórios, ORDER BY em Contratos/Contratos c/ aditivo) validado em staging
+# via Playwright em 2026-08-21: sem overflow horizontal a 375px em 4 páginas,
+# paginação com "Ver mais" funcional (414 linhas em qualidade-dado-orgao),
+# ordenação desc confirmada em qualidade-dado-orgao (Contratos) e
+# variacao-custo-modalidade (Contratos c/ aditivo).
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: ed97294
+    newTag: ef10ab4
