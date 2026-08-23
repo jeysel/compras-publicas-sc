@@ -8,12 +8,13 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag ef10ab4 — responsividade mobile,
-# paginação client-side e ordenação nos relatórios; commit ef10ab4 == HEAD do
-# push == GITHUB_SHA do build, confirmado via `gh run view` (headSha exato,
-# run 32539138369, conclusion success)).
+# build de compras-publicas-api no GHCR (tag 84254bb — menu mobile real +
+# tentativa de fix de gráficos encolhidos no Safari iOS + contexto legal de
+# aditivos/sazonalidade/insight de taxa por modalidade; dois commits no mesmo
+# push, tag == HEAD do push == GITHUB_SHA do build, confirmado via `gh run
+# list --commit`/`gh run watch` (run 32673566555, conclusion success)).
 # Atualizar aqui a cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: ef10ab4
+    newTag: 84254bb
