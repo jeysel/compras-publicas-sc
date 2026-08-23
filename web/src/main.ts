@@ -20,7 +20,11 @@ if (page === "home") {
 } else if (page === "grafico-diversidade-vencedores") {
   void renderDiversidadeVencedores("chart-diversidade-vencedores");
 } else if (page === "grafico-serie-temporal") {
-  void renderContratosTemporal("chart-contratos-temporal", "legenda-contratos-temporal");
+  void renderContratosTemporal(
+    "chart-contratos-temporal",
+    "legenda-contratos-temporal",
+    "chart-sazonalidade-mensal",
+  );
 } else if (page === "grafico-concentracao-fornecedor") {
   void renderConcentracaoFornecedor("chart-concentracao-fornecedor", "legenda-concentracao-fornecedor");
 } else if (page === "relatorio-qualidade-orgao") {
@@ -30,6 +34,7 @@ if (page === "home") {
     "chart-variacao-custo-modalidade",
     "tabela-variacao-custo-modalidade",
     "btn-ver-mais-variacao-custo-modalidade",
+    "insight-variacao-custo-modalidade",
   );
 } else if (page === "relatorio-variacao-prazo") {
   void renderVariacaoPrazoModalidade(

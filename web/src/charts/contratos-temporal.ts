@@ -9,7 +9,60 @@ function periodoLabel(item: ContratosTemporal): string {
   return `${item.ano_assinatura}-${String(item.mes_assinatura).padStart(2, "0")}`;
 }
 
-export async function renderContratosTemporal(containerId: string, legendaId: string): Promise<void> {
+const NOMES_MES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
+
+function renderSazonalidadeMensal(containerId: string, serieGeral: ContratosTemporal[]): void {
+  const container = document.getElementById(containerId);
+  if (container === null) return;
+
+  const porMes = new Array<number>(12).fill(0);
+  for (const item of serieGeral) {
+    porMes[item.mes_assinatura - 1] += item.qt_contratos;
+  }
+
+  const chart = echarts.init(container);
+  chart.setOption({
+    tooltip: { trigger: "axis" },
+    xAxis: {
+      type: "category",
+      data: NOMES_MES,
+      name: "Mês de assinatura",
+    },
+    yAxis: {
+      type: "value",
+      name: "Qtd. de contratos (soma de todos os anos)",
+    },
+    series: [
+      {
+        name: "qt_contratos",
+        type: "bar",
+        data: porMes,
+      },
+    ],
+  });
+
+  requestAnimationFrame(() => chart.resize());
+  window.addEventListener("resize", () => chart.resize());
+}
+
+export async function renderContratosTemporal(
+  containerId: string,
+  legendaId: string,
+  sazonalidadeId: string,
+): Promise<void> {
   const container = document.getElementById(containerId);
   if (container === null) return;
 
@@ -23,6 +76,8 @@ export async function renderContratosTemporal(containerId: string, legendaId: st
   const serieGeral = dados
     .filter((item) => item.tp_recorte === "Geral")
     .sort((a, b) => a.ano_assinatura - b.ano_assinatura || a.mes_assinatura - b.mes_assinatura);
+
+  renderSazonalidadeMensal(sazonalidadeId, serieGeral);
 
   const chart = echarts.init(container);
   chart.setOption({
