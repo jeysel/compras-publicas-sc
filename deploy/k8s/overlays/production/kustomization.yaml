@@ -10,13 +10,16 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# ef10ab4 (responsividade mobile, paginação client-side de 30 em 30 nos 3
-# relatórios, ORDER BY em Contratos/Contratos c/ aditivo) validado em staging
-# via Playwright em 2026-08-21: sem overflow horizontal a 375px em 4 páginas,
-# paginação com "Ver mais" funcional (414 linhas em qualidade-dado-orgao),
-# ordenação desc confirmada em qualidade-dado-orgao (Contratos) e
-# variacao-custo-modalidade (Contratos c/ aditivo).
+# 84254bb (menu hambúrguer mobile real, tentativa de fix para gráficos
+# encolhidos no Safari iOS, contexto legal de aditivos/sazonalidade mensal/
+# insight de taxa de aditivo por modalidade) validado em staging via
+# Playwright (viewport iPhone 13) em 2026-08-23: hamburger abre/fecha o menu
+# corretamente, chart-sazonalidade-mensal e chart-contratos-temporal
+# renderizam com bounding box não-colapsada (340x320) e dado real, insight
+# de variacao-custo-modalidade populado com texto real, zero erros de
+# console. As 3 rotas (/, /relatorios/variacao-custo-modalidade,
+# /graficos/serie-temporal) retornaram 200.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: ef10ab4
+    newTag: 84254bb
