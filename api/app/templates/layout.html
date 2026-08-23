@@ -10,7 +10,17 @@
     <nav class="navbar">
       <div class="navbar-inner">
         <a class="navbar-brand" href="/">Compras Públicas SC</a>
-        <ul class="navbar-links">
+        <button
+          type="button"
+          class="navbar-toggle"
+          id="navbar-toggle"
+          aria-expanded="false"
+          aria-controls="navbar-links"
+          aria-label="Abrir menu"
+        >
+          <span class="navbar-toggle-icon" aria-hidden="true"></span>
+        </button>
+        <ul class="navbar-links" id="navbar-links">
           <li><a href="/" class="{{ 'active' if page == 'home' else '' }}">Início</a></li>
           <li class="dropdown">
             <span class="dropdown-toggle {{ 'active' if page.startswith('grafico-') else '' }}" tabindex="0"

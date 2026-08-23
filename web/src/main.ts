@@ -6,7 +6,10 @@ import { renderQualidadeDadoOrgao } from "./charts/qualidade-dado-orgao";
 import { renderVariacaoCustoModalidade } from "./charts/variacao-custo-modalidade";
 import { renderVariacaoPrazoModalidade } from "./charts/variacao-prazo-modalidade";
 import { renderAchadosHome } from "./charts/achados-home";
+import { initNavbarToggle } from "./nav";
 import "./style.css";
+
+initNavbarToggle();
 
 const page = document.body.dataset.page;
 

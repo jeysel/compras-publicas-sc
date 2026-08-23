@@ -41,6 +41,10 @@ export async function renderVariacaoPrazoModalidade(
     ],
   });
 
+  // Fix especulativo (spec pendente) para gráfico encolhido observado em iPhone real —
+  // causa não confirmada em código (container já tem altura px explícita, listener de
+  // resize já existia); força um resize após o primeiro layout do Safari por precaução.
+  requestAnimationFrame(() => chart.resize());
   window.addEventListener("resize", () => chart.resize());
 
   tbody.textContent = "";
