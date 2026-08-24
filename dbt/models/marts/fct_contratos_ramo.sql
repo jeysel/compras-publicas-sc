@@ -21,11 +21,14 @@ classificado as (
         nm_modalidade,
         ds_objeto,
         dt_assinatura,
+        dt_inicio,
+        dt_fim_atual,
         ano_assinatura,
         vl_original,
         vl_atual,
         coalesce(vl_aditado, 0)     as vl_aditado,
         ds_situacao,
+        fl_valor_suspeito,
 
         case
             when lower(ds_objeto) like '%desenvolvimento de software%'

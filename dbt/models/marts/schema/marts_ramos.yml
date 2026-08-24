@@ -98,6 +98,19 @@ models:
       - name: dt_assinatura
         description: "Data de assinatura do contrato"
 
+      - name: dt_inicio
+        description: >
+          Data de início de vigência do contrato. Pode ser nula (achado real:
+          80 de 67.656 linhas no ambiente local, 0,12%, anos variados
+          2014-2025, dado legítimo da fonte, não lixo) — exibir período em
+          aberto nesse caso, não erro nem linha descartada.
+
+      - name: dt_fim_atual
+        description: >
+          Data de fim de vigência atualizada do contrato. Pode ser nula quando
+          a fonte não registra data de fim atualizada — exibir período em
+          aberto nesse caso, não erro nem linha descartada.
+
       - name: ano_assinatura
         description: "Ano de assinatura do contrato"
 
@@ -112,6 +125,18 @@ models:
 
       - name: ds_situacao
         description: "Situação atual do contrato"
+
+      - name: fl_valor_suspeito
+        description: >
+          Sinal de valor implausível em vl_original/vl_atual (spec 021, calculado em
+          stg_contratos) — passthrough adicionado após achado real (2026-08-24): a mart
+          foi criada em spec 013/014, antes de fl_valor_suspeito existir (spec 021), e
+          nunca herdou o filtro. Sem ele, os 3 maiores "fornecedores" do endpoint de
+          gráfico eram exatamente 3 dos 4 contratos da lista fechada de corrupção de
+          dado (Piata Comercio de Pecas R$10,5bi, VS Vida Saudavel R$6,48bi, Claro
+          R$6,31bi) — não gasto real. Consumidores desta coluna (api/app/routers/
+          fornecedor_por_segmento.py) DEVEM filtrar fl_valor_suspeito IS NOT TRUE,
+          mesmo padrão de concentracao_fornecedor.py.
 
       - name: ramo_atividade
         description: >
