@@ -8,14 +8,13 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag 20a66a2 — spec 027: cache-busting
-# real via hash de conteúdo no build do Vite (manifest + Cache-Control
-# imutável nos assets com hash); tag == HEAD do push == GITHUB_SHA do build,
-# confirmado via `gh run list`/`gh run watch` (run 32741933330, conclusion
+# build de compras-publicas-api no GHCR (tag aab8e3a — filtros interativos de
+# orgao/modalidade nos 4 graficos; tag == HEAD do push == GITHUB_SHA do build,
+# confirmado via `gh run list`/`gh run watch` (run 32753332957, conclusion
 # success). Mudança só de código API/frontend, sem alteração de model dbt —
 # não precisa de dbt run/test seletivo antes de promover.
 # Atualizar aqui a cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 20a66a2
+    newTag: aab8e3a
