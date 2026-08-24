@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.db import close_pool, open_pool
 from app.routers import (
+    anos_disponiveis,
     concentracao_fornecedor,
     contratos_temporal,
     diversidade_vencedores,
@@ -72,6 +73,7 @@ app = FastAPI(
 )
 
 for router in (
+    anos_disponiveis.router,
     escalada_custo.router,
     diversidade_vencedores.router,
     contratos_temporal.router,

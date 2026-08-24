@@ -2,6 +2,7 @@ import type { components } from "../api-types";
 
 type Orgao = components["schemas"]["Orgao"];
 type Modalidade = components["schemas"]["Modalidade"];
+type AnosDisponiveis = components["schemas"]["AnosDisponiveis"];
 
 export interface FiltrosGrafico {
   cod_unidade_gestora?: string;
@@ -77,14 +78,14 @@ export function initFiltrosGrafico(
   });
 }
 
-// Intervalo fixo (footer do layout: "a partir de 2016") — não há endpoint que liste os
-// anos com dado real, e o volume por ano já é pequeno o bastante pra não valer a pena
-// buscar do dataset carregado (spec pendente, ver nota de filtro de ano).
-const ANO_MIN = 2016;
-
-function popularAnos(select: HTMLSelectElement): void {
-  const anoAtual = new Date().getFullYear();
-  for (let ano = anoAtual; ano >= ANO_MIN; ano--) {
+// Intervalo real de ano_assinatura (fct_contratos), buscado do backend em vez de
+// hardcoded — um range fixo fica desatualizado tanto pra trás (dado anterior ao
+// início do range) quanto pra frente (anos futuros sem dado real na lista).
+async function popularAnos(select: HTMLSelectElement): Promise<void> {
+  const resposta = await fetch("/api/v1/anos-disponiveis");
+  if (!resposta.ok) return;
+  const { ano_min, ano_max } = (await resposta.json()) as AnosDisponiveis;
+  for (let ano = ano_max; ano >= ano_min; ano--) {
     const option = document.createElement("option");
     option.value = String(ano);
     option.textContent = String(ano);
@@ -96,7 +97,7 @@ function popularAnos(select: HTMLSelectElement): void {
 export function initFiltroAnoUnico(selectId: string, onChange: (ano: string | undefined) => void): void {
   const select = document.getElementById(selectId) as HTMLSelectElement | null;
   if (select === null) return;
-  popularAnos(select);
+  void popularAnos(select);
   select.addEventListener("change", () => onChange(select.value || undefined));
 }
 
@@ -115,8 +116,8 @@ export function initFiltroAnoIntervalo(
   const inicioSelect = document.getElementById(inicioSelectId) as HTMLSelectElement | null;
   const fimSelect = document.getElementById(fimSelectId) as HTMLSelectElement | null;
   if (inicioSelect === null || fimSelect === null) return;
-  popularAnos(inicioSelect);
-  popularAnos(fimSelect);
+  void popularAnos(inicioSelect);
+  void popularAnos(fimSelect);
 
   const disparar = (): void => {
     onChange({
