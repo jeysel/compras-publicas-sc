@@ -1,5 +1,6 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
+import type { FiltroAnoIntervalo } from "./filtros";
 import { formatarMoedaBRL } from "./format";
 import { isMobileViewport } from "./theme";
 
@@ -24,13 +25,19 @@ export async function renderPerfilOrgaos(
   containerId: string,
   tabelaQuantidadeId: string,
   tabelaValorId: string,
+  filtros: FiltroAnoIntervalo = {},
 ): Promise<void> {
   const container = document.getElementById(containerId);
   const tabelaQuantidade = document.getElementById(tabelaQuantidadeId)?.querySelector("tbody");
   const tabelaValor = document.getElementById(tabelaValorId)?.querySelector("tbody");
   if (container === null || tabelaQuantidade == null || tabelaValor == null) return;
 
-  const resposta = await fetch("/api/v1/orgaos");
+  const params = new URLSearchParams();
+  if (filtros.ano_inicio) params.set("ano_inicio", filtros.ano_inicio);
+  if (filtros.ano_fim) params.set("ano_fim", filtros.ano_fim);
+  const query = params.toString();
+
+  const resposta = await fetch(`/api/v1/orgaos${query ? `?${query}` : ""}`);
   if (!resposta.ok) {
     container.textContent = `Erro ao carregar dados (HTTP ${resposta.status})`;
     return;
@@ -49,16 +56,22 @@ export async function renderPerfilOrgaos(
   const perfis = ORDEM_PERFIL.filter((p) => contagemPorPerfil.has(p));
 
   const mobile = isMobileViewport();
-  const chart = echarts.init(container);
-  chart.setOption({
-    tooltip: { trigger: "axis" },
-    grid: { left: mobile ? 8 : 120, right: 30, bottom: 30, containLabel: true },
-    xAxis: { type: "value" },
-    yAxis: { type: "category", data: perfis },
-    series: [{ type: "bar", data: perfis.map((p) => contagemPorPerfil.get(p) ?? 0) }],
-  });
+  const instanciaExistente = echarts.getInstanceByDom(container);
+  const chart = instanciaExistente ?? echarts.init(container);
+  chart.setOption(
+    {
+      tooltip: { trigger: "axis" },
+      grid: { left: mobile ? 8 : 120, right: 30, bottom: 30, containLabel: true },
+      xAxis: { type: "value" },
+      yAxis: { type: "category", data: perfis },
+      series: [{ type: "bar", data: perfis.map((p) => contagemPorPerfil.get(p) ?? 0) }],
+    },
+    true,
+  );
   requestAnimationFrame(() => chart.resize());
-  window.addEventListener("resize", () => chart.resize());
+  if (instanciaExistente === undefined) {
+    window.addEventListener("resize", () => chart.resize());
+  }
 
   const porQuantidade = [...orgaos]
     .filter((o) => o.rank_por_quantidade != null)

@@ -30,6 +30,7 @@ com_classificacao as (
 
         dt_primeiro_contrato,
         dt_ultimo_contrato,
+        extract(year from dt_primeiro_contrato)          as ano_abertura,
 
         case
             when qt_fornecedores_distintos = 1  then 'Fornecedor único'

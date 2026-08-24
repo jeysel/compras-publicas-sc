@@ -8,8 +8,20 @@ models:
       concentração INTERNA do fornecedor (maior contrato dele / total dele).
       Esta mart mede concentração de MERCADO: quanto do gasto do órgão (ou
       do estado) está concentrado em cada fornecedor. Grão:
-      (cod_unidade_gestora, id_contratado). Não existia (nem parcialmente)
-      antes da spec 013/014.
+      (cod_unidade_gestora, id_contratado, ano_assinatura) desde a spec 029
+      (REQ-3) — antes era (cod_unidade_gestora, id_contratado), agregado
+      sobre todo o histórico. rank_no_orgao/perc_sobre_total_orgao/
+      rank_estado/perc_sobre_total_estado só são válidos dentro de um único
+      ano_assinatura — consumidores que precisam do agregado histórico (ex.:
+      endpoint sem filtro de ano) recalculam SUM/rank/perc no router sobre
+      este grão.
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - cod_unidade_gestora
+            - id_contratado
+            - ano_assinatura
 
     columns:
       - name: cod_unidade_gestora
@@ -27,6 +39,11 @@ models:
 
       - name: nm_contratado
         description: "Nome/razão social do fornecedor (atributo descritivo, não chave)"
+
+      - name: ano_assinatura
+        description: "Ano de assinatura (spec 029, REQ-3) — grão da mart, rank/perc particionados por este campo"
+        tests:
+          - not_null
 
       - name: vl_total_fornecedor_orgao
         description: "Soma de vl_atual dos contratos deste fornecedor com este órgão"

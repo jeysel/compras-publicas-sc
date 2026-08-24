@@ -33,7 +33,7 @@ export interface paths {
         };
         /**
          * Get Diversidade Vencedores
-         * @description Diversidade de vencedores por processo licitatório (mart_diversidade_vencedores, spec 007). Sem filtro de ano: o grão da mart é processo, não período — não existe coluna de ano nesta mart (achado confirmado em 2026-08-20).
+         * @description Diversidade de vencedores por processo licitatório (mart_diversidade_vencedores, spec 007). ano_inicio/ano_fim filtram por ano_abertura (ano de dt_primeiro_contrato, spec 029) — o grão continua sendo o processo, não período; processos multi-ano ficam atribuídos ao ano de abertura.
          */
         get: operations["get_diversidade_vencedores_api_v1_diversidade_vencedores_get"];
         put?: never;
@@ -73,7 +73,7 @@ export interface paths {
         };
         /**
          * Get Concentracao Fornecedor
-         * @description Concentração de gasto por fornecedor (mart_concentracao_fornecedor, spec 007/013/014/024). Com cod_unidade_gestora informado, ordena e limita por rank_no_orgao (ranking dentro do órgão) — grão (órgão, fornecedor) já é único nesse caso. Sem cod_unidade_gestora, deduplica por id_contratado (DISTINCT ON) antes de ordenar e limitar por rank_estado — o grão da mart é (órgão, fornecedor), um mesmo fornecedor tem uma linha por órgão com que contratou, mas rank_estado/vl_total_fornecedor_estado já vêm pré-agregados por fornecedor (idênticos em todas as linhas dele), então a dedup no SQL não altera o valor exibido.
+         * @description Concentração de gasto por fornecedor (mart_concentracao_fornecedor, spec 007/013/014/024/029). A mart tem grão (órgão, fornecedor, ano_assinatura) desde a spec 029 — rank/perc armazenados na mart só valem dentro de um único ano, então este endpoint sempre reagrega (SUM) e recalcula rank/perc no próprio SQL sobre o intervalo ano_inicio/ano_fim informado (ou sobre todo o histórico, se nenhum dos dois for informado — resultado idêntico ao grão antigo, pré-spec-029). Com cod_unidade_gestora informado, ordena e limita por rank_no_orgao recalculado. Sem cod_unidade_gestora, agrega por fornecedor somando todos os órgãos e ordena por rank_estado recalculado; cod_unidade_gestora/nm_unidade_gestora exibidos passam a ser o órgão de maior gasto do fornecedor dentro do intervalo (antes era um órgão arbitrário via DISTINCT ON).
          */
         get: operations["get_concentracao_fornecedor_api_v1_concentracao_fornecedor_get"];
         put?: never;
@@ -93,7 +93,7 @@ export interface paths {
         };
         /**
          * Get Orgaos
-         * @description Lista de órgãos (dim_orgaos, spec 007) — usada para popular filtro de órgão no frontend.
+         * @description Lista de órgãos (dim_orgaos, spec 007) — usada para popular filtro de órgão no frontend (sem ano_inicio/ano_fim) e para o gráfico de distribuição por perfil (com, spec 029). ano_inicio/ano_fim filtram órgãos por atividade — ao menos um contrato em fct_contratos dentro do intervalo — sem recalcular ds_perfil_contratacao, que continua histórico/acumulado. Sem os parâmetros, comportamento idêntico ao anterior à spec 029 (REQ-8).
          */
         get: operations["get_orgaos_api_v1_orgaos_get"];
         put?: never;
@@ -213,7 +213,7 @@ export interface paths {
         };
         /**
          * Get Perfil Fornecedores
-         * @description Distribuição de fornecedores por porte (spec 026) — GROUP BY porte_fornecedor sobre marts.dim_fornecedores; a classificação já vem pronta da mart (dim_fornecedores.sql), este endpoint só agrega o que já existe, não reclassifica nada.
+         * @description Distribuição de fornecedores por porte (spec 026) — GROUP BY porte_fornecedor sobre marts.dim_fornecedores; a classificação já vem pronta da mart (dim_fornecedores.sql), este endpoint só agrega o que já existe, não reclassifica nada. ano_inicio/ano_fim (spec 029) filtram fornecedores por atividade — ao menos um contrato em fct_contratos dentro do intervalo — sem recalcular porte_fornecedor, que continua histórico/acumulado.
          */
         get: operations["get_perfil_fornecedores_api_v1_perfil_fornecedores_get"];
         put?: never;
@@ -250,6 +250,11 @@ export interface components {
              * @description Nome/razão social do fornecedor
              */
             nm_contratado?: string | null;
+            /**
+             * Ano Assinatura
+             * @description Ano de assinatura (spec 029). Sem ano_inicio/ano_fim, este campo reflete o valor agregado no router (não corresponde a uma linha única da mart) — None nesse caso.
+             */
+            ano_assinatura?: number | null;
             /**
              * Vl Total Fornecedor Orgao
              * @description Soma de vl_atual dos contratos deste fornecedor com este órgão
@@ -431,6 +436,11 @@ export interface components {
              * @description Data de assinatura do contrato mais recente
              */
             dt_ultimo_contrato?: string | null;
+            /**
+             * Ano Abertura
+             * @description Ano de dt_primeiro_contrato — usado como filtro de ano do processo (spec 029)
+             */
+            ano_abertura?: number | null;
             /**
              * Ds Diversidade
              * @description Classificação: 'Fornecedor único' ou 'Múltiplos fornecedores'
@@ -902,6 +912,10 @@ export interface operations {
             query?: {
                 /** @description Código da unidade gestora */
                 cod_unidade_gestora?: string | null;
+                /** @description Ano inicial de ano_abertura (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final de ano_abertura (inclusive) */
+                ano_fim?: number | null;
                 /** @description Teto de segurança — não é paginação. O frontend consome o dataset completo (grão é processo, não é 'top N'); volume real em staging é ~51812 linhas (2026-08-21). */
                 limit?: number;
             };
@@ -976,6 +990,10 @@ export interface operations {
             query?: {
                 /** @description Código da unidade gestora */
                 cod_unidade_gestora?: string | null;
+                /** @description Ano inicial de ano_assinatura (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final de ano_assinatura (inclusive) */
+                ano_fim?: number | null;
                 /** @description Quantidade máxima de fornecedores retornados */
                 top_n?: number;
             };
@@ -1007,7 +1025,12 @@ export interface operations {
     };
     get_orgaos_api_v1_orgaos_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Ano inicial de atividade (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final de atividade (inclusive) */
+                ano_fim?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1021,6 +1044,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Orgao"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1169,7 +1201,12 @@ export interface operations {
     };
     get_perfil_fornecedores_api_v1_perfil_fornecedores_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Ano inicial de atividade (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final de atividade (inclusive) */
+                ano_fim?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1183,6 +1220,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PerfilFornecedores"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

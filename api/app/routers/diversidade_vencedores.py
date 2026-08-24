@@ -14,12 +14,14 @@ _adapter = TypeAdapter(list[DiversidadeVencedores])
     response_model=list[DiversidadeVencedores],
     description=(
         "Diversidade de vencedores por processo licitatório (mart_diversidade_vencedores, spec 007). "
-        "Sem filtro de ano: o grão da mart é processo, não período — não existe coluna de ano nesta mart "
-        "(achado confirmado em 2026-08-20)."
+        "ano_inicio/ano_fim filtram por ano_abertura (ano de dt_primeiro_contrato, spec 029) — o grão "
+        "continua sendo o processo, não período; processos multi-ano ficam atribuídos ao ano de abertura."
     ),
 )
 async def get_diversidade_vencedores(
     cod_unidade_gestora: str | None = Query(None, description="Código da unidade gestora"),
+    ano_inicio: int | None = Query(None, description="Ano inicial de ano_abertura (inclusive)"),
+    ano_fim: int | None = Query(None, description="Ano final de ano_abertura (inclusive)"),
     limit: int = Query(
         200_000,
         ge=1,
@@ -35,6 +37,12 @@ async def get_diversidade_vencedores(
     if cod_unidade_gestora is not None:
         conditions.append("cod_unidade_gestora = %(cod_unidade_gestora)s")
         params["cod_unidade_gestora"] = cod_unidade_gestora
+    if ano_inicio is not None:
+        conditions.append("ano_abertura >= %(ano_inicio)s")
+        params["ano_inicio"] = ano_inicio
+    if ano_fim is not None:
+        conditions.append("ano_abertura <= %(ano_fim)s")
+        params["ano_fim"] = ano_fim
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     sql = f"SELECT * FROM marts.mart_diversidade_vencedores {where} ORDER BY cod_unidade_gestora, nu_processo LIMIT %(limit)s"

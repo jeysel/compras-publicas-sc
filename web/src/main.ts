@@ -27,13 +27,15 @@ if (page === "home") {
   void renderKpisResumo();
   void renderAchadosHome();
 } else if (page === "relatorio-perfil-fornecedores") {
-  void renderPerfilFornecedores("chart-perfil-fornecedores");
+  const rerenderPerfilFornecedores = (filtros: FiltroAnoIntervalo): void =>
+    void renderPerfilFornecedores("chart-perfil-fornecedores", filtros);
+  rerenderPerfilFornecedores({});
+  initFiltroAnoIntervalo("filtro-ano-inicio", "filtro-ano-fim", rerenderPerfilFornecedores);
 } else if (page === "relatorio-perfil-orgaos") {
-  void renderPerfilOrgaos(
-    "chart-perfil-orgaos",
-    "tabela-ranking-quantidade",
-    "tabela-ranking-valor",
-  );
+  const rerenderPerfilOrgaos = (filtros: FiltroAnoIntervalo): void =>
+    void renderPerfilOrgaos("chart-perfil-orgaos", "tabela-ranking-quantidade", "tabela-ranking-valor", filtros);
+  rerenderPerfilOrgaos({});
+  initFiltroAnoIntervalo("filtro-ano-inicio", "filtro-ano-fim", rerenderPerfilOrgaos);
 } else if (page === "grafico-escalada-custo") {
   let filtrosAtuais: FiltrosGrafico = {};
   const rerenderEscaladaCusto = (): void =>
@@ -48,10 +50,18 @@ if (page === "home") {
     rerenderEscaladaCusto();
   });
 } else if (page === "grafico-diversidade-vencedores") {
-  void renderDiversidadeVencedores("chart-diversidade-vencedores");
-  initFiltrosGrafico("filtro-orgao", null, (filtros) =>
-    void renderDiversidadeVencedores("chart-diversidade-vencedores", filtros),
-  );
+  let filtrosAtuais: FiltrosGrafico = {};
+  const rerenderDiversidadeVencedores = (): void =>
+    void renderDiversidadeVencedores("chart-diversidade-vencedores", filtrosAtuais);
+  rerenderDiversidadeVencedores();
+  initFiltrosGrafico("filtro-orgao", null, (filtros) => {
+    filtrosAtuais = { ...filtrosAtuais, ...filtros };
+    rerenderDiversidadeVencedores();
+  });
+  initFiltroAnoIntervalo("filtro-ano-inicio", "filtro-ano-fim", (anoFiltro) => {
+    filtrosAtuais = { ...filtrosAtuais, ...anoFiltro };
+    rerenderDiversidadeVencedores();
+  });
 } else if (page === "grafico-serie-temporal") {
   let filtrosAtuais: FiltrosGrafico = {};
   const rerenderContratosTemporal = (): void =>
@@ -76,10 +86,18 @@ if (page === "home") {
     rerenderContratosTemporal();
   });
 } else if (page === "grafico-concentracao-fornecedor") {
-  void renderConcentracaoFornecedor("chart-concentracao-fornecedor", "legenda-concentracao-fornecedor");
-  initFiltrosGrafico("filtro-orgao", null, (filtros) =>
-    void renderConcentracaoFornecedor("chart-concentracao-fornecedor", "legenda-concentracao-fornecedor", filtros),
-  );
+  let filtrosAtuais: FiltrosGrafico = {};
+  const rerenderConcentracaoFornecedor = (): void =>
+    void renderConcentracaoFornecedor("chart-concentracao-fornecedor", "legenda-concentracao-fornecedor", filtrosAtuais);
+  rerenderConcentracaoFornecedor();
+  initFiltrosGrafico("filtro-orgao", null, (filtros) => {
+    filtrosAtuais = { ...filtrosAtuais, ...filtros };
+    rerenderConcentracaoFornecedor();
+  });
+  initFiltroAnoIntervalo("filtro-ano-inicio", "filtro-ano-fim", (anoFiltro) => {
+    filtrosAtuais = { ...filtrosAtuais, ...anoFiltro };
+    rerenderConcentracaoFornecedor();
+  });
 } else if (page === "relatorio-qualidade-orgao") {
   const rerenderQualidadeDadoOrgao = (filtros: FiltroAnoIntervalo): void =>
     void renderQualidadeDadoOrgao("tabela-qualidade-dado-orgao", "btn-ver-mais-qualidade-dado-orgao", filtros);

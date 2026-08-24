@@ -19,6 +19,8 @@ export async function renderConcentracaoFornecedor(
 
   const params = new URLSearchParams({ top_n: String(TOP_N_EXIBIDO) });
   if (filtros.cod_unidade_gestora) params.set("cod_unidade_gestora", filtros.cod_unidade_gestora);
+  if (filtros.ano_inicio) params.set("ano_inicio", filtros.ano_inicio);
+  if (filtros.ano_fim) params.set("ano_fim", filtros.ano_fim);
 
   // Dedup por id_contratado + top-N já acontece no SQL (spec 024) — a API
   // devolve só as linhas necessárias, não a mart inteira.

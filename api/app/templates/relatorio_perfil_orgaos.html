@@ -9,6 +9,24 @@
   contratado — nem sempre coincidem: um órgão pode contratar com frequência valores baixos, ou raramente valores
   altos.
 </p>
+<div class="filter-bar">
+  <div class="filter-field">
+    <label for="filtro-ano-inicio">Ano inicial</label>
+    <select id="filtro-ano-inicio">
+      <option value="">Desde o início</option>
+    </select>
+  </div>
+  <div class="filter-field">
+    <label for="filtro-ano-fim">Ano final</label>
+    <select id="filtro-ano-fim">
+      <option value="">Até o mais recente</option>
+    </select>
+  </div>
+</div>
+<p class="filter-hint">
+  Ano filtra órgãos por atividade (ao menos um contrato no intervalo) — o perfil exibido continua sendo a
+  classificação histórica de cada órgão (spec 029).
+</p>
 <div class="chart-card">
   <div id="chart-perfil-orgaos" class="chart"></div>
 </div>

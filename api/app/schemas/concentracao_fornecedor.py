@@ -16,6 +16,13 @@ class ConcentracaoFornecedor(BaseModel):
         ),
     )
     nm_contratado: str | None = Field(None, description="Nome/razão social do fornecedor")
+    ano_assinatura: int | None = Field(
+        None,
+        description=(
+            "Ano de assinatura (spec 029). Sem ano_inicio/ano_fim, este campo reflete o valor "
+            "agregado no router (não corresponde a uma linha única da mart) — None nesse caso."
+        ),
+    )
     vl_total_fornecedor_orgao: Decimal | None = Field(
         None, description="Soma de vl_atual dos contratos deste fornecedor com este órgão"
     )

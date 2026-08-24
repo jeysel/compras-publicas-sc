@@ -25,6 +25,8 @@ export async function renderDiversidadeVencedores(
 
   const params = new URLSearchParams();
   if (filtros.cod_unidade_gestora) params.set("cod_unidade_gestora", filtros.cod_unidade_gestora);
+  if (filtros.ano_inicio) params.set("ano_inicio", filtros.ano_inicio);
+  if (filtros.ano_fim) params.set("ano_fim", filtros.ano_fim);
   const query = params.toString();
 
   const resposta = await fetch(`/api/v1/diversidade-vencedores${query ? `?${query}` : ""}`);

@@ -20,6 +20,9 @@ class DiversidadeVencedores(BaseModel):
     vl_total_variacao: Decimal | None = Field(None, description="Soma de vl_variacao dos contratos deste processo")
     dt_primeiro_contrato: date | None = Field(None, description="Data de assinatura do contrato mais antigo")
     dt_ultimo_contrato: date | None = Field(None, description="Data de assinatura do contrato mais recente")
+    ano_abertura: int | None = Field(
+        None, description="Ano de dt_primeiro_contrato — usado como filtro de ano do processo (spec 029)"
+    )
     ds_diversidade: str | None = Field(
         None, description="Classificação: 'Fornecedor único' ou 'Múltiplos fornecedores'"
     )

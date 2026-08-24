@@ -52,6 +52,15 @@ models:
       - name: dt_ultimo_contrato
         description: "Data de assinatura do contrato mais recente do processo"
 
+      - name: ano_abertura
+        description: >
+          Ano de dt_primeiro_contrato (spec 029, REQ-1) — usado como filtro de ano do
+          processo. Processos multi-ano (3,1% do total, spec 029 Investigação item 3)
+          ficam atribuídos ao ano de abertura mesmo com contrato(s) em ano(s) seguinte(s);
+          comportamento esperado, não um bug.
+        tests:
+          - not_null
+
       - name: ds_diversidade
         description: "Classificação: 'Fornecedor único' (qt_fornecedores_distintos = 1) ou 'Múltiplos fornecedores' (> 1)"
         tests:
