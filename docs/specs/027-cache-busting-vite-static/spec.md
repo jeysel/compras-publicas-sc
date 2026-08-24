@@ -6,7 +6,7 @@ Correção de comportamento (bug de cache do browser) — mudança pequena de ar
 
 ## Status
 
-Implementado e validado localmente em 2026-08-24 (REQ-1 a REQ-7). Deploy em staging/produção (REQ-8) ainda não feito — pendente de autorização explícita de push/deploy (constitution, regra 2).
+Implementado, validado localmente, em staging e em produção em 2026-08-24 (REQ-1 a REQ-8) — commit `20a66a2` (código), `f50edc4` (promoção staging), `2c75849` (promoção produção).
 
 ### Validação (local, `docker compose --profile api up api -d --build`)
 
@@ -62,6 +62,42 @@ Smoke test de 4 páginas (todas herdam `layout.html`):
 ```
 
 `grep -rn "static/main\." api/app/templates/` → nenhum resultado (nenhuma referência hardcoded remanescente).
+
+### Validação (staging e produção, REQ-8)
+
+Fluxo de promoção confirmado (spec 022, mecanismo já em uso): push → CI (`build-and-push.yml`, run 32741933330) publica `ghcr.io/.../compras-publicas-api:20a66a2` → `newTag` do overlay atualizado → commit/push → sync manual do Argo CD (`sudo -n kubectl patch application ... sync`) → pod `Running`/`Healthy` na tag nova, confirmado por `kubectl get pod`/`get application` via SSH.
+
+Staging (via `kubectl port-forward` direto ao `Service`, sem passar pelo Ingress):
+
+```
+--- home HTML refs ---
+<link rel="stylesheet" href="/static/assets/main-BIW6ngjM.css" />
+<script type="module" src="/static/assets/main-CSZ12GDS.js"></script>
+--- hashed asset headers ---
+cache-control: public, max-age=31536000, immutable
+--- favicon headers (no hash) ---
+(sem cache-control, esperado)
+--- smoke pages ---
+/                          -> 200
+/metodologia               -> 200
+/relatorios/perfil-orgaos  -> 200
+```
+
+Produção (`https://contratos-sc.jeysel.dev`, domínio público real, atravessando Nginx/Traefik):
+
+```
+<link rel="stylesheet" href="/static/assets/main-BIW6ngjM.css" />
+<script type="module" src="/static/assets/main-CSZ12GDS.js"></script>
+
+Cache-Control: public, max-age=31536000, immutable          ← asset com hash
+Cache-Control: max-age=14400                                ← favicon.svg (sem hash)
+
+/                          -> 200
+/metodologia               -> 200
+/relatorios/perfil-orgaos  -> 200
+```
+
+O `max-age=14400` do `favicon.svg` em produção (ausente no teste local/staging via port-forward) vem da camada Nginx na frente do cluster, não da API — comportamento pré-existente, fora do escopo desta spec (ver Fora do escopo), e não é uma regressão: 4h é uma janela muito menor que o problema original (cache indefinido até hard-refresh manual) e esse arquivo não muda de conteúdo com frequência.
 
 ## Resumo
 
