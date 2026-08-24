@@ -10,14 +10,19 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# aab8e3a (filtros interativos de orgao/modalidade nos 4 graficos) validado em
-# staging em 2026-08-24: pod Running/Healthy na tag nova, filtro confirmado
-# via API (escalada-custo?cod_unidade_gestora=920021 retornou 43/43 registros,
-# todos com o código filtrado, contra 1000 sem filtro), confirmação visual dos
-# 4 gráficos no navegador via port-forward. Mudança só de código API/frontend,
-# sem alteração de model dbt — não precisa de dbt run/test seletivo antes de
-# promover.
+# c5dfabd (filtro de ano/intervalo em 5 endpoints + paginação 30->15, spec 028)
+# validado em staging em 2026-08-24: pod Running (0 restarts) na tag nova,
+# regressão checada nos 3 endpoints com WHERE novo (qualidade-dado-orgao 414/
+# variacao-custo-modalidade 18/variacao-prazo-modalidade 1 linhas sem filtro,
+# idêntico ao dado de dev), filtro de ano confirmado restringindo (qualidade-
+# dado-orgao?ano_inicio=2020&ano_fim=2020 -> 105/414), paginação confirmada via
+# clique real no "Ver mais" (15 linhas iniciais -> 30 após 1 clique),
+# confirmação visual das 5 páginas via Playwright + port-forward (dropdowns de
+# ano populados 2016-2026, combinação com filtro de órgão/modalidade preserva
+# ambos, 0 erros de console). Mudança só de código API/frontend (3 endpoints
+# existentes ganharam WHERE novo), sem alteração de model dbt — não precisa de
+# dbt run/test seletivo antes de promover.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: aab8e3a
+    newTag: c5dfabd
