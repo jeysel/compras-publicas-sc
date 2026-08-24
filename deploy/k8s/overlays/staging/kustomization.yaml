@@ -8,14 +8,16 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag c5dfabd — filtro de ano/intervalo
-# em 5 endpoints, paginação 30->15, spec 028; tag == HEAD do push == GITHUB_SHA
-# do build, confirmado via `gh run list`/`gh run watch` (run 32757860203,
-# conclusion success). Mudança só de código API/frontend (3 endpoints
-# existentes ganharam WHERE novo), sem alteração de model dbt — não precisa de
-# dbt run/test seletivo antes de promover.
+# build de compras-publicas-api no GHCR (tag d8aeacb — grão novo em
+# ConcentracaoFornecedor + filtro de ano em 4 endpoints, spec 029; tag == HEAD
+# do push == GITHUB_SHA do build, confirmado via `gh run list`/`gh run view`
+# (run 32762906232, conclusion success). Mudança de model dbt — dbt run/test
+# seletivo (int_concentracao_fornecedor_estado, int_concentracao_fornecedor_por_orgao,
+# mart_concentracao_fornecedor, mart_diversidade_vencedores) já rodado e
+# validado em staging antes desta promoção (108/108 dbt test, 46.305 linhas
+# em mart_concentracao_fornecedor, confirmado determinístico via --full-refresh).
 # Atualizar aqui a cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: c5dfabd
+    newTag: d8aeacb
