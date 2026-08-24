@@ -4,61 +4,27 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Compras Públicas SC</title>
+    <title>Compras Públicas SC (dev)</title>
   </head>
   <body data-page="home">
-    <h1>Compras Públicas SC</h1>
-
-    <section>
-      <h2>Escalada de custo — contratos</h2>
-      <div id="chart-escalada-custo" class="chart"></div>
-      <p id="legenda-escalada-custo" class="chart-legend"></p>
-    </section>
-
-    <section>
-      <h2>Diversidade de vencedores</h2>
-      <div id="chart-diversidade-vencedores" class="chart"></div>
-    </section>
-
-    <section>
-      <h2>Série temporal de contratos</h2>
-      <div id="chart-contratos-temporal" class="chart"></div>
-      <p id="legenda-contratos-temporal" class="chart-legend"></p>
-    </section>
-
-    <section>
-      <h2>Concentração de fornecedores</h2>
-      <div id="chart-concentracao-fornecedor" class="chart"></div>
-      <p id="legenda-concentracao-fornecedor" class="chart-legend"></p>
-    </section>
-
-    <section id="metodologia">
-      <h2>Metodologia</h2>
+    <div style="font: 14px/1.5 system-ui, sans-serif; color: #333; max-width: 640px; margin: 32px auto; padding: 0 16px">
+      <p><strong>Scaffold de dev (Vite)</strong> — nunca é servido em produção.</p>
       <p>
-        Contratos com <code>fl_aditivo_inconsistente = true</code> têm
-        divergência, acima de arredondamento, entre o valor de aditivo
-        registrado na fonte (<code>vl_aditado</code>) e a variação calculada
-        (<code>vl_atual - vl_original</code>) — sinal de qualidade de dado da
-        fonte, não um erro de cálculo deste sistema (ver spec 013/014). Por
-        padrão, esses contratos são excluídos das agregações de valor onde a
-        granularidade do dado permite o filtro (ex.: escalada de custo).
-        Quando a agregação já vem pronta de uma mart sem essa granularidade
-        (ex.: série temporal), a exclusão ainda não é possível e fica
-        registrada como pendência.
+        A home real é <code>api/app/templates/home.html</code> (Jinja2), renderizada pela API —
+        essa é a única fonte de verdade de estrutura/HTML.
       </p>
       <p>
-        Contratos com <code>fl_valor_suspeito = true</code> têm valor
-        (<code>vl_original</code> ou <code>vl_atual</code>) implausível para
-        o objeto contratado — por exemplo, um contrato registrado com valor
-        milhares de vezes maior que o valor atual do mesmo contrato. A
-        investigação confirmou que se trata de erro de dado da fonte
-        (portal/SICOP), não deste sistema. Por padrão, contratos com essa
-        flag são excluídos das agregações de valor exibidas nos gráficos
-        (ver spec 021 para o detalhe técnico completo, incluindo os padrões
-        de corrupção identificados e a magnitude do problema no dataset).
+        Fetches relativos (<code>/api/v1/...</code>) não resolvem aqui sem proxy (não configurado).
+        Para testar contra dados reais, use
+        <code>docker compose --profile api up api -d --build</code> e abra a página renderizada
+        pela API.
       </p>
-    </section>
-
+      <p>
+        Para iterar em um gráfico específico neste modo, troque <code>data-page</code> no
+        <code>&lt;body&gt;</code> e/ou adicione manualmente os elementos que o chart espera (ver
+        <code>web/src/main.ts</code> para o mapeamento page → render).
+      </p>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
