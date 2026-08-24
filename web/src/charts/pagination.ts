@@ -3,7 +3,7 @@ export function criarPaginador<T>(
   tbody: HTMLTableSectionElement,
   renderLinha: (linha: T, row: HTMLTableRowElement) => void,
   botao: HTMLButtonElement | null,
-  tamanhoPagina = 30,
+  tamanhoPagina = 15,
 ): void {
   let exibidas = 0;
 

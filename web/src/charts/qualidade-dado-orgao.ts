@@ -1,16 +1,26 @@
 import type { components } from "../api-types";
+import type { FiltroAnoIntervalo } from "./filtros";
 import { formatarPercentual } from "./format";
 import { criarPaginador } from "./pagination";
 
 type QualidadeDadoOrgao = components["schemas"]["QualidadeDadoOrgao"];
 
-export async function renderQualidadeDadoOrgao(tableId: string, botaoId: string): Promise<void> {
+export async function renderQualidadeDadoOrgao(
+  tableId: string,
+  botaoId: string,
+  filtros: FiltroAnoIntervalo = {},
+): Promise<void> {
   const table = document.getElementById(tableId);
   const tbody = table?.querySelector("tbody");
   const botao = document.getElementById(botaoId) as HTMLButtonElement | null;
   if (table === null || tbody == null) return;
 
-  const resposta = await fetch("/api/v1/qualidade-dado-orgao");
+  const params = new URLSearchParams();
+  if (filtros.ano_inicio) params.set("ano_inicio", filtros.ano_inicio);
+  if (filtros.ano_fim) params.set("ano_fim", filtros.ano_fim);
+  const query = params.toString();
+
+  const resposta = await fetch(`/api/v1/qualidade-dado-orgao${query ? `?${query}` : ""}`);
   if (!resposta.ok) {
     tbody.textContent = "";
     const row = tbody.insertRow();

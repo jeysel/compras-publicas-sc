@@ -1,5 +1,6 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
+import type { FiltroAnoIntervalo } from "./filtros";
 import { formatarPercentual, truncarTexto } from "./format";
 import { criarPaginador } from "./pagination";
 import { isMobileViewport } from "./theme";
@@ -50,6 +51,7 @@ export async function renderVariacaoCustoModalidade(
   tableId: string,
   botaoId: string,
   insightId: string,
+  filtros: FiltroAnoIntervalo = {},
 ): Promise<void> {
   const container = document.getElementById(containerId);
   const table = document.getElementById(tableId);
@@ -58,7 +60,12 @@ export async function renderVariacaoCustoModalidade(
   const insight = document.getElementById(insightId);
   if (container === null || table === null || tbody == null) return;
 
-  const resposta = await fetch("/api/v1/variacao-custo-modalidade");
+  const params = new URLSearchParams();
+  if (filtros.ano_inicio) params.set("ano_inicio", filtros.ano_inicio);
+  if (filtros.ano_fim) params.set("ano_fim", filtros.ano_fim);
+  const query = params.toString();
+
+  const resposta = await fetch(`/api/v1/variacao-custo-modalidade${query ? `?${query}` : ""}`);
   if (!resposta.ok) {
     container.textContent = `Erro ao carregar dados (HTTP ${resposta.status})`;
     return;
@@ -73,33 +80,43 @@ export async function renderVariacaoCustoModalidade(
 
   const mobile = isMobileViewport();
 
-  const chart = echarts.init(container);
-  chart.setOption({
-    tooltip: {
-      trigger: "axis",
-      valueFormatter: (value: number | string) => formatarPercentual(Number(value)),
-    },
-    // containLabel: true evita que o nome da modalidade seja cortado pela borda do
-    // grid (left fixo de 260px não cabe em tela mobile estreita).
-    grid: { left: mobile ? 8 : 260, right: 30, bottom: 30, containLabel: true },
-    xAxis: { type: "value", axisLabel: { formatter: (value: number) => formatarPercentual(value) } },
-    yAxis: {
-      type: "category",
-      data: porVariacao.map((l) => (mobile ? truncarTexto(l.nm_modalidade, 18) : l.nm_modalidade)).reverse(),
-    },
-    series: [
-      {
-        type: "bar",
-        data: porVariacao.map((l) => Number(l.perc_variacao_media)).reverse(),
+  // notMerge: true evita que categorias/série de uma chamada anterior (outro filtro)
+  // sobrevivam misturadas ao trocar o filtro e re-renderizar na mesma instância.
+  const instanciaExistente = echarts.getInstanceByDom(container);
+  const chart = instanciaExistente ?? echarts.init(container);
+  chart.setOption(
+    {
+      tooltip: {
+        trigger: "axis",
+        valueFormatter: (value: number | string) => formatarPercentual(Number(value)),
       },
-    ],
-  });
+      // containLabel: true evita que o nome da modalidade seja cortado pela borda do
+      // grid (left fixo de 260px não cabe em tela mobile estreita).
+      grid: { left: mobile ? 8 : 260, right: 30, bottom: 30, containLabel: true },
+      xAxis: { type: "value", axisLabel: { formatter: (value: number) => formatarPercentual(value) } },
+      yAxis: {
+        type: "category",
+        data: porVariacao.map((l) => (mobile ? truncarTexto(l.nm_modalidade, 18) : l.nm_modalidade)).reverse(),
+      },
+      series: [
+        {
+          type: "bar",
+          data: porVariacao.map((l) => Number(l.perc_variacao_media)).reverse(),
+        },
+      ],
+    },
+    true,
+  );
 
   // Fix especulativo (spec pendente) para gráfico encolhido observado em iPhone real —
   // causa não confirmada em código (container já tem altura px explícita, listener de
   // resize já existia); força um resize após o primeiro layout do Safari por precaução.
   requestAnimationFrame(() => chart.resize());
-  window.addEventListener("resize", () => chart.resize());
+  // Listener de resize só é anexado na primeira renderização — reaproveitar a instância
+  // ao trocar filtro não deve empilhar um novo listener a cada troca.
+  if (instanciaExistente === undefined) {
+    window.addEventListener("resize", () => chart.resize());
+  }
 
   tbody.textContent = "";
   criarPaginador(

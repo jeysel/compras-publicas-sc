@@ -37,6 +37,7 @@ export async function renderEscaladaCusto(
   const params = new URLSearchParams();
   if (filtros.cod_unidade_gestora) params.set("cod_unidade_gestora", filtros.cod_unidade_gestora);
   if (filtros.nm_modalidade) params.set("nm_modalidade", filtros.nm_modalidade);
+  if (filtros.ano) params.set("ano", filtros.ano);
   const query = params.toString();
 
   const resposta = await fetch(`/api/v1/escalada-custo${query ? `?${query}` : ""}`);

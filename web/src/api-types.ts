@@ -1047,7 +1047,12 @@ export interface operations {
     };
     get_qualidade_dado_orgao_api_v1_qualidade_dado_orgao_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Ano inicial do período (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final do período (inclusive) */
+                ano_fim?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1063,11 +1068,25 @@ export interface operations {
                     "application/json": components["schemas"]["QualidadeDadoOrgao"][];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     get_variacao_custo_modalidade_api_v1_variacao_custo_modalidade_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Ano inicial do período (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final do período (inclusive) */
+                ano_fim?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1083,11 +1102,25 @@ export interface operations {
                     "application/json": components["schemas"]["VariacaoCustoModalidade"][];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     get_variacao_prazo_modalidade_api_v1_variacao_prazo_modalidade_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Ano inicial do período (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final do período (inclusive) */
+                ano_fim?: number | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1101,6 +1134,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VariacaoPrazoModalidade"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
