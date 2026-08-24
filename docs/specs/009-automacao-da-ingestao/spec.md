@@ -6,6 +6,18 @@ Decisão de arquitetura — fecha o eixo pipeline (specs 003-008).
 
 ## Status
 
+**Superada em 2026-08-24** — ver [[030-ingestao-manual-upsert]]. A fonte
+CKAN que esta spec automatizava está congelada desde set/2025; o fluxo
+manual via SCP + upsert (spec 030) a substituiu definitivamente. O cron
+do host (`ubuntu`, servidor de produção, entrada `30 9 * * *` disparando
+`docker compose -f docker-compose.pipeline.yml run --rm
+compras-publicas-pipeline`) foi removido nessa data para eliminar o risco
+documentado na spec 030 ("Casos de borda") de a Secretaria voltar a
+publicar no link antigo e o próximo disparo automático apagar
+silenciosamente o histórico 2011–2020 trazido só pelo fluxo manual. O
+script `ingest.sh` e a imagem do pipeline não foram apagados — mantidos
+como histórico/referência, sem disparo automático.
+
 **Decisão revertida nesta sessão** (achado de deploy real): "Onde a rotina roda" muda de `CronJob` k3s para **crontab do host + `docker-compose run`**, seguindo o precedente real dos dois projetos vizinhos (nenhum usa CronJob k8s para rotina agendada, mesmo tendo cluster/Argo CD disponíveis — ambos usam crontab do host). O resto do Design (cadência via `ETag`/`HEAD`, validação de schema antes do `dbt run`, sequenciamento num único script) permanece válido — só o mecanismo de execução muda.
 
 ## Resumo
