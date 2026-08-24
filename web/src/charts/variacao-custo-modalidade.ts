@@ -1,7 +1,8 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
-import { formatarPercentual } from "./format";
+import { formatarPercentual, truncarTexto } from "./format";
 import { criarPaginador } from "./pagination";
+import { isMobileViewport } from "./theme";
 
 type VariacaoCustoModalidade = components["schemas"]["VariacaoCustoModalidade"];
 
@@ -70,15 +71,22 @@ export async function renderVariacaoCustoModalidade(
 
   if (insight !== null) insight.textContent = montarInsight(linhas);
 
+  const mobile = isMobileViewport();
+
   const chart = echarts.init(container);
   chart.setOption({
     tooltip: {
       trigger: "axis",
       valueFormatter: (value: number | string) => formatarPercentual(Number(value)),
     },
-    grid: { left: 260, right: 30, bottom: 30 },
+    // containLabel: true evita que o nome da modalidade seja cortado pela borda do
+    // grid (left fixo de 260px não cabe em tela mobile estreita).
+    grid: { left: mobile ? 8 : 260, right: 30, bottom: 30, containLabel: true },
     xAxis: { type: "value", axisLabel: { formatter: (value: number) => formatarPercentual(value) } },
-    yAxis: { type: "category", data: porVariacao.map((l) => l.nm_modalidade).reverse() },
+    yAxis: {
+      type: "category",
+      data: porVariacao.map((l) => (mobile ? truncarTexto(l.nm_modalidade, 18) : l.nm_modalidade)).reverse(),
+    },
     series: [
       {
         type: "bar",

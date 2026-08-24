@@ -1,6 +1,8 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
 import { criarPaginador } from "./pagination";
+import { isMobileViewport } from "./theme";
+import { truncarTexto } from "./format";
 
 type VariacaoPrazoModalidade = components["schemas"]["VariacaoPrazoModalidade"];
 
@@ -24,15 +26,22 @@ export async function renderVariacaoPrazoModalidade(
   const linhas = (await resposta.json()) as VariacaoPrazoModalidade[];
   const ordenadas = [...linhas].sort((a, b) => Number(b.dias_variacao_media) - Number(a.dias_variacao_media));
 
+  const mobile = isMobileViewport();
+
   const chart = echarts.init(container);
   chart.setOption({
     tooltip: {
       trigger: "axis",
       valueFormatter: (value: number | string) => `${value} dias`,
     },
-    grid: { left: 260, right: 30, bottom: 30 },
+    // containLabel: true evita que o nome da modalidade seja cortado pela borda do
+    // grid (left fixo de 260px não cabe em tela mobile estreita).
+    grid: { left: mobile ? 8 : 260, right: 30, bottom: 30, containLabel: true },
     xAxis: { type: "value", axisLabel: { formatter: "{value}d" } },
-    yAxis: { type: "category", data: ordenadas.map((l) => l.nm_modalidade).reverse() },
+    yAxis: {
+      type: "category",
+      data: ordenadas.map((l) => (mobile ? truncarTexto(l.nm_modalidade, 18) : l.nm_modalidade)).reverse(),
+    },
     series: [
       {
         type: "bar",

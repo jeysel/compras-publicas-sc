@@ -1,5 +1,6 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
+import { tituloResponsivo } from "./theme";
 
 type DiversidadeVencedores = components["schemas"]["DiversidadeVencedores"];
 
@@ -29,7 +30,7 @@ export async function renderDiversidadeVencedores(containerId: string): Promise<
 
   const chart = echarts.init(container);
   chart.setOption({
-    title: { text: "Diversidade de vencedores por processo licitatório" },
+    title: tituloResponsivo("Diversidade de vencedores por processo licitatório"),
     tooltip: { trigger: "item" },
     series: [
       {

@@ -2,6 +2,7 @@ import * as echarts from "echarts";
 import type { components } from "../api-types";
 import { setLegendaExclusao } from "./legend";
 import { formatarMoedaBRL } from "./format";
+import { tituloResponsivo } from "./theme";
 
 type ContratosTemporal = components["schemas"]["ContratosTemporal"];
 
@@ -81,7 +82,7 @@ export async function renderContratosTemporal(
 
   const chart = echarts.init(container);
   chart.setOption({
-    title: { text: "Valor contratado por mês de assinatura" },
+    title: tituloResponsivo("Valor contratado por mês de assinatura"),
     tooltip: {
       trigger: "axis",
       valueFormatter: (value: number | string) => formatarMoedaBRL(Number(value)),

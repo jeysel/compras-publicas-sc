@@ -1,7 +1,8 @@
 import * as echarts from "echarts";
 import type { components } from "../api-types";
 import { setLegendaExclusao } from "./legend";
-import { formatarMoedaBRL } from "./format";
+import { formatarMoedaBRL, formatarMoedaCompactaBRL, truncarTexto } from "./format";
+import { isMobileViewport, tituloResponsivo } from "./theme";
 
 type ConcentracaoFornecedor = components["schemas"]["ConcentracaoFornecedor"];
 
@@ -20,26 +21,37 @@ export async function renderConcentracaoFornecedor(containerId: string, legendaI
   }
 
   const top = (await resposta.json()) as ConcentracaoFornecedor[];
+  const mobile = isMobileViewport();
+  const nomes = top.map((f) => String(f.nm_contratado ?? f.id_contratado));
 
   const chart = echarts.init(container);
   chart.setOption({
-    title: { text: `Top ${TOP_N_EXIBIDO} fornecedores por gasto no estado` },
+    title: tituloResponsivo(`Top ${TOP_N_EXIBIDO} fornecedores por gasto no estado`),
     tooltip: {
       trigger: "axis",
       valueFormatter: (value: number | string) => formatarMoedaBRL(Number(value)),
     },
-    grid: { left: 200, bottom: 70 },
+    // containLabel: true evita que rótulo de eixo (nome de fornecedor, valor) seja
+    // cortado pela borda do grid — left/bottom viram folga extra além do rótulo.
+    grid: { left: mobile ? 8 : 200, bottom: mobile ? 40 : 70, containLabel: true },
     xAxis: {
       type: "value",
-      name: "Valor total no estado (R$)",
+      // Nome do eixo estoura a largura da tela em mobile (não cabe ao lado do
+      // último tick) — some no valor completo já disponível no tooltip/título.
+      name: mobile ? undefined : "Valor total no estado (R$)",
+      // Menos ticks em mobile: rótulo compacto ainda se sobrepõe se o eixo tentar
+      // caber os ~5 ticks padrão num grid estreito.
+      splitNumber: mobile ? 3 : undefined,
       axisLabel: {
-        formatter: (value: number) => formatarMoedaBRL(value),
-        rotate: 30,
+        // Notação completa gira 30° e sobrepõe em telas estreitas; compacta cabe
+        // na horizontal (rotate 0) mesmo em mobile.
+        formatter: (value: number) => (mobile ? formatarMoedaCompactaBRL(value) : formatarMoedaBRL(value)),
+        rotate: mobile ? 0 : 30,
       },
     },
     yAxis: {
       type: "category",
-      data: top.map((f) => f.nm_contratado ?? f.id_contratado).reverse(),
+      data: nomes.map((nome) => (mobile ? truncarTexto(nome, 18) : nome)).reverse(),
     },
     series: [
       {

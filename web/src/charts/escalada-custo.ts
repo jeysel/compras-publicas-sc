@@ -2,6 +2,7 @@ import * as echarts from "echarts";
 import type { components } from "../api-types";
 import { setLegendaExclusao } from "./legend";
 import { formatarMoedaBRL } from "./format";
+import { tituloResponsivo } from "./theme";
 
 type EscaladaCusto = components["schemas"]["EscaladaCusto"];
 
@@ -55,7 +56,7 @@ export async function renderEscaladaCusto(containerId: string, legendaId: string
 
   const chart = echarts.init(container);
   chart.setOption({
-    title: { text: "Escalada de custo por ano de assinatura" },
+    title: tituloResponsivo("Escalada de custo por ano de assinatura"),
     tooltip: {
       trigger: "axis",
       valueFormatter: (value: number | string) => formatarMoedaBRL(Number(value)),
