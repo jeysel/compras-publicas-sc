@@ -5,6 +5,9 @@ models:
     description: >
       Agregação de contratos por unidade gestora e gestão.
       Inclui totais de valor, quantidade de contratos e fornecedores distintos.
+      Exclui linhas com fl_valor_suspeito=true (spec 021/026) — mesmo motivo
+      de int_contratos_evolucao_por_orgao.sql; sem o filtro, dim_orgaos.rank_por_valor/
+      ds_perfil_contratacao ficavam distorcidos por outliers de valor implausível.
 
     columns:
       - name: cod_unidade_gestora
@@ -62,6 +65,9 @@ models:
     description: >
       Agregação de contratos por fornecedor (contratado).
       Inclui métricas de concentração e participação.
+      Exclui linhas com fl_valor_suspeito=true (spec 021/026) — mesmo motivo
+      de int_contratos_por_orgao.sql; sem o filtro, dim_fornecedores.rank_por_valor/
+      porte_fornecedor ficavam distorcidos por outliers de valor implausível.
 
     columns:
       - name: id_contratado

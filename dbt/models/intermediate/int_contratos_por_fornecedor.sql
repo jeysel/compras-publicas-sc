@@ -37,6 +37,11 @@ agregado as (
         )                                               as perc_concentracao
 
     from contratos
+    -- exclui linhas com fl_valor_suspeito=true (spec 021/026) — mesmo padrão
+    -- já usado em int_contratos_evolucao_por_orgao.sql; sem este filtro,
+    -- dim_fornecedores.rank_por_valor/porte_fornecedor ficam distorcidos por
+    -- outliers de valor implausível (spec 026, achado de ~R$ 32,5 bi de gap).
+    where coalesce(fl_valor_suspeito, false) = false
     group by 1
 
 )

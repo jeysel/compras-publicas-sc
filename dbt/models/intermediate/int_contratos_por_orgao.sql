@@ -33,6 +33,11 @@ agregado as (
         max(dt_assinatura)                              as dt_ultimo_contrato
 
     from contratos
+    -- exclui linhas com fl_valor_suspeito=true (spec 021/026) — mesmo padrão
+    -- já usado em int_contratos_evolucao_por_orgao.sql; sem este filtro,
+    -- dim_orgaos.rank_por_valor/ds_perfil_contratacao ficam distorcidos por
+    -- outliers de valor implausível (spec 026, achado de ~R$ 32,5 bi de gap).
+    where coalesce(fl_valor_suspeito, false) = false
     group by 1, 3
 
 )
