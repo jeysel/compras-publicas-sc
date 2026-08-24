@@ -184,15 +184,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/": {
+    "/api/v1/kpis-resumo": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Home */
-        get: operations["home__get"];
+        /**
+         * Get Kpis Resumo
+         * @description KPIs resumo da home (spec 026) — agregado em 1 linha sobre marts.mart_escalada_custo. Sem campos de SUM de valor (valor_total/total_aditivos) — achado durante a spec 026: fl_valor_suspeito não cobre 13 contratos com |vl_variacao| > R$100mi (gap de detecção anterior à spec 021, não corrigido aqui), então qualquer SUM de vl_atual/vl_variacao fica sensível a um único outlier não sinalizado. Contagens (count) não são afetadas por esse gap — a classificação de um contrato como outlier não muda se ele é contado ou não.
+         */
+        get: operations["get_kpis_resumo_api_v1_kpis_resumo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/perfil-fornecedores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Perfil Fornecedores
+         * @description Distribuição de fornecedores por porte (spec 026) — GROUP BY porte_fornecedor sobre marts.dim_fornecedores; a classificação já vem pronta da mart (dim_fornecedores.sql), este endpoint só agrega o que já existe, não reclassifica nada.
+         */
+        get: operations["get_perfil_fornecedores_api_v1_perfil_fornecedores_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -522,6 +545,29 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** KpisResumo */
+        KpisResumo: {
+            /**
+             * Total Contratos
+             * @description Total de contratos
+             */
+            total_contratos: number;
+            /**
+             * Fornecedores Distintos
+             * @description Quantidade de fornecedores distintos
+             */
+            fornecedores_distintos: number;
+            /**
+             * Orgaos Distintos
+             * @description Quantidade de órgãos distintos
+             */
+            orgaos_distintos: number;
+            /**
+             * Contratos Com Aditivo
+             * @description Quantidade de contratos com vl_variacao <> 0
+             */
+            contratos_com_aditivo: number;
+        };
         /** Modalidade */
         Modalidade: {
             /**
@@ -702,6 +748,24 @@ export interface components {
              * @description Classificação textual do perfil de contratação do órgão
              */
             ds_perfil_contratacao?: string | null;
+        };
+        /** PerfilFornecedores */
+        PerfilFornecedores: {
+            /**
+             * Porte Fornecedor
+             * @description Classificação por porte: Micro, Pequeno, Médio, Grande
+             */
+            porte_fornecedor: string;
+            /**
+             * Qt Fornecedores
+             * @description Quantidade de fornecedores na faixa
+             */
+            qt_fornecedores: number;
+            /**
+             * Valor Total
+             * @description Soma de vl_total_atual dos fornecedores na faixa
+             */
+            valor_total?: string | null;
         };
         /** QualidadeDadoOrgao */
         QualidadeDadoOrgao: {
@@ -1041,7 +1105,7 @@ export interface operations {
             };
         };
     };
-    home__get: {
+    get_kpis_resumo_api_v1_kpis_resumo_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1056,7 +1120,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KpisResumo"];
+                };
+            };
+        };
+    };
+    get_perfil_fornecedores_api_v1_perfil_fornecedores_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerfilFornecedores"][];
                 };
             };
         };

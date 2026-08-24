@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Perfil de órgãos — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Relatórios / Perfil de órgãos</div>
+<h1>Perfil de órgãos por volume e valor</h1>
+<p class="page-intro">
+  Classificação dos órgãos pelo volume de contratação (Esporádico: até 9 contratos; Baixo volume: 10 a 99; Médio
+  volume: 100 a 999; Alto volume: 1.000 ou mais) e os dois rankings — por quantidade de contratos e por valor total
+  contratado — nem sempre coincidem: um órgão pode contratar com frequência valores baixos, ou raramente valores
+  altos.
+</p>
+<div class="chart-card">
+  <div id="chart-perfil-orgaos" class="chart"></div>
+</div>
+<div class="ranking-grid">
+  <div class="table-card">
+    <h2>Top 10 órgãos por quantidade de contratos</h2>
+    <table id="tabela-ranking-quantidade" class="data-table">
+      <thead>
+        <tr>
+          <th>Órgão</th>
+          <th class="num">Contratos</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="table-card">
+    <h2>Top 10 órgãos por valor total</h2>
+    <table id="tabela-ranking-valor" class="data-table">
+      <thead>
+        <tr>
+          <th>Órgão</th>
+          <th class="num">Valor total</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

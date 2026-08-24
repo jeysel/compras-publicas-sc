@@ -225,6 +225,47 @@ section {
   margin: 36px 0;
 }
 
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 36px 0;
+}
+
+.kpi-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  padding: 20px;
+  text-align: center;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.ranking-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.ranking-grid h2 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+
 .finding-card {
   border: 1px solid var(--border);
   border-left: 4px solid var(--accent-2);
@@ -527,6 +568,14 @@ section {
 @media (max-width: 720px) {
   .findings,
   .link-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ranking-grid {
     grid-template-columns: 1fr;
   }
 

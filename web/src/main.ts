@@ -6,6 +6,9 @@ import { renderQualidadeDadoOrgao } from "./charts/qualidade-dado-orgao";
 import { renderVariacaoCustoModalidade } from "./charts/variacao-custo-modalidade";
 import { renderVariacaoPrazoModalidade } from "./charts/variacao-prazo-modalidade";
 import { renderAchadosHome } from "./charts/achados-home";
+import { renderKpisResumo } from "./charts/kpis-resumo";
+import { renderPerfilFornecedores } from "./charts/perfil-fornecedores";
+import { renderPerfilOrgaos } from "./charts/perfil-orgaos";
 import { initNavbarToggle } from "./nav";
 import "./style.css";
 
@@ -14,7 +17,16 @@ initNavbarToggle();
 const page = document.body.dataset.page;
 
 if (page === "home") {
+  void renderKpisResumo();
   void renderAchadosHome();
+} else if (page === "relatorio-perfil-fornecedores") {
+  void renderPerfilFornecedores("chart-perfil-fornecedores");
+} else if (page === "relatorio-perfil-orgaos") {
+  void renderPerfilOrgaos(
+    "chart-perfil-orgaos",
+    "tabela-ranking-quantidade",
+    "tabela-ranking-valor",
+  );
 } else if (page === "grafico-escalada-custo") {
   void renderEscaladaCusto("chart-escalada-custo", "legenda-escalada-custo");
 } else if (page === "grafico-diversidade-vencedores") {
