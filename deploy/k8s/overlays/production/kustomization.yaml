@@ -10,16 +10,17 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# 84254bb (menu hambúrguer mobile real, tentativa de fix para gráficos
-# encolhidos no Safari iOS, contexto legal de aditivos/sazonalidade mensal/
-# insight de taxa de aditivo por modalidade) validado em staging via
-# Playwright (viewport iPhone 13) em 2026-08-23: hamburger abre/fecha o menu
-# corretamente, chart-sazonalidade-mensal e chart-contratos-temporal
-# renderizam com bounding box não-colapsada (340x320) e dado real, insight
-# de variacao-custo-modalidade populado com texto real, zero erros de
-# console. As 3 rotas (/, /relatorios/variacao-custo-modalidade,
-# /graficos/serie-temporal) retornaram 200.
+# 064bbd0 (spec 026: KPIs resumo, perfil de fornecedores/órgãos, correção de
+# fl_valor_suspeito em dim_orgaos/dim_fornecedores) validado em staging em
+# 2026-08-24: dbt run/test seletivo já rodado contra o Postgres compartilhado
+# (staging=produção, mesmo banco — achado da spec 026, ver overlay de staging)
+# antes deste deploy, então a promoção pra produção não precisa recalcular
+# marts de novo, só trocar a imagem. Validação funcional pós-sync em staging:
+# /api/v1/kpis-resumo e /api/v1/perfil-fornecedores retornaram dado real
+# (idêntico ao validado localmente); /, /relatorios/perfil-fornecedores e
+# /relatorios/perfil-orgaos retornaram 200; load test (50 sequenciais) 50/50
+# HTTP 200, memória estável em 42Mi.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 84254bb
+    newTag: 064bbd0
