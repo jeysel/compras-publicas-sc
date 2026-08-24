@@ -17,9 +17,11 @@ import {
   type FiltroAnoIntervalo,
 } from "./charts/filtros";
 import { initNavbarToggle } from "./nav";
+import { initCoberturaAno } from "./cobertura";
 import "./style.css";
 
 initNavbarToggle();
+void initCoberturaAno();
 
 const page = document.body.dataset.page;
 
