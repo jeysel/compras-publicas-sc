@@ -10,17 +10,16 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# 064bbd0 (spec 026: KPIs resumo, perfil de fornecedores/órgãos, correção de
-# fl_valor_suspeito em dim_orgaos/dim_fornecedores) validado em staging em
-# 2026-08-24: dbt run/test seletivo já rodado contra o Postgres compartilhado
-# (staging=produção, mesmo banco — achado da spec 026, ver overlay de staging)
-# antes deste deploy, então a promoção pra produção não precisa recalcular
-# marts de novo, só trocar a imagem. Validação funcional pós-sync em staging:
-# /api/v1/kpis-resumo e /api/v1/perfil-fornecedores retornaram dado real
-# (idêntico ao validado localmente); /, /relatorios/perfil-fornecedores e
-# /relatorios/perfil-orgaos retornaram 200; load test (50 sequenciais) 50/50
-# HTTP 200, memória estável em 42Mi.
+# 20a66a2 (spec 027: cache-busting real via hash de conteúdo no build do
+# Vite) validado em staging em 2026-08-24: pod Running/Healthy na tag nova,
+# HTML servindo /static/assets/main-<hash>.js/css (nome muda por conteúdo,
+# não fixo), Cache-Control: public, max-age=31536000, immutable só nos
+# arquivos com hash (favicon.svg/icons.svg sem hash mantêm o comportamento
+# padrão do StaticFiles), smoke test de 3 páginas (/, /metodologia,
+# /relatorios/perfil-orgaos) todas HTTP 200 via port-forward direto ao
+# Service. Mudança só de código API/frontend, sem alteração de model dbt —
+# não precisa de dbt run/test seletivo antes de promover.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 064bbd0
+    newTag: 20a66a2
