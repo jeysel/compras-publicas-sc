@@ -104,6 +104,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fornecedor-por-segmento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Fornecedor Por Segmento
+         * @description Top fornecedores por ramo de atividade (spec 031) — agrega marts.fct_contratos_ramo por (ramo_atividade, id_contratado, nm_contratado) direto no SQL, sem mart nova (mesmo padrão de qualidade_dado_orgao.py). Sem ramo_atividade informado, o ranking mistura fornecedores de diferentes ramos, ordenado só por valor. Exclui fl_valor_suspeito = true (spec 021/031, REQ-16) — achado real: sem esse filtro, o topo do ranking era dominado por contratos com corrupção de dado conhecida (Piata Comercio de Pecas, VS Vida Saudavel, Claro), não gasto real.
+         */
+        get: operations["get_fornecedor_por_segmento_api_v1_fornecedor_por_segmento_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fornecedor-por-segmento/contratos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Fornecedor Por Segmento Contratos
+         * @description Listagem de contratos individuais por segmento (spec 031, REQ-3/REQ-4). SELECT explícito e estreito (6 colunas) sobre marts.fct_contratos_ramo — validado sob carga real a 512Mi (ver spec 031, seção Validação); qualquer coluna adicional exige repetir esse teste antes do merge (REQ-7). Exclui fl_valor_suspeito = true (spec 021/031, REQ-16), mesmo critério do endpoint de gráfico. Response + TypeAdapter (não response_model), mesmo padrão de diversidade_vencedores.py/contratos_temporal.py, para evitar o OOM de 2026-08-21.
+         */
+        get: operations["get_fornecedor_por_segmento_contratos_api_v1_fornecedor_por_segmento_contratos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgaos": {
         parameters: {
             query?: never;
@@ -582,6 +622,62 @@ export interface components {
              * @description Sinal de valor implausível em vl_original/vl_atual (spec 021): três padrões de corrupção de valor, ver mart
              */
             fl_valor_suspeito?: boolean | null;
+        };
+        /** FornecedorPorSegmentoContrato */
+        FornecedorPorSegmentoContrato: {
+            /**
+             * Nu Contrato
+             * @description Número do contrato
+             */
+            nu_contrato: string;
+            /**
+             * Nm Contratado
+             * @description Nome/razão social do fornecedor
+             */
+            nm_contratado?: string | null;
+            /**
+             * Vl Atual
+             * @description Valor atual do contrato
+             */
+            vl_atual?: string | null;
+            /**
+             * Dt Inicio
+             * @description Data de início de vigência — pode ser nula na fonte
+             */
+            dt_inicio?: string | null;
+            /**
+             * Dt Fim Atual
+             * @description Data de fim de vigência atualizada — pode ser nula na fonte
+             */
+            dt_fim_atual?: string | null;
+            /**
+             * Ramo Atividade
+             * @description Ramo de atividade classificado por palavras-chave do objeto
+             */
+            ramo_atividade: string;
+        };
+        /** FornecedorPorSegmentoGrafico */
+        FornecedorPorSegmentoGrafico: {
+            /**
+             * Ramo Atividade
+             * @description Ramo de atividade classificado por palavras-chave do objeto
+             */
+            ramo_atividade: string;
+            /**
+             * Id Contratado
+             * @description Identificador do fornecedor (CNPJ ou CPF pré-mascarado pela fonte)
+             */
+            id_contratado: string;
+            /**
+             * Nm Contratado
+             * @description Nome/razão social do fornecedor
+             */
+            nm_contratado?: string | null;
+            /**
+             * Vl Total
+             * @description Soma de vl_atual dos contratos deste fornecedor neste ramo
+             */
+            vl_total: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1063,6 +1159,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConcentracaoFornecedor"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fornecedor_por_segmento_api_v1_fornecedor_por_segmento_get: {
+        parameters: {
+            query?: {
+                /** @description Ramo de atividade (18 ramos + 'Outros') */
+                ramo_atividade?: string | null;
+                /** @description Quantidade máxima de fornecedores retornados */
+                top_n?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FornecedorPorSegmentoGrafico"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fornecedor_por_segmento_contratos_api_v1_fornecedor_por_segmento_contratos_get: {
+        parameters: {
+            query?: {
+                /** @description Ramo de atividade (18 ramos + 'Outros') */
+                ramo_atividade?: string | null;
+                /** @description Busca por nome do fornecedor (parcial, case-insensitive) */
+                nm_contratado?: string | null;
+                /** @description Teto de segurança — não é paginação. O frontend consome o dataset completo (grão é contrato); volume real em produção ~93978 linhas (spec 031), não reproduzível em dev local (seed menor). */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FornecedorPorSegmentoContrato"][];
                 };
             };
             /** @description Validation Error */
