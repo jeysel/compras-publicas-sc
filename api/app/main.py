@@ -11,12 +11,20 @@ from app.routers import (
     contratos_temporal,
     diversidade_vencedores,
     escalada_custo,
+    kpis_resumo,
     modalidades,
     orgaos,
+    perfil_fornecedores,
     qualidade_dado_orgao,
     variacao_custo_modalidade,
     variacao_prazo_modalidade,
 )
+
+# top_aditivos NÃO é registrado (spec 026): achado durante a spec — 13
+# contratos com |vl_variacao| > R$100mi não são cobertos por fl_valor_suspeito,
+# então um ranking "top aditivos" exporia esses outliers como se fossem
+# aditivos reais. Router implementado e funcional, aguardando investigação de
+# detecção (spec própria, nos moldes da 021) antes de ser exposto.
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -45,6 +53,8 @@ for router in (
     qualidade_dado_orgao.router,
     variacao_custo_modalidade.router,
     variacao_prazo_modalidade.router,
+    kpis_resumo.router,
+    perfil_fornecedores.router,
 ):
     app.include_router(router, prefix="/api/v1")
 
@@ -63,6 +73,8 @@ _PAGES = (
     ("/relatorios/qualidade-dado-orgao", "relatorio_qualidade_orgao.html", "relatorio-qualidade-orgao"),
     ("/relatorios/variacao-custo-modalidade", "relatorio_variacao_custo.html", "relatorio-variacao-custo"),
     ("/relatorios/variacao-prazo-modalidade", "relatorio_variacao_prazo.html", "relatorio-variacao-prazo"),
+    ("/relatorios/perfil-fornecedores", "relatorio_perfil_fornecedores.html", "relatorio-perfil-fornecedores"),
+    ("/relatorios/perfil-orgaos", "relatorio_perfil_orgaos.html", "relatorio-perfil-orgaos"),
     ("/metodologia", "metodologia.html", "metodologia"),
 )
 
