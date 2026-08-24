@@ -10,16 +10,14 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# 20a66a2 (spec 027: cache-busting real via hash de conteúdo no build do
-# Vite) validado em staging em 2026-08-24: pod Running/Healthy na tag nova,
-# HTML servindo /static/assets/main-<hash>.js/css (nome muda por conteúdo,
-# não fixo), Cache-Control: public, max-age=31536000, immutable só nos
-# arquivos com hash (favicon.svg/icons.svg sem hash mantêm o comportamento
-# padrão do StaticFiles), smoke test de 3 páginas (/, /metodologia,
-# /relatorios/perfil-orgaos) todas HTTP 200 via port-forward direto ao
-# Service. Mudança só de código API/frontend, sem alteração de model dbt —
-# não precisa de dbt run/test seletivo antes de promover.
+# aab8e3a (filtros interativos de orgao/modalidade nos 4 graficos) validado em
+# staging em 2026-08-24: pod Running/Healthy na tag nova, filtro confirmado
+# via API (escalada-custo?cod_unidade_gestora=920021 retornou 43/43 registros,
+# todos com o código filtrado, contra 1000 sem filtro), confirmação visual dos
+# 4 gráficos no navegador via port-forward. Mudança só de código API/frontend,
+# sem alteração de model dbt — não precisa de dbt run/test seletivo antes de
+# promover.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 20a66a2
+    newTag: aab8e3a
