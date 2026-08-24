@@ -423,6 +423,37 @@ section {
   text-decoration: underline;
 }
 
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 16px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.filter-field select {
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-width: 220px;
+}
+
+.filter-hint {
+  font-size: 13px;
+  color: var(--text);
+  margin: -8px 0 16px;
+}
+
 .chart-card {
   border: 1px solid var(--border);
   border-radius: 8px;

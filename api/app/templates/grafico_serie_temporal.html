@@ -7,6 +7,21 @@
   Valor atual total dos contratos, agrupado por ano e mês de assinatura. Esta série já chega pré-agregada dos
   modelos analíticos, no grão ano/mês.
 </p>
+<div class="filter-bar">
+  <div class="filter-field">
+    <label for="filtro-orgao">Órgão</label>
+    <select id="filtro-orgao">
+      <option value="">Todos os órgãos</option>
+    </select>
+  </div>
+  <div class="filter-field">
+    <label for="filtro-modalidade">Modalidade</label>
+    <select id="filtro-modalidade">
+      <option value="">Todas as modalidades</option>
+    </select>
+  </div>
+</div>
+<p class="filter-hint">Órgão e modalidade não combinam nesta série (recorte pré-agregado) — escolher um limpa o outro.</p>
 <div class="chart-card">
   <div id="chart-contratos-temporal" class="chart"></div>
 </div>

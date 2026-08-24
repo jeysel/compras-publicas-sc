@@ -9,6 +9,7 @@ import { renderAchadosHome } from "./charts/achados-home";
 import { renderKpisResumo } from "./charts/kpis-resumo";
 import { renderPerfilFornecedores } from "./charts/perfil-fornecedores";
 import { renderPerfilOrgaos } from "./charts/perfil-orgaos";
+import { initFiltrosGrafico } from "./charts/filtros";
 import { initNavbarToggle } from "./nav";
 import "./style.css";
 
@@ -29,16 +30,37 @@ if (page === "home") {
   );
 } else if (page === "grafico-escalada-custo") {
   void renderEscaladaCusto("chart-escalada-custo", "legenda-escalada-custo");
+  initFiltrosGrafico("filtro-orgao", "filtro-modalidade", (filtros) =>
+    void renderEscaladaCusto("chart-escalada-custo", "legenda-escalada-custo", filtros),
+  );
 } else if (page === "grafico-diversidade-vencedores") {
   void renderDiversidadeVencedores("chart-diversidade-vencedores");
+  initFiltrosGrafico("filtro-orgao", null, (filtros) =>
+    void renderDiversidadeVencedores("chart-diversidade-vencedores", filtros),
+  );
 } else if (page === "grafico-serie-temporal") {
   void renderContratosTemporal(
     "chart-contratos-temporal",
     "legenda-contratos-temporal",
     "chart-sazonalidade-mensal",
   );
+  initFiltrosGrafico(
+    "filtro-orgao",
+    "filtro-modalidade",
+    (filtros) =>
+      void renderContratosTemporal(
+        "chart-contratos-temporal",
+        "legenda-contratos-temporal",
+        "chart-sazonalidade-mensal",
+        filtros,
+      ),
+    { mutuamenteExclusivo: true },
+  );
 } else if (page === "grafico-concentracao-fornecedor") {
   void renderConcentracaoFornecedor("chart-concentracao-fornecedor", "legenda-concentracao-fornecedor");
+  initFiltrosGrafico("filtro-orgao", null, (filtros) =>
+    void renderConcentracaoFornecedor("chart-concentracao-fornecedor", "legenda-concentracao-fornecedor", filtros),
+  );
 } else if (page === "relatorio-qualidade-orgao") {
   void renderQualidadeDadoOrgao("tabela-qualidade-dado-orgao", "btn-ver-mais-qualidade-dado-orgao");
 } else if (page === "relatorio-variacao-custo") {
