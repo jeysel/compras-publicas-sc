@@ -5,12 +5,9 @@ export default defineConfig({
   build: {
     outDir: "../api/app/static",
     emptyOutDir: true,
+    manifest: true,
     rollupOptions: {
       input: resolve(import.meta.dirname, "src/main.ts"),
-      output: {
-        entryFileNames: "main.js",
-        assetFileNames: "[name][extname]",
-      },
     },
   },
 });
