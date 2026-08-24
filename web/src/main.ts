@@ -2,6 +2,11 @@ import { renderEscaladaCusto } from "./charts/escalada-custo";
 import { renderDiversidadeVencedores } from "./charts/diversidade-vencedores";
 import { renderContratosTemporal } from "./charts/contratos-temporal";
 import { renderConcentracaoFornecedor } from "./charts/concentracao-fornecedor";
+import {
+  renderFornecedorPorSegmentoGrafico,
+  renderFornecedorPorSegmentoRelatorio,
+  type FiltroSegmentoBusca,
+} from "./charts/fornecedor-por-segmento";
 import { renderQualidadeDadoOrgao } from "./charts/qualidade-dado-orgao";
 import { renderVariacaoCustoModalidade } from "./charts/variacao-custo-modalidade";
 import { renderVariacaoPrazoModalidade } from "./charts/variacao-prazo-modalidade";
@@ -13,6 +18,8 @@ import {
   initFiltrosGrafico,
   initFiltroAnoUnico,
   initFiltroAnoIntervalo,
+  initFiltroSegmento,
+  initFiltroBuscaTexto,
   type FiltrosGrafico,
   type FiltroAnoIntervalo,
 } from "./charts/filtros";
@@ -99,6 +106,37 @@ if (page === "home") {
   initFiltroAnoIntervalo("filtro-ano-inicio", "filtro-ano-fim", (anoFiltro) => {
     filtrosAtuais = { ...filtrosAtuais, ...anoFiltro };
     rerenderConcentracaoFornecedor();
+  });
+} else if (page === "grafico-fornecedor-por-segmento") {
+  let filtrosAtuais: { ramo_atividade?: string } = {};
+  const rerenderFornecedorPorSegmento = (): void =>
+    void renderFornecedorPorSegmentoGrafico(
+      "chart-fornecedor-por-segmento",
+      "legenda-fornecedor-por-segmento",
+      filtrosAtuais,
+    );
+  rerenderFornecedorPorSegmento();
+  initFiltroSegmento("filtro-ramo", (ramo_atividade) => {
+    filtrosAtuais = { ramo_atividade };
+    rerenderFornecedorPorSegmento();
+  });
+} else if (page === "relatorio-fornecedor-por-segmento") {
+  let filtrosAtuais: FiltroSegmentoBusca = {};
+  const rerenderFornecedorPorSegmentoRelatorio = (): void =>
+    void renderFornecedorPorSegmentoRelatorio(
+      "tabela-fornecedor-por-segmento",
+      "btn-ver-mais-fornecedor-por-segmento",
+      "legenda-fornecedor-por-segmento",
+      filtrosAtuais,
+    );
+  rerenderFornecedorPorSegmentoRelatorio();
+  initFiltroSegmento("filtro-ramo", (ramo_atividade) => {
+    filtrosAtuais = { ...filtrosAtuais, ramo_atividade };
+    rerenderFornecedorPorSegmentoRelatorio();
+  });
+  initFiltroBuscaTexto("filtro-nome-fornecedor", (nm_contratado) => {
+    filtrosAtuais = { ...filtrosAtuais, nm_contratado };
+    rerenderFornecedorPorSegmentoRelatorio();
   });
 } else if (page === "relatorio-qualidade-orgao") {
   const rerenderQualidadeDadoOrgao = (filtros: FiltroAnoIntervalo): void =>

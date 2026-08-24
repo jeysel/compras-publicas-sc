@@ -101,6 +101,32 @@ export function initFiltroAnoUnico(selectId: string, onChange: (ano: string | un
   select.addEventListener("change", () => onChange(select.value || undefined));
 }
 
+// Dropdown de segmento (ramo_atividade) — opções estáticas já no HTML (18 ramos +
+// "Outros", spec 013/014), sem necessidade de popular via API como órgão/modalidade.
+export function initFiltroSegmento(selectId: string, onChange: (ramoAtividade: string | undefined) => void): void {
+  const select = document.getElementById(selectId) as HTMLSelectElement | null;
+  if (select === null) return;
+  select.addEventListener("change", () => onChange(select.value || undefined));
+}
+
+// Busca por texto livre (ex.: nome de fornecedor) — primeiro input de texto livre do
+// projeto (spec 031); debounce evita disparar um fetch a cada tecla digitada.
+export function initFiltroBuscaTexto(
+  inputId: string,
+  onChange: (valor: string | undefined) => void,
+  debounceMs = 300,
+): void {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  if (input === null) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  input.addEventListener("input", () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = setTimeout(() => {
+      onChange(input.value.trim() || undefined);
+    }, debounceMs);
+  });
+}
+
 export interface FiltroAnoIntervalo {
   ano_inicio?: string;
   ano_fim?: string;

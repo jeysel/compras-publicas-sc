@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}Fornecedor por segmento — Compras Públicas SC{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Início</a> / Gráficos / Fornecedor por segmento</div>
+<h1>Fornecedor por segmento</h1>
+<p class="page-intro">
+  Top fornecedores por valor contratado, agrupados por ramo de atividade (classificação heurística por
+  palavras-chave do objeto do contrato, spec 013/014). Sem segmento selecionado, o ranking mistura
+  fornecedores de diferentes ramos.
+</p>
+<div class="filter-bar">
+  <div class="filter-field">
+    <label for="filtro-ramo">Segmento</label>
+    <select id="filtro-ramo">
+      <option value="">Todos os segmentos</option>
+      <option value="TI - Desenvolvimento de Software">TI - Desenvolvimento de Software</option>
+      <option value="TI - Manutenção e Suporte">TI - Manutenção e Suporte</option>
+      <option value="TI - Licenciamento de Software">TI - Licenciamento de Software</option>
+      <option value="TI - Geral">TI - Geral</option>
+      <option value="Combustíveis e Energia">Combustíveis e Energia</option>
+      <option value="Alimentação">Alimentação</option>
+      <option value="Limpeza e Higiene">Limpeza e Higiene</option>
+      <option value="Veículos e Manutenção">Veículos e Manutenção</option>
+      <option value="Obras e Construção">Obras e Construção</option>
+      <option value="Água e Saneamento">Água e Saneamento</option>
+      <option value="Educação e Capacitação">Educação e Capacitação</option>
+      <option value="Saúde e Medicamentos">Saúde e Medicamentos</option>
+      <option value="Segurança Pública">Segurança Pública</option>
+      <option value="Locação de Imóveis">Locação de Imóveis</option>
+      <option value="Transporte e Logística">Transporte e Logística</option>
+      <option value="Material de Escritório e Equipamentos">Material de Escritório e Equipamentos</option>
+      <option value="Agropecuária">Agropecuária</option>
+      <option value="Meio Ambiente e Recursos Hídricos">Meio Ambiente e Recursos Hídricos</option>
+      <option value="Outros">Outros</option>
+    </select>
+  </div>
+</div>
+<div class="chart-card">
+  <div id="chart-fornecedor-por-segmento" class="chart"></div>
+</div>
+<p id="legenda-fornecedor-por-segmento" class="chart-legend"></p>
+{% endblock %}
