@@ -8,15 +8,13 @@ resources:
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag 183fbc2 — fornecedor-por-segmento,
-# spec 031: dbt fct_contratos_ramo ganha dt_inicio/dt_fim_atual/fl_valor_suspeito
-# + endpoints API + páginas web; tag == HEAD do push == GITHUB_SHA do build,
-# confirmado via `gh run list`/`gh run view` (run 32790244935, conclusion
-# success). Mudança de model dbt — dbt run/test seletivo (fct_contratos_ramo)
-# já rodado e validado em staging antes desta promoção (5/5 dbt test, 93.978
-# linhas em fct_contratos_ramo, bate com o esperado). Atualizar aqui a cada
-# novo SHA que se queira validar em staging.
+# build de compras-publicas-api no GHCR (tag 12d21e2 — ordenação decrescente +
+# filtro de período dt_inicio_de/dt_inicio_ate no relatório fornecedor-por-
+# segmento; tag == HEAD do push == GITHUB_SHA do build, confirmado via
+# `gh run list`/`gh run view` (run 32795532550, conclusion success). Sem
+# mudança de model dbt nesta promoção — só API + frontend. Atualizar aqui a
+# cada novo SHA que se queira validar em staging.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 183fbc2
+    newTag: 12d21e2
