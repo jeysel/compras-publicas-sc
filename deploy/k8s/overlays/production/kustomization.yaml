@@ -10,14 +10,16 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# 12d21e2 (ordenação decrescente + filtro de período dt_inicio_de/dt_inicio_ate
-# no relatório fornecedor-por-segmento; sem mudança de mart dbt) validado em
-# staging em 2026-08-25: ORDER BY nu_contrato DESC confirmado, filtro de
-# período restringindo corretamente (93803 -> 5467 linhas no intervalo
-# 2020-01-01/2020-12-31), os 118 registros com dt_inicio NULL sempre inclusos
-# (com e sem filtro), 0 registros fora do intervalo vazando. Página do
-# relatório em 200.
+# 7effec3 (filtro de período em escalada-custo/fornecedor-por-segmento, rename
+# de rótulo "Ano inicial/final" -> "A partir de/Até", alinhamento visual dos
+# date pickers, e ocultação do relatório de variação de prazo do menu; sem
+# mudança de mart dbt) validado em staging em 2026-08-25: filtros
+# ano_inicio/ano_fim e dt_inicio_de retornando dados reais em 200, rótulo "A
+# partir de" presente e "Ano inicial" ausente em diversidade-vencedores e
+# qualidade-dado-orgao, rota variacao-prazo-modalidade ainda em 200 mas
+# ausente da home/menu. Confirmação visual (date pickers, dark mode, menu)
+# feita pelo usuário.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 12d21e2
+    newTag: 7effec3
