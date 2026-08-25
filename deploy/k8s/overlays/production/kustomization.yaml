@@ -10,20 +10,14 @@ resources:
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
 #
-# 183fbc2 (fornecedor-por-segmento, spec 031: dbt fct_contratos_ramo ganha
-# dt_inicio/dt_fim_atual/fl_valor_suspeito + endpoints API + páginas web)
-# validado em staging em 2026-08-24: dbt run seletivo (fct_contratos_ramo) +
-# dbt test seletivo 5/5 sem erro (sem teste not_null pra dt_inicio, nullable
-# como esperado). fct_contratos_ramo com 93.978 linhas, bate com o esperado.
-# Staging e production compartilham o mesmo Postgres (postgres/compras_publicas,
-# confirmado via secret compras-publicas-api-secret em ambos namespaces) — dbt
-# já rodou contra o dado compartilhado, não precisa repetir para production.
-# Pod Running (0 restarts) na tag nova, load test 2x50 requisições sem
-# crescimento monotônico de memória (259Mi -> 156Mi entre rodadas, bem dentro
-# do limite de 1Gi). Validação funcional: os 3 contratos corrompidos (Piata,
-# VS Vida Saudavel, Claro) não aparecem no top 3 do gráfico; busca por nome
-# retorna resultados; páginas de gráfico e relatório em 200.
+# 12d21e2 (ordenação decrescente + filtro de período dt_inicio_de/dt_inicio_ate
+# no relatório fornecedor-por-segmento; sem mudança de mart dbt) validado em
+# staging em 2026-08-25: ORDER BY nu_contrato DESC confirmado, filtro de
+# período restringindo corretamente (93803 -> 5467 linhas no intervalo
+# 2020-01-01/2020-12-31), os 118 registros com dt_inicio NULL sempre inclusos
+# (com e sem filtro), 0 registros fora do intervalo vazando. Página do
+# relatório em 200.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 183fbc2
+    newTag: 12d21e2
