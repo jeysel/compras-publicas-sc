@@ -154,3 +154,31 @@ export function initFiltroAnoIntervalo(
   inicioSelect.addEventListener("change", disparar);
   fimSelect.addEventListener("change", disparar);
 }
+
+export interface FiltroPeriodo {
+  dt_inicio_de?: string;
+  dt_inicio_ate?: string;
+}
+
+// Par "A partir de"/"Até" (dt_inicio_de/dt_inicio_ate) — inputs type="date" (não select de
+// ano como initFiltroAnoIntervalo, primeiro date picker do projeto). Filtra por dt_inicio
+// apenas (não sobreposição de período — decisão consciente, spec 031); contratos com
+// dt_inicio nulo sempre aparecem, o filtro é aplicado inteiramente no backend.
+export function initFiltroPeriodo(
+  deInputId: string,
+  ateInputId: string,
+  onChange: (filtro: FiltroPeriodo) => void,
+): void {
+  const deInput = document.getElementById(deInputId) as HTMLInputElement | null;
+  const ateInput = document.getElementById(ateInputId) as HTMLInputElement | null;
+  if (deInput === null || ateInput === null) return;
+
+  const disparar = (): void => {
+    onChange({
+      dt_inicio_de: deInput.value || undefined,
+      dt_inicio_ate: ateInput.value || undefined,
+    });
+  };
+  deInput.addEventListener("change", disparar);
+  ateInput.addEventListener("change", disparar);
+}

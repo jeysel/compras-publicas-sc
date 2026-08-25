@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Query, Response
 from pydantic import TypeAdapter
 
@@ -66,6 +68,12 @@ async def get_fornecedor_por_segmento(
 async def get_fornecedor_por_segmento_contratos(
     ramo_atividade: str | None = Query(None, description="Ramo de atividade (18 ramos + 'Outros')"),
     nm_contratado: str | None = Query(None, description="Busca por nome do fornecedor (parcial, case-insensitive)"),
+    dt_inicio_de: date | None = Query(
+        None, description="Filtra contratos com dt_inicio a partir desta data (inclusive)"
+    ),
+    dt_inicio_ate: date | None = Query(
+        None, description="Filtra contratos com dt_inicio até esta data (inclusive)"
+    ),
     limit: int = Query(
         150_000,
         ge=1,
@@ -84,13 +92,23 @@ async def get_fornecedor_por_segmento_contratos(
     if nm_contratado is not None:
         conditions.append("nm_contratado ILIKE %(nm_contratado)s")
         params["nm_contratado"] = f"%{nm_contratado}%"
+    # Filtra por dt_inicio apenas (não sobreposição de período — decisão consciente, spec 031).
+    # Contratos com dt_inicio NULL sempre aparecem, independente do filtro estar ativo (REQ do
+    # relatório) — validado manualmente contra o dado real antes de aplicar (118 nulos sempre
+    # inclusos, contratos fora do intervalo corretamente excluídos).
+    if dt_inicio_de is not None:
+        conditions.append("(dt_inicio IS NULL OR dt_inicio >= %(dt_inicio_de)s)")
+        params["dt_inicio_de"] = dt_inicio_de
+    if dt_inicio_ate is not None:
+        conditions.append("(dt_inicio IS NULL OR dt_inicio <= %(dt_inicio_ate)s)")
+        params["dt_inicio_ate"] = dt_inicio_ate
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     sql = f"""
         SELECT nu_contrato, nm_contratado, vl_atual, dt_inicio, dt_fim_atual, ramo_atividade
         FROM marts.fct_contratos_ramo
         {where}
-        ORDER BY nu_contrato
+        ORDER BY nu_contrato DESC
         LIMIT %(limit)s
     """
 

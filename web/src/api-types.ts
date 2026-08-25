@@ -1213,6 +1213,10 @@ export interface operations {
                 ramo_atividade?: string | null;
                 /** @description Busca por nome do fornecedor (parcial, case-insensitive) */
                 nm_contratado?: string | null;
+                /** @description Filtra contratos com dt_inicio a partir desta data (inclusive) */
+                dt_inicio_de?: string | null;
+                /** @description Filtra contratos com dt_inicio até esta data (inclusive) */
+                dt_inicio_ate?: string | null;
                 /** @description Teto de segurança — não é paginação. O frontend consome o dataset completo (grão é contrato); volume real em produção ~93978 linhas (spec 031), não reproduzível em dev local (seed menor). */
                 limit?: number;
             };

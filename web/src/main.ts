@@ -20,6 +20,7 @@ import {
   initFiltroAnoIntervalo,
   initFiltroSegmento,
   initFiltroBuscaTexto,
+  initFiltroPeriodo,
   type FiltrosGrafico,
   type FiltroAnoIntervalo,
 } from "./charts/filtros";
@@ -136,6 +137,10 @@ if (page === "home") {
   });
   initFiltroBuscaTexto("filtro-nome-fornecedor", (nm_contratado) => {
     filtrosAtuais = { ...filtrosAtuais, nm_contratado };
+    rerenderFornecedorPorSegmentoRelatorio();
+  });
+  initFiltroPeriodo("filtro-periodo-de", "filtro-periodo-ate", (periodo) => {
+    filtrosAtuais = { ...filtrosAtuais, ...periodo };
     rerenderFornecedorPorSegmentoRelatorio();
   });
 } else if (page === "relatorio-qualidade-orgao") {

@@ -98,6 +98,8 @@ export async function renderFornecedorPorSegmentoGrafico(
 
 export interface FiltroSegmentoBusca extends FiltroSegmento {
   nm_contratado?: string;
+  dt_inicio_de?: string;
+  dt_inicio_ate?: string;
 }
 
 export async function renderFornecedorPorSegmentoRelatorio(
@@ -114,6 +116,8 @@ export async function renderFornecedorPorSegmentoRelatorio(
   const params = new URLSearchParams();
   if (filtros.ramo_atividade) params.set("ramo_atividade", filtros.ramo_atividade);
   if (filtros.nm_contratado) params.set("nm_contratado", filtros.nm_contratado);
+  if (filtros.dt_inicio_de) params.set("dt_inicio_de", filtros.dt_inicio_de);
+  if (filtros.dt_inicio_ate) params.set("dt_inicio_ate", filtros.dt_inicio_ate);
   const query = params.toString();
 
   const resposta = await fetch(`/api/v1/fornecedor-por-segmento/contratos${query ? `?${query}` : ""}`);
