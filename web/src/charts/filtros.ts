@@ -7,7 +7,6 @@ type AnosDisponiveis = components["schemas"]["AnosDisponiveis"];
 export interface FiltrosGrafico {
   cod_unidade_gestora?: string;
   nm_modalidade?: string;
-  ano?: string;
   ano_inicio?: string;
   ano_fim?: string;
 }
@@ -91,14 +90,6 @@ async function popularAnos(select: HTMLSelectElement): Promise<void> {
     option.textContent = String(ano);
     select.append(option);
   }
-}
-
-// Dropdown de ano único (EscaladaCusto — parâmetro `ano` do endpoint).
-export function initFiltroAnoUnico(selectId: string, onChange: (ano: string | undefined) => void): void {
-  const select = document.getElementById(selectId) as HTMLSelectElement | null;
-  if (select === null) return;
-  void popularAnos(select);
-  select.addEventListener("change", () => onChange(select.value || undefined));
 }
 
 // Dropdown de segmento (ramo_atividade) — opções estáticas já no HTML (18 ramos +

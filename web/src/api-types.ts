@@ -1025,8 +1025,10 @@ export interface operations {
                 cod_unidade_gestora?: string | null;
                 /** @description Modalidade de licitação */
                 nm_modalidade?: string | null;
-                /** @description Ano de assinatura do contrato */
-                ano?: number | null;
+                /** @description Ano inicial de assinatura do contrato (inclusive) */
+                ano_inicio?: number | null;
+                /** @description Ano final de assinatura do contrato (inclusive) */
+                ano_fim?: number | null;
                 /** @description Teto de segurança — não é paginação. O frontend consome o dataset completo (grão é contrato, 1:1 com raw.contratos); volume real em dev é ~76041 linhas, teto de raw.contratos confirmado em 95508 linhas (spec 019, 2026-08-21). */
                 limit?: number;
             };
@@ -1179,6 +1181,10 @@ export interface operations {
                 ramo_atividade?: string | null;
                 /** @description Quantidade máxima de fornecedores retornados */
                 top_n?: number;
+                /** @description Filtra contratos com dt_inicio a partir desta data (inclusive) */
+                dt_inicio_de?: string | null;
+                /** @description Filtra contratos com dt_inicio até esta data (inclusive) */
+                dt_inicio_ate?: string | null;
             };
             header?: never;
             path?: never;

@@ -26,12 +26,26 @@ _adapter = TypeAdapter(list[FornecedorPorSegmentoContrato])
 async def get_fornecedor_por_segmento(
     ramo_atividade: str | None = Query(None, description="Ramo de atividade (18 ramos + 'Outros')"),
     top_n: int = Query(10, ge=1, le=100, description="Quantidade máxima de fornecedores retornados"),
+    dt_inicio_de: date | None = Query(
+        None, description="Filtra contratos com dt_inicio a partir desta data (inclusive)"
+    ),
+    dt_inicio_ate: date | None = Query(
+        None, description="Filtra contratos com dt_inicio até esta data (inclusive)"
+    ),
 ) -> list[dict]:
     conditions = ["fl_valor_suspeito IS NOT TRUE"]
     params: dict = {"top_n": top_n}
     if ramo_atividade is not None:
         conditions.append("ramo_atividade = %(ramo_atividade)s")
         params["ramo_atividade"] = ramo_atividade
+    # Mesma semântica do endpoint /contratos (spec 031): filtra só por dt_inicio, registros
+    # com dt_inicio NULL sempre aparecem, independente do filtro estar ativo.
+    if dt_inicio_de is not None:
+        conditions.append("(dt_inicio IS NULL OR dt_inicio >= %(dt_inicio_de)s)")
+        params["dt_inicio_de"] = dt_inicio_de
+    if dt_inicio_ate is not None:
+        conditions.append("(dt_inicio IS NULL OR dt_inicio <= %(dt_inicio_ate)s)")
+        params["dt_inicio_ate"] = dt_inicio_ate
 
     where = f"WHERE {' AND '.join(conditions)}"
     sql = f"""

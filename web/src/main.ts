@@ -5,6 +5,7 @@ import { renderConcentracaoFornecedor } from "./charts/concentracao-fornecedor";
 import {
   renderFornecedorPorSegmentoGrafico,
   renderFornecedorPorSegmentoRelatorio,
+  type FiltroSegmento,
   type FiltroSegmentoBusca,
 } from "./charts/fornecedor-por-segmento";
 import { renderQualidadeDadoOrgao } from "./charts/qualidade-dado-orgao";
@@ -16,7 +17,6 @@ import { renderPerfilFornecedores } from "./charts/perfil-fornecedores";
 import { renderPerfilOrgaos } from "./charts/perfil-orgaos";
 import {
   initFiltrosGrafico,
-  initFiltroAnoUnico,
   initFiltroAnoIntervalo,
   initFiltroSegmento,
   initFiltroBuscaTexto,
@@ -55,8 +55,8 @@ if (page === "home") {
     filtrosAtuais = { ...filtrosAtuais, ...filtros };
     rerenderEscaladaCusto();
   });
-  initFiltroAnoUnico("filtro-ano", (ano) => {
-    filtrosAtuais = { ...filtrosAtuais, ano };
+  initFiltroAnoIntervalo("filtro-ano-inicio", "filtro-ano-fim", (anoFiltro) => {
+    filtrosAtuais = { ...filtrosAtuais, ...anoFiltro };
     rerenderEscaladaCusto();
   });
 } else if (page === "grafico-diversidade-vencedores") {
@@ -109,7 +109,7 @@ if (page === "home") {
     rerenderConcentracaoFornecedor();
   });
 } else if (page === "grafico-fornecedor-por-segmento") {
-  let filtrosAtuais: { ramo_atividade?: string } = {};
+  let filtrosAtuais: FiltroSegmento = {};
   const rerenderFornecedorPorSegmento = (): void =>
     void renderFornecedorPorSegmentoGrafico(
       "chart-fornecedor-por-segmento",
@@ -118,7 +118,11 @@ if (page === "home") {
     );
   rerenderFornecedorPorSegmento();
   initFiltroSegmento("filtro-ramo", (ramo_atividade) => {
-    filtrosAtuais = { ramo_atividade };
+    filtrosAtuais = { ...filtrosAtuais, ramo_atividade };
+    rerenderFornecedorPorSegmento();
+  });
+  initFiltroPeriodo("filtro-periodo-de", "filtro-periodo-ate", (periodo) => {
+    filtrosAtuais = { ...filtrosAtuais, ...periodo };
     rerenderFornecedorPorSegmento();
   });
 } else if (page === "relatorio-fornecedor-por-segmento") {

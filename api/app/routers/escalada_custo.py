@@ -57,7 +57,8 @@ async def _stream_rows(sql: str, params: dict) -> AsyncIterator[bytes]:
 async def get_escalada_custo(
     cod_unidade_gestora: str | None = Query(None, description="Código da unidade gestora"),
     nm_modalidade: str | None = Query(None, description="Modalidade de licitação"),
-    ano: int | None = Query(None, description="Ano de assinatura do contrato"),
+    ano_inicio: int | None = Query(None, description="Ano inicial de assinatura do contrato (inclusive)"),
+    ano_fim: int | None = Query(None, description="Ano final de assinatura do contrato (inclusive)"),
     limit: int = Query(
         150_000,
         ge=1,
@@ -77,9 +78,12 @@ async def get_escalada_custo(
     if nm_modalidade is not None:
         conditions.append("nm_modalidade = %(nm_modalidade)s")
         params["nm_modalidade"] = nm_modalidade
-    if ano is not None:
-        conditions.append("ano_assinatura = %(ano)s")
-        params["ano"] = ano
+    if ano_inicio is not None:
+        conditions.append("ano_assinatura >= %(ano_inicio)s")
+        params["ano_inicio"] = ano_inicio
+    if ano_fim is not None:
+        conditions.append("ano_assinatura <= %(ano_fim)s")
+        params["ano_fim"] = ano_fim
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     sql = f"""
