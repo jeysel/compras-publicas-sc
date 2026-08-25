@@ -439,7 +439,8 @@ section {
 }
 
 .filter-field select,
-.filter-field input[type="search"] {
+.filter-field input[type="search"],
+.filter-field input[type="date"] {
   font: inherit;
   color: var(--text-h);
   background: var(--bg-card);
@@ -447,6 +448,10 @@ section {
   border-radius: 6px;
   padding: 6px 10px;
   min-width: 220px;
+}
+
+.filter-field input[type="date"] {
+  color-scheme: light dark;
 }
 
 .filter-hint {
