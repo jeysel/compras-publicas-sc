@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - deployment.yaml
   - service.yaml
-  - postgres-service.yaml
 
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
