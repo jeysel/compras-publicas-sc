@@ -1,7 +1,18 @@
 # Ponte pro Postgres compartilhado, fora do k3s (container Docker no host,
-# rede bridge própria). Mesmo padrão dos vizinhos (jeysel-auth,
-# weather-analytics) — Service+Endpoints combinados num único arquivo, cada
-# projeto mantém sua própria cópia, não compartilhada.
+# rede bridge própria). Mesmo padrão de arquivo usado por jeysel-auth (cada
+# projeto mantém sua própria cópia de Service+Endpoints, não compartilhada
+# via kustomize base comum). weather-analytics NÃO declara este recurso —
+# não faz parte deste padrão.
+#
+# Nome próprio (não mais "postgres" genérico) desde 2026-08-26 -- até então
+# jeysel-auth (repo jeysel.dev) declarava o MESMO Service/Endpoints
+# `postgres`, nome e namespace idênticos, o que fazia as duas Applications
+# do Argo CD (jeysel-auth-production e compras-publicas-production,
+# espelhado em staging) competirem pela posse do objeto (OutOfSync
+# intermitente por disputa de tracking-id, achado real, spec 083/084,
+# pendencias.md do repo infra). jeysel-auth passou a usar
+# `postgres-jeysel-auth`, este repo passou a usar `postgres-compras-publicas`
+# -- mesmo IP/porta, sem mais colisão de nome.
 #
 # IP confirmado ao vivo via `docker inspect postgres` em 2026-08-21 (ver
 # spec 022, Requirement 6) — já mudou uma vez antes, não presumir estável
@@ -9,9 +20,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres-compras-publicas
   labels:
-    app: postgres
+    app: postgres-compras-publicas
 spec:
   ports:
     - port: 5432
@@ -20,9 +31,9 @@ spec:
 apiVersion: v1
 kind: Endpoints
 metadata:
-  name: postgres
+  name: postgres-compras-publicas
   labels:
-    app: postgres
+    app: postgres-compras-publicas
 subsets:
   - addresses:
       - ip: 172.18.0.2
