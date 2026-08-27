@@ -1,0 +1,28 @@
+# Aplicado manualmente via kubectl desde a spec 079 (2026-08-19), nunca
+# versionado até a spec 088 -- gap encontrado na revisão de
+# disaster-recovery da spec 087 (o único Ingress dos 3 apps k3s que ainda
+# não era gerenciado pelo Argo CD; jeysel.dev e weather-analytics já
+# tinham o deles versionados desde a spec 077). Host `.internal` é
+# consumido só dentro do cluster/host (Nginx no VPS proxeia
+# contratos-sc.jeysel.dev pro Traefik com esse Host header) -- confirmado
+# idêntico ao objeto vivo via kubectl antes deste commit.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: compras-publicas-staging
+  namespace: staging
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: compras-publicas-staging.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compras-publicas-api
+                port:
+                  number: 8000

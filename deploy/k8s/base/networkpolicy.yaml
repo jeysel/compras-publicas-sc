@@ -1,0 +1,35 @@
+# Egress restrito ao necessário para o pod `app: compras-publicas-api` --
+# DNS (kube-system) e Postgres compartilhado (172.18.0.2/32:5432, fora do
+# k3s, ver infra/deploy/k8s/platform). App não faz chamada HTTPS externa
+# própria (dbt/ingestão rodam fora do k3s, no host). Aplicado manualmente
+# via kubectl desde a spec 080 (2026-08-19), nunca versionado até a spec 088
+# -- mesmo gap encontrado nos outros 2 apps k3s (jeysel.dev,
+# weather-analytics) durante a revisão de disaster-recovery da spec 087.
+# Conteúdo idêntico entre staging e production, confirmado via kubectl
+# antes deste commit.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: compras-publicas-api-egress-restrict
+spec:
+  podSelector:
+    matchLabels:
+      app: compras-publicas-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: 172.18.0.2/32
+      ports:
+        - protocol: TCP
+          port: 5432

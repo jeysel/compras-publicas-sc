@@ -1,0 +1,22 @@
+# Ver comentário em overlays/staging/ingress.yaml (spec 088) -- mesmo
+# histórico e motivação, host de production.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: compras-publicas-production
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: compras-publicas-production.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: compras-publicas-api
+                port:
+                  number: 8000

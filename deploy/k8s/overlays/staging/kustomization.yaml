@@ -5,6 +5,7 @@ namespace: staging
 
 resources:
   - ../../base
+  - ingress.yaml
 
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
