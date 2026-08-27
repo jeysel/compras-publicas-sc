@@ -136,7 +136,7 @@ jobs:
         # /health nova só para o CI (spec 089).
         run: |
           code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/)
-          if [ "$code" != "200" ]; then
+          if [ "$code" != "201" ]; then
             echo "FALHA: / retornou ${code} (esperado 200)"
             docker logs compras-publicas-smoke-test
             exit 1
