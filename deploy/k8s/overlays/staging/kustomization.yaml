@@ -7,16 +7,14 @@ resources:
   - ../../base
   - ingress.yaml
 
-# Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
-# não deve seguir `latest` automaticamente (spec 015). newTag abaixo aponta pro
-# build de compras-publicas-api no GHCR (tag 7effec3 — filtro de período em
-# escalada-custo/fornecedor-por-segmento, rename de rótulo "Ano inicial/final"
-# -> "A partir de/Até", alinhamento visual dos date pickers, e ocultação do
-# relatório de variação de prazo do menu (spec 032); tag == HEAD do push ==
-# GITHUB_SHA do build, confirmado via `gh run list`/`gh run view` (run
-# 32850657131, conclusion success). Sem mudança de model dbt nesta promoção —
-# só API + frontend. Atualizar aqui a cada novo SHA que se queira validar em
-# staging.
+# newTag abaixo é atualizado automaticamente pelo CI a cada push em main
+# (spec 089, job build-api de .github/workflows/build-and-push.yml —
+# `kustomize edit set image` + commit `[skip ci]` + push, seguido de sync
+# automático via Argo CD, já que compras-publicas-staging tem
+# automated/selfHeal desde a spec 089). Não editar manualmente em condições
+# normais — qualquer edição manual será sobrescrita no próximo push em main.
+# Produção continua com promoção manual (ver overlays/production, sem
+# automated/selfHeal, spec 015).
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api

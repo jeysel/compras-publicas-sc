@@ -57,7 +57,7 @@ jobs:
     name: Imagem da API+frontend
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     # Postgres real, exigido pelo smoke test (spec 089): api/app/db.py abre o
     # pool com wait=True no startup (`await pool.open(wait=True)`), diferente
@@ -151,3 +151,25 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.repository }}/compras-publicas-api:${{ steps.tags.outputs.sha_short }}
           docker push ghcr.io/${{ github.repository }}/compras-publicas-api:latest
+
+      - name: Instala kustomize
+        run: |
+          curl -fSL --retry 5 --retry-delay 2 --retry-connrefused \
+            -o kustomize.tar.gz \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.8.1/kustomize_v5.8.1_linux_amd64.tar.gz"
+          tar xzf kustomize.tar.gz
+          rm kustomize.tar.gz
+          sudo mv kustomize /usr/local/bin/kustomize
+
+      - name: Atualiza tag da imagem no overlay de staging
+        run: |
+          cd deploy/k8s/overlays/staging
+          kustomize edit set image \
+            ghcr.io/${{ github.repository }}/compras-publicas-api=ghcr.io/${{ github.repository }}/compras-publicas-api:${{ steps.tags.outputs.sha_short }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add kustomization.yaml
+          git diff --cached --quiet && exit 0
+          # [skip ci]: evita loop -- este commit também casa com o gatilho push:main
+          git commit -m "deploy(staging): atualiza imagem compras-publicas-api para ${{ steps.tags.outputs.sha_short }} [skip ci]"
+          git push
