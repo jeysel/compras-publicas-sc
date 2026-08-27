@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Compras Públicas SC — API",
     description="Serving layer para as marts do pipeline dbt (spec 007/012).",
-    version="0.1.0",
+    version="0.1.1",
     lifespan=lifespan,
 )
 
