@@ -59,6 +59,24 @@ jobs:
     permissions:
       contents: read
       packages: write
+    # Postgres real, exigido pelo smoke test (spec 089): api/app/db.py abre o
+    # pool com wait=True no startup (`await pool.open(wait=True)`), diferente
+    # de outros apps deste cluster com engine lazy -- sem um Postgres real
+    # alcançável, o container nem termina de subir.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: smoke
+          POSTGRES_PASSWORD: smoke
+          POSTGRES_DB: smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smoke"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -75,12 +93,61 @@ jobs:
         id: tags
         run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - name: Build e push
+      - name: Build (local, sem push ainda)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: api/Dockerfile
-          push: true
+          push: false
+          load: true
           tags: |
             ghcr.io/${{ github.repository }}/compras-publicas-api:${{ steps.tags.outputs.sha_short }}
             ghcr.io/${{ github.repository }}/compras-publicas-api:latest
+
+      - name: Sobe container efêmero para smoke test
+        # --network host: o Service de postgres acima é exposto em
+        # localhost:5432 do runner; sem host networking, o container do
+        # smoke test não alcançaria essa porta (namespace de rede próprio).
+        run: |
+          docker run -d --name compras-publicas-smoke-test --network host \
+            -e POSTGRES_HOST=localhost \
+            -e POSTGRES_PORT=5432 \
+            -e POSTGRES_DB=smoke \
+            -e POSTGRES_USER=smoke \
+            -e POSTGRES_PASSWORD=smoke \
+            ghcr.io/${{ github.repository }}/compras-publicas-api:${{ steps.tags.outputs.sha_short }}
+
+      - name: Aguarda container ficar pronto
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/ >/dev/null 2>&1; then
+              echo "Container pronto após ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Timeout aguardando / responder"
+          docker logs compras-publicas-smoke-test
+          exit 1
+
+      - name: Smoke test da rota /
+        # Mesma rota já usada pelas probes de k8s (deploy/k8s/base/deployment.yaml)
+        # como definição operacional de "saudável" -- sem introduzir uma rota
+        # /health nova só para o CI (spec 089).
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/)
+          if [ "$code" != "200" ]; then
+            echo "FALHA: / retornou ${code} (esperado 200)"
+            docker logs compras-publicas-smoke-test
+            exit 1
+          fi
+          echo "OK: / -> 200"
+
+      - name: Limpa container de smoke test
+        if: always()
+        run: docker rm -f compras-publicas-smoke-test || true
+
+      - name: Publica imagem no GHCR
+        run: |
+          docker push ghcr.io/${{ github.repository }}/compras-publicas-api:${{ steps.tags.outputs.sha_short }}
+          docker push ghcr.io/${{ github.repository }}/compras-publicas-api:latest
