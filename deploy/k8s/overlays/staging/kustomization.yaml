@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: staging
 
 resources:
-  - ../../base
-  - ingress.yaml
+- ../../base
+- ingress.yaml
 
 # newTag abaixo é atualizado automaticamente pelo CI a cada push em main
 # (spec 089, job build-api de .github/workflows/build-and-push.yml —
@@ -16,6 +16,6 @@ resources:
 # Produção continua com promoção manual (ver overlays/production, sem
 # automated/selfHeal, spec 015).
 images:
-  - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 7effec3
+- name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
+  newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
+  newTag: c2d163d
