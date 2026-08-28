@@ -7,6 +7,14 @@ resources:
   - ../../base
   - ingress.yaml
 
+# 2 réplicas em produção (levantamento de connection pool do Postgres
+# compartilhado, repo infra) -- elimina o gap de ~80-90s sem replica de
+# backup a cada restart de liveness. App é stateless (API de leitura, sem
+# sessão local).
+replicas:
+  - name: compras-publicas-api
+    count: 2
+
 # Mecanismo de promoção manual (item 3, revisão de deployment.yaml): produção
 # não deve seguir `latest` automaticamente (spec 015). newTag deve ser um SHA
 # já validado em staging, não necessariamente o mesmo do primeiro deploy.
