@@ -20,7 +20,19 @@ resources:
 # qualidade-dado-orgao, rota variacao-prazo-modalidade ainda em 200 mas
 # ausente da home/menu. Confirmação visual (date pickers, dark mode, menu)
 # feita pelo usuário.
+# 0096c52 (repo infra): /health criado do zero (não existia -- probes
+# apontavam para / antes, que nunca tocava o banco, exatamente a rota que
+# respondeu 200 o tempo todo durante o incidente de 27/08 enquanto todo
+# /api/v1/* travava com o pool preso). Agora testa SELECT 1 via
+# get_connection() (pool real de app/db.py), readinessProbe/livenessProbe
+# apontam para /health com timeoutSeconds/failureThreshold explícitos.
+# Validado em staging (28/08/2026) com teste de falha controlada real:
+# iptables DROP escopado ao IP do pod -> IP do postgres:5432 (host,
+# temporário, removido depois), readinessProbe detectou em 35s,
+# livenessProbe reiniciou o pod sozinho em 81s, recuperação completa
+# (/health 200) poucos segundos após remover o bloqueio -- restartCount
+# final 1, sem efeito nos outros sites/pods.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 7effec3
+    newTag: 0096c52
