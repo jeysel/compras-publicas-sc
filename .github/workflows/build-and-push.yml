@@ -120,28 +120,30 @@ jobs:
       - name: Aguarda container ficar pronto
         run: |
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:8000/ >/dev/null 2>&1; then
+            if curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
               echo "Container pronto após ${i}s"
               exit 0
             fi
             sleep 1
           done
-          echo "Timeout aguardando / responder"
+          echo "Timeout aguardando /health responder"
           docker logs compras-publicas-smoke-test
           exit 1
 
-      - name: Smoke test da rota /
-        # Mesma rota já usada pelas probes de k8s (deploy/k8s/base/deployment.yaml)
-        # como definição operacional de "saudável" -- sem introduzir uma rota
-        # /health nova só para o CI (spec 089).
+      - name: Smoke test da rota /health
+        # /health agora existe e testa SELECT 1 através do pool real (ver
+        # pendencias.md, repo infra) -- mesma rota usada pelas probes de k8s
+        # (deploy/k8s/base/deployment.yaml). O Postgres real deste job (acima)
+        # garante que o pool consiga abrir/consultar de verdade, não só que o
+        # processo esteja de pé.
         run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/)
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/health)
           if [ "$code" != "200" ]; then
-            echo "FALHA: / retornou ${code} (esperado 200)"
+            echo "FALHA: /health retornou ${code} (esperado 200)"
             docker logs compras-publicas-smoke-test
             exit 1
           fi
-          echo "OK: / -> 200"
+          echo "OK: /health -> 200"
 
       - name: Limpa container de smoke test
         if: always()

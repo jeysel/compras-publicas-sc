@@ -1,12 +1,14 @@
+import asyncio
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.db import close_pool, open_pool
+from app.db import close_pool, get_connection, open_pool
 from app.routers import (
     anos_disponiveis,
     concentracao_fornecedor,
@@ -89,6 +91,27 @@ for router in (
     perfil_fornecedores.router,
 ):
     app.include_router(router, prefix="/api/v1")
+
+
+HEALTH_CHECK_TIMEOUT_SECONDS = 3.0
+
+
+@app.get("/health", include_in_schema=False)
+async def health() -> JSONResponse:
+    """Testa o banco via SELECT 1.
+
+    Usa o pool de produção real (não uma conexão avulsa), pra que um pool
+    travado (ex: incidente 27/08, ver pendencias.md do repo infra) apareça
+    como falha do probe em vez de passar despercebido.
+    """
+    try:
+        async with asyncio.timeout(HEALTH_CHECK_TIMEOUT_SECONDS):
+            async with get_connection() as conn:
+                await conn.execute("SELECT 1")
+    except Exception:
+        return JSONResponse(status_code=503, content={"status": "unhealthy"})
+    return JSONResponse(status_code=200, content={"status": "ok"})
+
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=APP_DIR / "templates")
