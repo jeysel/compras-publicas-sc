@@ -1,8 +1,8 @@
 # Egress restrito ao necessário para o pod `app: compras-publicas-api` --
 # DNS (kube-system) e Postgres compartilhado (172.18.0.2/32:5432, fora do
-# k3s, ver infra/deploy/k8s/platform -- IP trocou com o do redis em
-# 2026-08-27 e de novo em 2026-08-28 (mesmo padrão, restart do daemon
-# Docker), ver comentário em
+# k3s, ver infra/deploy/k8s/platform -- IP FIXO desde 2026-08-28
+# (ipv4_address no docker-compose.yml do repo infra, correção definitiva
+# da causa raiz do IP-swap, não deveria mais trocar), ver comentário em
 # infra/deploy/k8s/platform/base/postgres-service.yaml). App não faz chamada HTTPS externa
 # própria (dbt/ingestão rodam fora do k3s, no host). Aplicado manualmente
 # via kubectl desde a spec 080 (2026-08-19), nunca versionado até a spec 088
@@ -32,7 +32,7 @@ spec:
           port: 53
     - to:
         - ipBlock:
-            cidr: 172.18.0.3/32
+            cidr: 172.18.0.2/32
       ports:
         - protocol: TCP
           port: 5432
