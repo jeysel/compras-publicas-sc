@@ -21,6 +21,68 @@ on:
       - ".github/workflows/build-and-push.yml"
 
 jobs:
+  test:
+    name: Suíte de testes da API (spec 033)
+    runs-on: ubuntu-latest
+    # Postgres real como serviço — mesmo padrão do smoke test do job build-api
+    # (não mockado, Requirement funcional 3 da spec 033).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cp_test
+          POSTGRES_PASSWORD: cp_test
+          POSTGRES_DB: cp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cp_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: cp_test
+      POSTGRES_USER: cp_test
+      POSTGRES_PASSWORD: cp_test
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instala Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instala dbt e dependências de teste da API
+        run: |
+          pip install dbt-core==1.9.* dbt-postgres==1.9.*
+          pip install -r api/requirements-dev.txt
+
+      - name: Resolve dependências dbt (dbt_utils)
+        working-directory: dbt
+        run: dbt deps
+
+      # Substitui dbt/seeds/contratos.csv só neste checkout efêmero do
+      # runner — nunca commitado; mesmo mecanismo já usado em produção
+      # (scripts/ingest.sh sobrescreve o mesmo arquivo antes de dbt seed/
+      # build). Fonte de verdade do seed de teste: api/tests/fixtures/contratos.py.
+      - name: Gera seed de teste determinístico
+        run: python api/tests/fixtures/contratos.py dbt/seeds/contratos.csv
+
+      - name: dbt seed + dbt build (schema marts real, populado do zero)
+        working-directory: dbt
+        run: |
+          dbt seed --select contratos --full-refresh
+          dbt build
+
+      - name: Executa a suíte de testes (pytest -m integration + testes rápidos)
+        working-directory: api
+        run: pytest -v
+
   build-pipeline:
     name: Imagem de ingestão
     runs-on: ubuntu-latest
@@ -56,6 +118,11 @@ jobs:
   build-api:
     name: Imagem da API+frontend
     runs-on: ubuntu-latest
+    # Requirement funcional 1/2 da spec 033: suíte de testes roda antes do
+    # build e bloqueia publicação no GHCR/promoção pro overlay de staging
+    # se falhar. build-pipeline (imagem dbt) não depende de test — a suíte
+    # cobre só a API, pipeline de ingestão é fora do escopo (spec 033).
+    needs: test
     permissions:
       contents: write
       packages: write
