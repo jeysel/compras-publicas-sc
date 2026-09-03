@@ -55,13 +55,41 @@
 
     <main>{% block content %}{% endblock %}</main>
 
-    <footer class="footer">
-      <div class="footer-inner">
-        <span
-          >Fonte: sistemas de gestão do Estado, com os dados disponibilizados no Portal de Transparência oficial ·
-          a partir de <span class="ano-cobertura">2016</span></span
-        >
-        <a href="/metodologia">Metodologia →</a>
+    <footer class="site-footer">
+      <div class="site-footer__grid">
+        <div>
+          <h3 class="site-footer__title">Compras Públicas SC</h3>
+          <p class="site-footer__desc">
+            Painel de transparência de contratos públicos do Estado de Santa Catarina, a partir de
+            <span class="ano-cobertura">2016</span>. Dados abertos do Portal de Transparência oficial,
+            a partir dos sistemas de gestão do Estado.
+          </p>
+        </div>
+        <div>
+          <h3 class="site-footer__title site-footer__title--caps">Navegação</h3>
+          <ul class="site-footer__links">
+            <li><a href="/">Início</a></li>
+            <li><a href="/graficos/serie-temporal">Série temporal</a></li>
+            <li><a href="/graficos/escalada-custo">Escalada de custo</a></li>
+            <li><a href="/graficos/concentracao-fornecedor">Concentração de fornecedores</a></li>
+            <li><a href="/relatorios/perfil-orgaos">Perfil de órgãos</a></li>
+            <li><a href="/metodologia">Metodologia</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="site-footer__title site-footer__title--caps">Contato</h3>
+          <ul class="site-footer__links">
+            <li><a href="mailto:contato@jeysel.dev">contato@jeysel.dev</a></li>
+            <li><a href="https://jeysel.dev">Desenvolvido por jeysel.dev</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="site-footer__bottom">
+        <p>© 2026 Compras Públicas SC · Código e dados sob licença aberta.</p>
+        <p>
+          <a href="#">Privacidade</a>
+          <a href="#">Termos de Uso</a>
+        </p>
       </div>
     </footer>
 
