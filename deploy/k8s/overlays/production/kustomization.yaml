@@ -40,7 +40,18 @@ replicas:
 # livenessProbe reiniciou o pod sozinho em 81s, recuperação completa
 # (/health 200) poucos segundos após remover o bloqueio -- restartCount
 # final 1, sem efeito nos outros sites/pods.
+# a39f3db (spec 034 -- fronteira de cobertura temporal 2016): piso
+# GREATEST(MIN(ano_assinatura), 2016) em /api/v1/anos-disponiveis +
+# paragrafo na metodologia sobre a exclusao pre-2016. O corte no dbt
+# (stg_contratos) so tem efeito nos KPIs/series apos rodar o pipeline
+# manual no servidor (cron gated por ETag nao pega mudanca so de codigo,
+# spec 030). Validado em staging em 2026-09-03 (exec no pod, DB
+# compartilhado ainda sem reprocessamento dbt): /api/v1/anos-disponiveis
+# -> {"ano_min":2016,"ano_max":2026} (era 1994); /metodologia contem o
+# paragrafo novo; kpis-resumo/escalada-custo ainda 104.574 (esperado ate
+# o dbt build); contratos-temporal, concentracao-fornecedor e /health em
+# 200, sem regressao.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 0096c52
+    newTag: a39f3db
