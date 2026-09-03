@@ -156,6 +156,10 @@ adicionado `.site-footer__bottom a:hover`.
 de Privacidade e Termos" — fica assim: LICENSE **feito** (MIT); páginas de Privacidade/Termos
 **não serão criadas** (decisão, não pendência) e os links saíram.
 
+**No ar em produção (2026-09-03):** commits `3739c2e` + `6c3f625`, promovido em `ba42e9a`.
+GitHub detecta a licença (`licenseInfo.key = "mit"`). Footer de produção com o link do
+LICENSE e sem Privacidade/Termos, conferido no ar.
+
 ## Ver também
 
 - [[034-fronteira-cobertura-temporal-2016]] — o `.ano-cobertura` que o footer carrega.
