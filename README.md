@@ -1,182 +1,196 @@
-# 🛒 Compras Públicas SC — Pipeline Analytics
+# 🛒 Compras Públicas SC
 
-Pipeline de dados analíticos sobre contratos públicos do estado de Santa Catarina.
+Painel de transparência sobre contratos públicos do Estado de Santa Catarina — do pipeline
+de dados (dbt + PostgreSQL) à apresentação pública (FastAPI + ECharts).
 
-**Fonte:** [Portal de Transparência do Estado de Santa Catarina](https://www.transparencia.sc.gov.br/) | **Período:** 2016 a 2026
+- **No ar:** [contratos-sc.jeysel.dev](https://contratos-sc.jeysel.dev)
+- **Fonte:** [Portal de Transparência de SC](https://www.transparencia.sc.gov.br/) — dados abertos em [dados.sc.gov.br](https://dados.sc.gov.br/dataset/contratos)
+- **Cobertura:** contratos assinados a partir de 2016 ([spec 034](docs/specs/034-fronteira-cobertura-temporal-2016/spec.md))
 
 ---
 
 ## 🏗️ Arquitetura
 
 ```
-CSV (Transparência SC)
-       ↓
-  dbt seed → PostgreSQL (raw)
-       ↓
-  dbt build
-  ├── staging      → padronização e limpeza
-  ├── intermediate → regras de negócio
-  └── marts        → métricas analíticas
-       ↓
-    (frontend em transição — ver nota abaixo)
+Portal de Transparência SC (CSV)
+        │   ingest.sh (gated por ETag)  +  upsert manual (spec 030)
+        ▼
+PostgreSQL  ──  raw.contratos
+        │   dbt build
+        ├── staging       padronização, tipagem, flags de qualidade, corte 2016+
+        ├── intermediate  regras de negócio
+        └── marts         tabelas e métricas analíticas
+        │
+        ▼
+FastAPI  ──  páginas (Jinja2)  +  API de leitura  /api/v1/*
+        │        ▲
+        │        └──  web/  (Vite + TypeScript + ECharts) → build embutido em api/app/static
+        ▼
+k3s + Argo CD (GitOps)  ──►  contratos-sc.jeysel.dev
 ```
 
-> **Frontend em transição:** o dashboard anterior (Evidence.dev, publicado via GitHub Pages) foi removido deste repositório. O novo frontend (FastAPI + ECharts, spec 012) ainda não foi implementado — o projeto está temporariamente sem apresentação pública além do pipeline dbt/PostgreSQL. Ver `docs/specs/012-eixo-frontend-biblioteca-grafico/spec.md` e `docs/specs/013-levantamento-dbt-legado/spec.md` (Caso de borda 3) para o histórico da decisão.
+O frontend estático anterior (Evidence.dev via GitHub Pages) foi removido em 2026-08 e
+substituído por este serving layer FastAPI + ECharts (specs 012 / 022). Histórico da decisão
+em [`docs/specs/012`](docs/specs/012-eixo-frontend-biblioteca-grafico/spec.md) e
+[`docs/specs/013`](docs/specs/013-levantamento-dbt-legado/spec.md).
 
 ## 🧱 Stack
 
 | Camada | Tecnologia |
 |---|---|
 | Banco de dados | PostgreSQL 17 |
-| Transformação | dbt-core 1.9 |
-| Visualização | *(em transição — spec 012, não implementado)* |
+| Transformação | dbt-core 1.9 (`dbt-postgres`) |
+| Serving / API | FastAPI · Jinja2 · `psycopg` 3 (pool) — Python 3.12 |
+| Frontend | Vite · TypeScript · ECharts 6 |
+| Empacotamento | Docker (multi-stage: Node builda o `web/`, imagem final serve a API) |
+| Deploy | k3s (VPS) + Argo CD — manifests em [`deploy/k8s`](deploy/k8s); `Ingress`/`Application` no repo de infra |
+| CI | GitHub Actions — suíte de testes (spec 033) + build/push das imagens no GHCR |
 | Orquestração local | Docker Compose |
-| CI/CD | GitHub Actions |
 
 ---
 
-## 🚀 Como rodar localmente
+## 🚀 Rodar localmente
 
 ### Pré-requisitos
-- Docker Desktop instalado e rodando
-- Node.js 20+
-- Git
 
----
+- Docker (Desktop ou Engine) rodando
+- Node.js 22+ (só para iterar no frontend com `npm run dev`)
+- Git
 
 ### Setup
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/jeysel/Analytics-Engineer.git
-cd Analytics-Engineer/compras-publicas
+# 1. Clone
+git clone https://github.com/jeysel/compras-publicas-sc.git
+cd compras-publicas-sc
 
-# 2. Ative o pre-commit hook local (bloqueia commit de IP/ARN/chave privada
-#    em arquivos de documentação — precisa rodar uma vez por clone, não se
-#    propaga sozinho; ver .githooks/pre-commit)
+# 2. Pre-commit hook local (bloqueia commit de IP/ARN/identity/chave privada em
+#    docs — precisa rodar uma vez por clone, não se propaga; ver .githooks/pre-commit)
 git config core.hooksPath .githooks
 
-# 3. Configure as variáveis de ambiente
+# 3. Variáveis de ambiente
 cp .env.example .env
 
-# 4. Compila as imagens docker
-docker compose build
-
-# 5. Sobe o PostgreSQL
+# 4. Sobe o PostgreSQL
 docker compose up postgres -d
 
-# Visualizar logs
-docker logs compras_postgres
-
-# Configurar PgAdmin (opcional)
-# Host:     localhost
-# Port:     5432
-# Database: compras_publicas
-# Username: cp_user
-# Password: cp_pass
-
-# 6. Instala dependências do dbt
+# 5. Pipeline dbt (deps → seed → build completo com testes)
 docker compose run --rm dbt deps
+docker compose run --rm dbt seed --select contratos --full-refresh
+docker compose run --rm dbt build
 
-# 7. Carrega os dados (seed)
-docker compose run --rm dbt seed
+# 6. Sobe a API + frontend (buildado dentro da imagem)
+docker compose --profile api up api -d --build
+#    → http://localhost:8000        (páginas)
+#    → http://localhost:8000/docs   (OpenAPI)
+```
 
-# Validar no PgAdmin:
-# SELECT count(*) FROM raw.contratos;
-# Esperado: ~76.000 linhas
+### Iterar no frontend
 
-# 8. Executa e valida o staging
-docker compose run --rm dbt build --select stg_contratos
+```bash
+cd web
+npm install
+npm run dev        # Vite dev server; consome a API em localhost:8000
+npm run build      # tsc + vite build → api/app/static (o que a imagem serve)
+```
 
-# Validar no PgAdmin:
-# SELECT table_name
-#   FROM information_schema.tables
-#   WHERE table_schema = 'staging'
-#   ORDER BY table_name;
+### Documentação do dbt (opcional)
 
-# 9. Executa e valida o intermediate
-docker compose run --rm dbt build --select tag:int
-
-# Validar no PgAdmin:
-# SELECT table_name
-#   FROM information_schema.tables
-#   WHERE table_schema = 'intermediate'
-#   ORDER BY table_name;
-
-# 10. Executa os marts
-docker compose run --rm dbt build --select tag:marts
-
-# Validar no PgAdmin:
-# SELECT table_name
-#   FROM information_schema.tables
-#   WHERE table_schema = 'marts'
-#   ORDER BY table_name;
-
-# Conferir campos descritivos na fct_contratos:
-# SELECT
-#     ds_situacao_aditivo,
-#     ds_situacao_prazo,
-#     porte_fornecedor,
-#     count(*) as qt
-# FROM marts.fct_contratos
-# GROUP BY 1, 2, 3
-# ORDER BY 4 DESC
-# LIMIT 10;
-
-# 11. Documentação do DBT (opcional)
-# Gera a documentação com lineage graph e descrições dos modelos
+```bash
 docker compose run --rm dbt docs generate
-
-# Sobe o servidor de documentação
 docker compose run --rm -p 8080:8080 dbt docs serve --host 0.0.0.0 --port 8080
-# Acesse: http://localhost:8080
+# → http://localhost:8080
+```
+
+### PgAdmin (opcional)
+
+```bash
+docker compose up pgadmin -d          # → http://localhost:8080
+# Host: postgres · Port: 5432 · Database/User/Password: ver .env
 ```
 
 ---
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura
 
 ```
-compras-publicas/
-├── .github/workflows/   # CI/CD — GitHub Actions
-├── postgres/
-│   ├── Dockerfile       # Ubuntu 24.04 + PostgreSQL 17
-│   └── entrypoint.sh    # Inicialização do cluster
+compras-publicas-sc/
+├── .github/workflows/       # CI — testes + build/push das imagens
+├── postgres/                # imagem do Postgres local (Ubuntu 24.04 + PG 17)
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/     # Padronização dos dados brutos + dim_datas (date_spine)
-│   │   ├── intermediate/# Regras de negócio
-│   │   └── marts/       # Tabelas analíticas finais
-│   ├── seeds/           # CSV dos contratos SC
-│   ├── macros/          # generate_schema_name
-│   ├── dbt_project.yml
-│   ├── profiles.yml
+│   │   ├── staging/         # padronização, flags de qualidade, corte 2016+, dim_datas (date_spine)
+│   │   ├── intermediate/    # regras de negócio
+│   │   └── marts/           # tabelas e métricas analíticas
+│   ├── seeds/               # CSV base dos contratos
+│   ├── tests/               # asserts SQL (relações, invariantes)
+│   ├── macros/              # generate_schema_name
+│   ├── scripts/             # ingest.sh · process_csv.py
+│   └── Dockerfile, Dockerfile.pipeline
+├── api/
+│   ├── app/
+│   │   ├── routers/         # endpoints /api/v1/*
+│   │   ├── schemas/         # modelos Pydantic
+│   │   └── templates/       # páginas Jinja2 (layout, home, gráficos, relatórios, metodologia)
+│   ├── tests/               # suíte pytest (integração contra Postgres real + testes rápidos)
 │   └── Dockerfile
-├── docs/                # Arquitetura e decisões
+├── web/                     # frontend Vite/TS/ECharts (buildado para api/app/static)
+├── deploy/k8s/              # Deployment/Service/NetworkPolicy + overlays staging/production
+├── docs/
+│   ├── specs/               # SDD — uma spec por decisão/mudança de comportamento
+│   ├── memory/constitution.md
+│   └── backlog-archived/    # backlog antigo (histórico)
 ├── docker-compose.yml
 └── .env.example
 ```
 
 ---
 
-## 🎯 Métricas Analíticas
+## 📊 O que o painel mostra
 
-- Volume de contratos por órgão e período
-- Ranking de fornecedores por valor e quantidade
-- Distribuição por modalidade de licitação
-- Evolução anual de gastos (2016-2026)
-- Contratos com aditivo — acréscimo e supressão
-- Perfil de contratação dos órgãos
-- Classificação por ramo de atividade (16 categorias)
-- Análise completa do setor de TI por subcategoria
+- **Série temporal** de valor contratado (mês a mês, variação ano a ano, média móvel)
+- **Escalada de custo** — variação de valor por aditivo, por ano de assinatura
+- **Concentração de fornecedores** — top 10 por gasto, no estado e por órgão
+- **Diversidade de vencedores** — concorrência efetiva por processo licitatório
+- **Fornecedor por segmento** — ranking por ramo de atividade
+- **Perfil de órgãos** e **perfil de fornecedores** (por porte, volume e valor)
+- **Ranking de qualidade de dado** por órgão · **variação de custo/prazo** por modalidade
+
+### Metodologia de dados
+
+Decisões de tratamento ficam registradas como spec e resumidas em
+[`/metodologia`](https://contratos-sc.jeysel.dev/metodologia):
+
+- **Cobertura a partir de 2016** — registros anteriores existem na origem mas sem cobertura
+  contínua nem auditoria; excluídos de todas as visualizações ([spec 034](docs/specs/034-fronteira-cobertura-temporal-2016/spec.md)).
+- **`fl_valor_suspeito`** — valores implausíveis (erro da fonte) sinalizados e excluídos das
+  agregações ([spec 021](docs/specs/021-levantamento-outliers-valor-extremo/spec.md)).
+- **`fl_aditivo_inconsistente`** — divergência entre `vl_aditado` e a variação calculada
+  ([spec 008](docs/specs/008-qualidade-e-documentacao/spec.md) / 013 / 014).
+- Normalização de modalidade (mesmo instituto sob leis diferentes vira uma categoria).
+
+---
+
+## 🧭 Como este repositório trabalha
+
+Metodologia SDD (spec-driven): toda decisão de arquitetura, requirement ou mudança de
+comportamento relevante vira uma spec em [`docs/specs/`](docs/specs/) **antes** de virar
+código. Regras não-negociáveis (segredos, push, validação real) em
+[`docs/memory/constitution.md`](docs/memory/constitution.md). Orientação para agentes em
+[`CLAUDE.md`](CLAUDE.md).
+
+Deploy: `push` em `main` → CI roda a suíte e publica as imagens → staging sincroniza
+automático via Argo CD → produção é promoção manual (bump de tag no overlay + sync).
 
 ---
 
 ## 👤 Autor
 
-Desenvolvido por [Jeysel](https://github.com/jeysel) como projeto de portfólio em Analytics Engineering.
+Desenvolvido por [Jeysel](https://github.com/jeysel) como projeto de portfólio em
+Analytics / Data Engineering.
 
-Portfólio completo: [github.com/jeysel/Analytics-Engineer](https://github.com/jeysel/Analytics-Engineer)
+Outros projetos: [repositórios pessoais](https://github.com/jeysel?tab=repositories) ·
+[organização jeysel-dev](https://github.com/orgs/jeysel-dev/repositories)
 
 ---
 
