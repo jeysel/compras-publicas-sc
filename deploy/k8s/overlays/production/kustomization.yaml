@@ -60,7 +60,13 @@ replicas:
 # perfil-orgaos presente, CSS built com .site-footer__* e sem .footer-inner;
 # colapso p/ 1 coluna em tela estreita e dark mode conferidos por
 # screenshot local (mesmo codigo). Sem regressao nas rotas.
+# 6c3f625 (adendo spec 035): footer -- "Codigo e dados sob licenca aberta"
+# vira link pro LICENSE do repo; links Privacidade/Termos (href="#")
+# removidos (app sem auth/form/sessao). Tambem: LICENSE MIT na raiz +
+# secao de licenca no README (nao afetam o runtime). So frontend.
+# Validado local e em staging 2026-09-03: footer com grid, link
+# blob/main/LICENSE presente, Privacidade/Termos ausentes.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: e781ee3
+    newTag: 6c3f625
