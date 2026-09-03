@@ -4,8 +4,13 @@ models:
   - name: stg_contratos
     description: >
       Contratos públicos do estado de Santa Catarina padronizados.
-      Fonte: Transparência SC. Período: 2016 a 2026.
-      78.000 registros aproximadamente.
+      Fonte: Transparência SC. Período: a partir de 2016 (fronteira de
+      cobertura oficial — spec 034). raw.contratos tem registros de 1994 em
+      diante (entraram por upsert manual, spec 030), mas 1994-2015 é cauda
+      não auditada, com anos inteiros ausentes antes de ~2013; é cortada
+      aqui num ponto só (CTE cobertura_oficial) e não chega às marts. O
+      backfill oficial pré-2016 é a spec 006 (pendente), não este corte.
+      ~78.000 registros após o corte.
  
     columns:
       - name: nu_contrato
@@ -110,7 +115,10 @@ models:
         description: "Tipo do contrato"
  
       - name: ano_assinatura
-        description: "Ano de assinatura extraído de dt_assinatura"
+        description: >
+          Ano de assinatura extraído de dt_assinatura. Sempre >= 2016 —
+          registros anteriores são cortados na CTE cobertura_oficial
+          (spec 034).
         tests:
           - not_null
  

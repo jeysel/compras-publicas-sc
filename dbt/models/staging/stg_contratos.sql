@@ -142,6 +142,26 @@ com_flags as (
 
     from renamed
 
+),
+
+cobertura_oficial as (
+
+    -- Fronteira de cobertura temporal (spec 034): 2016 é o piso oficial —
+    -- mesma data que a metodologia (/metodologia) e a home já publicavam.
+    -- raw.contratos acumulou registros de 1994 em diante via upsert manual
+    -- (spec 030), mas antes de ~2013 são linhas esparsas com anos inteiros
+    -- ausentes (nada em 1995-2000, 2002-2003) e sem auditoria contra fonte
+    -- oficial. 1994-2015 é tratado como cauda documentada: continua em
+    -- raw.contratos e no seed, é cortado aqui num ponto só, e os 14 models a
+    -- jusante herdam o recorte via ref(). O backfill oficial pré-2016 é a
+    -- spec 006 (pendente), não este corte.
+    -- coalesce(..., 9999): linha sem dt_assinatura (logo ano_assinatura nulo)
+    -- passa adiante e é pega pelo teste not_null de ano_assinatura no yml,
+    -- em vez de sumir em silêncio por causa deste filtro.
+    select *
+    from com_flags
+    where coalesce(ano_assinatura, 9999) >= 2016
+
 )
 
-select * from com_flags
+select * from cobertura_oficial

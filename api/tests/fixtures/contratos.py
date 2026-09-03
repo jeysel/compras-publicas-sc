@@ -18,6 +18,11 @@ Cobre deliberadamente:
   stg_contratos.sql).
 - 1 processo (2023PROC001) com 2 fornecedores distintos (rows 1 e 8), pra
   diversidade_vencedores ter ao menos um "Múltiplos fornecedores".
+- 1 contrato assinado antes de 2016 (row 9: 2014) — deve ser cortado em
+  stg_contratos pela fronteira de cobertura oficial (spec 034) e não
+  aparecer em nenhuma mart. Valida-se em test_cobertura_oficial.py. Usa
+  órgão/fornecedor/modalidade já existentes de propósito: como a linha some
+  em stg, nenhum agregado das outras rotas muda por causa dela.
 """
 
 from __future__ import annotations
@@ -111,6 +116,16 @@ FIXTURE_ROWS = [
         "objeto": "Aquisição de materiais de expediente para o escritório central",
         "vloriginal": "25000", "vlatual": "25000", "vladitado": "0",
         "diasoriginais": "15", "diasaditados": "0", "diasatuais": "15",
+    },
+    {
+        # Assinado em 2014 — antes da fronteira de cobertura oficial (2016,
+        # spec 034). Deve ser cortado em stg_contratos e não aparecer em
+        # nenhuma mart nem no intervalo de /api/v1/anos-disponiveis.
+        **ORG_A, **F1, "nucontrato": "CT-TESTE-PRE2016", "dtassinatura": "2014-08-11 00:00:00",
+        "nuprocesso": "2014PROC009", "nmmodalidade": MOD_PE,
+        "objeto": "Contrato histórico anterior ao início da cobertura do painel",
+        "vloriginal": "99000", "vlatual": "99000", "vladitado": "0",
+        "diasoriginais": "30", "diasaditados": "0", "diasatuais": "30",
     },
 ]
 

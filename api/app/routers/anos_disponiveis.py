@@ -17,7 +17,16 @@ router = APIRouter(tags=["anos-disponiveis"])
     ),
 )
 async def get_anos_disponiveis() -> dict:
-    sql = "SELECT MIN(ano_assinatura)::int AS ano_min, MAX(ano_assinatura)::int AS ano_max FROM marts.fct_contratos"
+    # GREATEST(..., 2016): 2016 é a fronteira de cobertura oficial (spec 034).
+    # O corte real acontece em stg_contratos, mas a ingestão de produção é
+    # cron manual gated por ETag (spec 030) — não reprocessa por mudança de
+    # código dbt. Enquanto o próximo `dbt build` manual não roda, fct_contratos
+    # em produção ainda pode ter linhas anteriores a 2016; este piso mantém os
+    # dropdowns de ano do frontend corretos desde já.
+    sql = (
+        "SELECT GREATEST(MIN(ano_assinatura), 2016)::int AS ano_min, "
+        "MAX(ano_assinatura)::int AS ano_max FROM marts.fct_contratos"
+    )
 
     async with get_connection() as conn:
         async with conn.cursor() as cur:
