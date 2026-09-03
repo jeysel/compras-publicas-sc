@@ -51,7 +51,16 @@ replicas:
 # paragrafo novo; kpis-resumo/escalada-custo ainda 104.574 (esperado ate
 # o dbt build); contratos-temporal, concentracao-fornecedor e /health em
 # 200, sem regressao.
+# e781ee3 (spec 035 -- footer de 3 colunas): layout.html troca o footer de
+# linha unica pelo de 3 colunas (marca / Navegacao / Contato) + barra
+# inferior com copyright, "Codigo e dados sob licenca aberta" e
+# Privacidade/Termos (href="#"). So frontend, sem toque em dbt/marts.
+# Validado local (Postgres real) e em staging em 2026-09-03: /metodologia
+# serve <footer class="site-footer"> com o grid, link /relatorios/
+# perfil-orgaos presente, CSS built com .site-footer__* e sem .footer-inner;
+# colapso p/ 1 coluna em tela estreita e dark mode conferidos por
+# screenshot local (mesmo codigo). Sem regressao nas rotas.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: a39f3db
+    newTag: e781ee3
