@@ -7,7 +7,10 @@ weather-analytics (spec 019 de lá), adaptado ao conteúdo e ao stack deste repo
 
 ## Status
 
-Proposta — 2026-09-03.
+**No ar em produção (2026-09-03).** `layout.html` + `web/src/style.css` com o footer de 3
+colunas. Validado local (Postgres real, screenshots light/dark/estreito) e em staging;
+deploy da API via CI→Argo (staging automático, produção promovida manualmente, commit
+`23cc99f`). Sem toque em dbt.
 
 ## Resumo
 
