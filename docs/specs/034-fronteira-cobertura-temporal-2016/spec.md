@@ -6,7 +6,11 @@ Decisão de arquitetura (fronteira de escopo temporal) + ajuste de implementaç�
 
 ## Status
 
-Implementado e validado (2026-09-03). Levantamento com output literal na seção Investigação; filtro aplicado em `stg_contratos`, piso replicado no endpoint `/api/v1/anos-disponiveis`, teste dbt e teste de integração adicionados.
+**No ar em produção (2026-09-03).** Filtro aplicado em `stg_contratos`, piso replicado no
+endpoint `/api/v1/anos-disponiveis`, teste dbt e teste de integração adicionados. Deploy da API
+via CI→Argo (staging automático, produção promovida manualmente); marts reprocessadas no
+servidor (`dbt run` + `dbt test`, sem `seed`/`build`). Ver seção Deploy / cutover para o output
+literal.
 
 ## Resumo
 
@@ -218,6 +222,39 @@ A mudança tem duas camadas com caminhos de deploy diferentes:
 
 Ordem recomendada: (1) API em staging → validar → produção; (2) rodar o pipeline dbt manual no
 servidor; (3) conferir `/api/v1/kpis-resumo` (`total_contratos` ~79,6k) e a metodologia no ar.
+
+### Cutover executado — 2026-09-03
+
+1. Commits `a39f3db` (impl) + `8966c77` (promoção `overlays/production` → `a39f3db`). CI verde
+   (suíte 32 passed). Staging sincronizou sozinho; produção via
+   `kubectl -n argocd patch application compras-publicas-production ... {"operation":{"sync":...}}`
+   (sem `automated` — spec 015), sync `Succeeded`, 2 pods `a39f3db` ready.
+
+2. Reprocessamento dbt no host (mesmo padrão do passo 7 de `infra/scripts/importar-contratos.sh`
+   — `run` + `test`, **nunca** `seed`/`build`, senão o `dbt seed` sobrescreve os upserts da
+   spec 030 em `raw.contratos`):
+
+   ```
+   docker run --rm --entrypoint dbt --network jeysel-network \
+     --env-file /home/ubuntu/secrets/compras-publicas.env -w /usr/app/dbt \
+     ghcr.io/jeysel/compras-publicas-sc/compras-publicas-pipeline:latest  run    # PASS=24
+   ...                                                                    test   # PASS=109
+   ```
+   (`assert_stg_contratos_cobertura_oficial` PASS. Log:
+   `/home/ubuntu/logs/compras-publicas/spec034-dbt-20260903_174614.log`.)
+
+3. Verificação em produção (`compras_publicas` no container `postgres`):
+
+   | | antes | depois |
+   |---|---|---|
+   | `raw.contratos` | 104.574 (24.937 pré-2016) | **104.574 (inalterado)** |
+   | `stg_contratos` / `min(ano_assinatura)` | 104.574 / 1994 | **79.637 / 2016** |
+   | `mart_escalada_custo` / `fct_contratos` | 104.574 | **79.637** |
+   | `GET /api/v1/kpis-resumo` `total_contratos` | 104.574 | **79.637** |
+   | `GET /api/v1/anos-disponiveis` `ano_min` | 1994 | **2016** |
+
+   Smoke test de 9 rotas (`/`, `/metodologia`, gráficos, `/api/v1/*`): todas 200.
+   `raw.contratos` intacto confirma a cauda documentada — dado preservado, só fora do escopo analítico.
 
 ## Referências de código
 
