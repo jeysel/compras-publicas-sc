@@ -10,7 +10,8 @@ weather-analytics (spec 019 de lá), adaptado ao conteúdo e ao stack deste repo
 **No ar em produção (2026-09-03).** `layout.html` + `web/src/style.css` com o footer de 3
 colunas. Validado local (Postgres real, screenshots light/dark/estreito) e em staging;
 deploy da API via CI→Argo (staging automático, produção promovida manualmente, commit
-`23cc99f`). Sem toque em dbt.
+`23cc99f`). Sem toque em dbt. Ver **Adendo** para a licença (MIT) e a remoção dos links
+`Privacidade` / `Termos de Uso`.
 
 ## Resumo
 
@@ -52,9 +53,11 @@ página tem footer próprio).
    - **Contato**: `.site-footer__title--caps` "Contato" + `.site-footer__links` com
      `mailto:contato@jeysel.dev` e `https://jeysel.dev` ("Desenvolvido por jeysel.dev").
 
-2. O `layout.html` DEVE renderizar `.site-footer__bottom` com:
-   - `© 2026 Compras Públicas SC · Código e dados sob licença aberta.`
-   - links `Privacidade` e `Termos de Uso`, ambos `href="#"` (páginas não existem).
+2. O `layout.html` DEVE renderizar `.site-footer__bottom` com a linha
+   `© 2026 Compras Públicas SC · Código e dados sob licença aberta.`, onde "Código e dados
+   sob licença aberta" é link para o `LICENSE` do repositório.
+   *(Revisto no Adendo — a versão original tinha também links `Privacidade` / `Termos de Uso`
+   como `href="#"`; removidos.)*
 
 3. O footer DEVE aparecer em todas as páginas — consequência de estar em `layout.html`.
 
@@ -123,6 +126,35 @@ página tem footer próprio).
   `@media (prefers-color-scheme: dark)`.
 - `web/src/cobertura.ts` — popula `.ano-cobertura` (spec 034).
 - weather-analytics `docs/specs/019-footer-tres-colunas/spec.md` — origem do padrão.
+
+## Adendo — 2026-09-03 (licença + remoção de Privacidade/Termos)
+
+Dois itens que a versão original deixou como pendência/placeholder, resolvidos na mesma
+sessão logo após o deploy:
+
+1. **Licença escolhida: MIT.** Adicionado `LICENSE` na raiz (`Copyright (c) 2026 Jeysel
+   Pacheco Bastos`) e seção "## Licença" no `README.md`. Motivo: o pedido era "permitir
+   baixar e usar para estudos" — MIT é a licença permissiva mais curta e reconhecida,
+   sem copyleft (zero fricção pra quem estuda/reaproveita), e o GitHub passa a exibir o
+   badge. Os *dados* de contratos continuam sendo dados abertos do portal SC (termos do
+   próprio portal); o repo não os relicencia — o `README` deixa isso explícito.
+   No footer, "Código e dados sob licença aberta" passa a ser link para
+   `github.com/jeysel/compras-publicas-sc/blob/main/LICENSE`.
+
+2. **Links `Privacidade` / `Termos de Uso` removidos** do `.site-footer__bottom`. Eram
+   `href="#"` (placeholder herdado do padrão weather-analytics). O app não tem auth, forma,
+   sessão nem coleta de dado do visitante (checklist do CLAUDE.md) — uma política de
+   privacidade seria vazia e "Termos de Uso" não se aplica a um painel de leitura de dado
+   público. Melhor não ter o link morto. A barra inferior fica só com a linha de copyright +
+   licença.
+
+CSS: removidas as regras `.site-footer__bottom a { margin-right }` / `a:last-child` /
+`p:last-child { margin-top }` (não fazem mais sentido com uma linha só e um link inline);
+adicionado `.site-footer__bottom a:hover`.
+
+"Fora do escopo" da versão original — "Adicionar um arquivo `LICENSE`" e "Criar as páginas
+de Privacidade e Termos" — fica assim: LICENSE **feito** (MIT); páginas de Privacidade/Termos
+**não serão criadas** (decisão, não pendência) e os links saíram.
 
 ## Ver também
 

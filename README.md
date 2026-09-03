@@ -177,3 +177,14 @@ compras-publicas/
 Desenvolvido por [Jeysel](https://github.com/jeysel) como projeto de portfólio em Analytics Engineering.
 
 Portfólio completo: [github.com/jeysel/Analytics-Engineer](https://github.com/jeysel/Analytics-Engineer)
+
+---
+
+## 📄 Licença
+
+Código, modelos dbt, specs e documentação deste repositório: **[MIT](LICENSE)** —
+livre para baixar, estudar, modificar e redistribuir.
+
+Os dados de contratos são do [Portal de Transparência do Estado de Santa Catarina](https://dados.sc.gov.br/),
+publicados como dados abertos sob os termos do próprio portal; este repositório apenas os
+processa e não os relicencia.
