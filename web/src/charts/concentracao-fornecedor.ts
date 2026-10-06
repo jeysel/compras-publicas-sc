@@ -91,9 +91,11 @@ export async function renderConcentracaoFornecedor(
     true,
   );
 
-  // Fix especulativo (spec pendente) para gráfico encolhido observado em iPhone real —
-  // causa não confirmada em código (container já tem altura px explícita, listener de
-  // resize já existia); força um resize após o primeiro layout do Safari por precaução.
+  // Fix especulativo para gráfico encolhido observado em iPhone real — causa não
+  // confirmada em código (container já tem altura px explícita, listener de resize já
+  // existia); força um resize após o primeiro layout do Safari por precaução. Investigação
+  // em iOS real segue pendente (spec 036, "Não validado") — isto NÃO foi confirmado como
+  // correção, só mantido por precaução.
   requestAnimationFrame(() => chart.resize());
   if (instanciaExistente === undefined) {
     window.addEventListener("resize", () => chart.resize());

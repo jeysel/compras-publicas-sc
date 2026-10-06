@@ -2,8 +2,8 @@ import * as echarts from "echarts";
 import type { components } from "../api-types";
 import type { FiltrosGrafico } from "./filtros";
 import { setLegendaExclusao } from "./legend";
-import { formatarMoedaBRL } from "./format";
-import { tituloResponsivo } from "./theme";
+import { formatarMoedaBRL, formatarMoedaCompactaBRL } from "./format";
+import { isMobileViewport, tituloResponsivo } from "./theme";
 
 type EscaladaCusto = components["schemas"]["EscaladaCusto"];
 
@@ -65,6 +65,7 @@ export async function renderEscaladaCusto(
   const totalExcluidos = dados.length - incluidos.length;
 
   const agregado = agregarPorAno(incluidos);
+  const mobile = isMobileViewport();
 
   // notMerge: true evita que categorias/série de uma chamada anterior (outro filtro)
   // sobrevivam misturadas ao trocar o filtro e re-renderizar na mesma instância.
@@ -77,15 +78,23 @@ export async function renderEscaladaCusto(
         trigger: "axis",
         valueFormatter: (value: number | string) => formatarMoedaBRL(Number(value)),
       },
+      // containLabel: true evita que o rótulo do eixo de valor (BRL completo cabe,
+      // compacto em mobile) seja cortado pela margem padrão do grid — mesmo padrão
+      // de concentracao-fornecedor.ts / variacao-custo-modalidade.ts.
+      grid: { left: mobile ? 8 : 90, right: 20, bottom: 30, containLabel: true },
       xAxis: {
         type: "category",
         data: agregado.map((item) => String(item.ano)),
-        name: "Ano de assinatura",
+        // Nome do eixo some em mobile — mesma lógica de concentracao-fornecedor.ts
+        // (não cabe ao lado do grid estreito, informação já está no título/tooltip).
+        name: mobile ? undefined : "Ano de assinatura",
       },
       yAxis: {
         type: "value",
-        name: "Variação de valor (R$)",
-        axisLabel: { formatter: (value: number) => formatarMoedaBRL(value) },
+        name: mobile ? undefined : "Variação de valor (R$)",
+        axisLabel: {
+          formatter: (value: number) => (mobile ? formatarMoedaCompactaBRL(value) : formatarMoedaBRL(value)),
+        },
       },
       series: [
         {
@@ -98,9 +107,11 @@ export async function renderEscaladaCusto(
     true,
   );
 
-  // Fix especulativo (spec pendente) para gráfico encolhido observado em iPhone real —
-  // causa não confirmada em código (container já tem altura px explícita, listener de
-  // resize já existia); força um resize após o primeiro layout do Safari por precaução.
+  // Fix especulativo para gráfico encolhido observado em iPhone real — causa não
+  // confirmada em código (container já tem altura px explícita, listener de resize já
+  // existia); força um resize após o primeiro layout do Safari por precaução. Investigação
+  // em iOS real segue pendente (spec 036, "Não validado") — isto NÃO foi confirmado como
+  // correção, só mantido por precaução.
   requestAnimationFrame(() => chart.resize());
   // Listener de resize só é anexado na primeira renderização — reaproveitar a instância
   // ao trocar filtro não deve empilhar um novo listener a cada troca.

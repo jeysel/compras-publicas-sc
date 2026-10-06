@@ -2,8 +2,8 @@ import * as echarts from "echarts";
 import type { components } from "../api-types";
 import type { FiltrosGrafico } from "./filtros";
 import { setLegendaExclusao } from "./legend";
-import { formatarMoedaBRL } from "./format";
-import { tituloResponsivo } from "./theme";
+import { formatarMoedaBRL, formatarMoedaCompactaBRL } from "./format";
+import { isMobileViewport, tituloResponsivo } from "./theme";
 
 type ContratosTemporal = components["schemas"]["ContratosTemporal"];
 
@@ -35,19 +35,26 @@ function renderSazonalidadeMensal(containerId: string, serie: ContratosTemporal[
     porMes[item.mes_assinatura - 1] += item.qt_contratos;
   }
 
+  const mobile = isMobileViewport();
+
   const instanciaExistente = echarts.getInstanceByDom(container);
   const chart = instanciaExistente ?? echarts.init(container);
   chart.setOption(
     {
       tooltip: { trigger: "axis" },
+      // containLabel: true evita corte do rótulo do eixo em mobile (mesmo padrão
+      // dos gráficos de ranking) — aqui o valor é contagem, não BRL, então não
+      // precisa de notação compacta, só a folga de margem.
+      grid: { left: mobile ? 8 : 60, right: 20, bottom: 30, containLabel: true },
       xAxis: {
         type: "category",
         data: NOMES_MES,
-        name: "Mês de assinatura",
+        name: mobile ? undefined : "Mês de assinatura",
       },
       yAxis: {
         type: "value",
-        name: "Qtd. de contratos (soma de todos os anos)",
+        // Nome do eixo é longo demais pra mobile (estoura a largura do grid estreito).
+        name: mobile ? undefined : "Qtd. de contratos (soma de todos os anos)",
       },
       series: [
         {
@@ -102,6 +109,8 @@ export async function renderContratosTemporal(
 
   renderSazonalidadeMensal(sazonalidadeId, serie);
 
+  const mobile = isMobileViewport();
+
   const instanciaExistente = echarts.getInstanceByDom(container);
   const chart = instanciaExistente ?? echarts.init(container);
   chart.setOption(
@@ -111,15 +120,20 @@ export async function renderContratosTemporal(
         trigger: "axis",
         valueFormatter: (value: number | string) => formatarMoedaBRL(Number(value)),
       },
+      // containLabel: true + rótulo compacto em mobile — mesmo padrão de
+      // escalada-custo.ts / concentracao-fornecedor.ts pro eixo de valor em BRL.
+      grid: { left: mobile ? 8 : 90, right: 20, bottom: 30, containLabel: true },
       xAxis: {
         type: "category",
         data: serie.map(periodoLabel),
-        name: "Ano-mês de assinatura",
+        name: mobile ? undefined : "Ano-mês de assinatura",
       },
       yAxis: {
         type: "value",
-        name: "Valor atual (R$)",
-        axisLabel: { formatter: (value: number) => formatarMoedaBRL(value) },
+        name: mobile ? undefined : "Valor atual (R$)",
+        axisLabel: {
+          formatter: (value: number) => (mobile ? formatarMoedaCompactaBRL(value) : formatarMoedaBRL(value)),
+        },
       },
       series: [
         {
@@ -132,9 +146,11 @@ export async function renderContratosTemporal(
     true,
   );
 
-  // Fix especulativo (spec pendente) para gráfico encolhido observado em iPhone real —
-  // causa não confirmada em código (container já tem altura px explícita, listener de
-  // resize já existia); força um resize após o primeiro layout do Safari por precaução.
+  // Fix especulativo para gráfico encolhido observado em iPhone real — causa não
+  // confirmada em código (container já tem altura px explícita, listener de resize já
+  // existia); força um resize após o primeiro layout do Safari por precaução. Investigação
+  // em iOS real segue pendente (spec 036, "Não validado") — isto NÃO foi confirmado como
+  // correção, só mantido por precaução.
   requestAnimationFrame(() => chart.resize());
   if (instanciaExistente === undefined) {
     window.addEventListener("resize", () => chart.resize());
