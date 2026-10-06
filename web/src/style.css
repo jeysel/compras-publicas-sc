@@ -35,6 +35,13 @@
 
 body {
   margin: 0;
+  /* Rede de segurança: nada no layout deveria exigir scroll horizontal (main
+     tem max-width, .table-card já trata sua própria largura com overflow-x
+     local). Controle nativo de formulário (select, input de data) pode
+     ignorar width/max-width em engines WebKit específicas de um jeito que
+     não reproduz em Chromium/WebKit desktop (ver spec 038) — isto contém
+     qualquer vazamento desse tipo sem precisar prever cada caso. */
+  overflow-x: hidden;
 }
 
 main {
