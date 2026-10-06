@@ -436,6 +436,10 @@ section {
   gap: 4px;
   font-size: 13.5px;
   color: var(--text);
+  /* Item de flex não encolhe abaixo do conteúdo por padrão (min-width: auto) —
+     um <select> com option longa (nome de órgão) força a linha inteira a
+     estourar a largura da tela sem isto, mesmo com o select tendo width: 100%. */
+  min-width: 0;
 }
 
 .filter-field select,
@@ -685,6 +689,24 @@ section {
 
   .navbar-toggle {
     display: flex;
+  }
+
+  /* Select nativo sem width/max-width definido se dimensiona pelo conteúdo
+     (a option mais longa) em vez de respeitar o container — "Órgão" vazava
+     da tela porque nome de órgão é texto longo (confirmado real em iPhone).
+     Afeta todo combobox/input do projeto, já que o seletor é compartilhado
+     por todo filter-bar (spec 037). */
+  .filter-field {
+    width: 100%;
+  }
+
+  .filter-field select,
+  .filter-field input[type="search"],
+  .filter-field input[type="date"] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .navbar-links {
