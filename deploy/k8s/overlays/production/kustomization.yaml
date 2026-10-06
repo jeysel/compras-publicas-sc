@@ -96,7 +96,21 @@ replicas:
 # Francisco do Sul") selecionada. Validado em staging 2026-10-06 (exec no
 # pod): /health 200, bundle main-BtywNKSo.css confirmado como o mesmo
 # validado localmente. So frontend, sem toque em dbt/marts.
+# 493af7b (spec 038 -- rede de seguranca contra overflow horizontal em
+# mobile): usuario reportou o mesmo vazamento da spec 037 no input de data
+# de fornecedor-por-segmento. DIFERENTE da 037, a causa NAO foi confirmada
+# -- nao reproduziu em Chromium nem WebKit desktop (Playwright), com ou
+# sem valor no campo. Tentativa de fix direcionado (-webkit-appearance:
+# none no input de data) foi implementada, testada e REVERTIDA na mesma
+# sessao por quebrar visualmente o campo em WebKit (icone/placeholder
+# somem). No lugar: overflow-x: hidden no body, contendo qualquer
+# vazamento horizontal sem depender do mecanismo exato. Validado:
+# sticky nav intacto, sem overflow nos engines testaveis, sem mudanca
+# visual nos campos (staging 2026-10-06, bundle main-DjjVkpqS.css
+# confirmado). NAO VALIDADO: o bug relatado em si -- sem acesso a iPhone
+# real nesta sessao, fica pendente confirmacao do usuario apos este
+# deploy (ver docs/specs/038-mobile-overflow-rede-seguranca/spec.md).
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: cb00467
+    newTag: 493af7b
