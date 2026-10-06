@@ -6,9 +6,14 @@ Correção de UI (consistência de padrão já existente, não padrão novo).
 
 ## Status
 
-**No ar em produção — pendente deploy.** Implementado e validado localmente (ver
-Validação). Falta build/push da imagem e promoção via Argo CD (fora do escopo desta
-sessão — ver pendência no final).
+**No ar em produção, confirmado pelo usuário em iPhone real (2026-10-06).** Implementado
+e validado localmente (ver Validação), depois promovido via o fluxo normal (CI → GHCR →
+staging automático → promoção manual via Argo CD, commit `af86d5f`, imagem `10098d8`).
+Usuário validou os dois gráficos corrigidos (escalada de custo, série temporal) no
+dispositivo que motivou a investigação original. A investigação do "gráfico encolhido em
+iPhone" (comentário "Fix especulativo" no código, ver Validação) segue em aberto —
+nenhum encolhimento foi relatado neste teste, mas isso não fecha a investigação por si
+(ausência de sintoma num teste não é a mesma coisa que causa identificada).
 
 ## Resumo
 

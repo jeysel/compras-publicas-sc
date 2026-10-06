@@ -6,7 +6,10 @@ Correção de bug (achado reportado pelo usuário, confirmado em dispositivo rea
 
 ## Status
 
-**Implementado e validado — pendente deploy.**
+**No ar em produção, confirmado pelo usuário em iPhone real (2026-10-06).** Promovido via
+o fluxo normal (CI → GHCR → staging automático → promoção manual via Argo CD, commit
+`bef7b58`, imagem `cb00467`). Usuário confirmou no mesmo dispositivo e mesma página
+("Órgão") que motivou o relato original — resposta "Corrigido".
 
 ## Resumo
 

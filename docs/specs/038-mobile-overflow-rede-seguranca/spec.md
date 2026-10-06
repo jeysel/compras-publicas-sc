@@ -7,10 +7,14 @@ defensiva aplicada no lugar.
 
 ## Status
 
-**Implementado — pendente deploy. Causa raiz NÃO confirmada** (ver Investigação e
-"Não validado"). Diferente das specs 036/037, esta correção não reproduziu o bug
-relatado em nenhum engine disponível localmente — é uma rede de segurança, não um fix
-dirigido à causa.
+**No ar em produção — confirmado pelo usuário em iPhone real (2026-10-06).** Causa raiz
+continua NÃO confirmada (ver Investigação) — a correção aplicada é uma rede de segurança
+genérica (`overflow-x: hidden`), não um fix dirigido ao mecanismo exato do bug. O usuário
+validou no dispositivo que reportou o problema originalmente ("Feito") depois do deploy
+em produção (`493af7b`), via o mesmo fluxo de promoção manual (Argo CD) das specs 036/037.
+Diferente daquelas duas, esta spec nunca reproduziu o bug em ambiente de teste local — a
+confirmação de que funciona existe só no relato do usuário em produção, não em evidência
+automatizada própria desta sessão. Ver Adendo.
 
 ## Resumo
 
@@ -110,17 +114,13 @@ sem disfarçar uma correção especulativa como corrigida.
 4. Nenhuma mudança visual aos campos de formulário nos dois engines (screenshot
    comparado antes/depois da adição de `overflow-x: hidden`, sem diferença).
 
-**NÃO validado (honesto, não presumido):**
+**NÃO validado nesta sessão, antes do deploy (honesto, não presumido no momento):**
 - O bug relatado pelo usuário ("componente de data vazando da tela" no iPhone real) não
   foi reproduzido em nenhum ambiente de teste disponível nesta sessão. A correção
-  aplicada (`overflow-x: hidden`) deve conter o sintoma, mas isso não foi confirmado
+  aplicada (`overflow-x: hidden`) deveria conter o sintoma, mas isso não tinha confirmação
   contra o bug real — só contra a ausência de overflow nos engines testáveis.
-- Pendência explícita: o usuário precisa validar de novo em iPhone real depois do
-  deploy. Se o campo de data ainda aparentar vazar (mesmo contido por
-  `overflow-x: hidden`, o CAMPO em si pode ficar cortado visualmente em vez de
-  "vazar" — sintoma diferente, não resolvido), a investigação precisa continuar com mais
-  informação do usuário (modelo do iPhone, versão do iOS, se o vazamento acontece com o
-  campo vazio ou só depois de abrir o picker).
+- **Resolvido pelo Adendo abaixo**: o usuário confirmou em produção, no iPhone que
+  reportou o problema original, que o vazamento parou ("Feito").
 
 ## Casos de borda
 
@@ -145,6 +145,27 @@ sem disfarçar uma correção especulativa como corrigida.
 - `web/src/style.css` — regra `body`.
 - `api/app/templates/grafico_fornecedor_por_segmento.html`,
   `relatorio_fornecedor_por_segmento.html` — únicas páginas com `input[type="date"]`.
+
+## Adendo — 2026-10-06 (confirmado em iPhone real)
+
+Deploy em produção (`493af7b`, promovido via `ac6652b`, sync manual de Argo CD) validado
+pelo usuário diretamente no iPhone que reportou o bug original — resposta "Feito" após o
+pedido de reteste. Mantém-se em aberto, por decisão consciente e não por omissão, o que a
+spec já registrava como não investigado:
+
+- **Causa raiz exata** do comportamento do `input[type="date"]` em iOS Safari que levava
+  ao vazamento — nunca foi isolada (não reproduziu em Chromium/WebKit desktop). A
+  correção que resolveu o sintoma (`overflow-x: hidden` no `body`) é uma rede de
+  segurança, não elimina a causa — se outro elemento algum dia tiver o mesmo
+  comportamento de "ignorar a largura do container", o sintoma será contido do mesmo
+  jeito, sem precisar de uma spec nova por padrão (só se o efeito colateral do corte
+  silencioso, em vez de vazamento visível, se tornar um problema por si).
+- **Ambiente iOS real** segue indisponível para esta sessão — a confirmação de que o fix
+  funciona existe como relato do usuário, não como evidência automatizada capturada
+  nesta sessão (diferente das specs 036/037, que têm screenshot/medição própria). Registro
+  deliberado dessa assimetria, não uma correção retroativa do que já foi escrito acima.
+
+Nenhuma mudança de código neste adendo — só atualização de status.
 
 ## Ver também
 
