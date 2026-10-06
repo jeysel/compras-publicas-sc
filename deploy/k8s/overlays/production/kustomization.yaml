@@ -66,7 +66,21 @@ replicas:
 # secao de licenca no README (nao afetam o runtime). So frontend.
 # Validado local e em staging 2026-09-03: footer com grid, link
 # blob/main/LICENSE presente, Privacidade/Termos ausentes.
+# 10098d8 (spec 036 -- tratamento mobile consistente em eixo monetario/pizza):
+# escalada-custo.ts e contratos-temporal.ts ganham grid/containLabel
+# responsivo + notacao compacta de BRL em mobile (mesmo padrao ja usado em
+# concentracao-fornecedor.ts); diversidade-vencedores.ts troca rotulo
+# externo da pizza (truncava em "..." mesmo com so 2 categorias) por
+# legenda na base. So frontend, sem toque em dbt/marts. Validado local
+# (Postgres real, screenshot Playwright/Chromium 375px antes/depois) e em
+# staging 2026-10-06 (exec no pod): /health 200, /api/v1/anos-disponiveis
+# 200 com dado real, bundle main-DTxGoK9F.js confirmado como o mesmo
+# validado localmente (contem notacao "compact"). Teste em iPhone real
+# (Safari) fica para o usuario validar agora que esta em producao -- a
+# investigacao do "grafico encolhido em iPhone" (comentario
+# "Fix especulativo" no codigo) segue em aberto, nao fechada por este
+# deploy.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 6c3f625
+    newTag: 10098d8
