@@ -80,7 +80,23 @@ replicas:
 # investigacao do "grafico encolhido em iPhone" (comentario
 # "Fix especulativo" no codigo) segue em aberto, nao fechada por este
 # deploy.
+# cb00467 (spec 037 -- combobox/input de filtro vazando da tela em mobile):
+# achado pelo usuario em iPhone real ao validar a spec 036 em producao --
+# select "Orgao" vazava horizontalmente. Causa: select nativo sem
+# width/max-width se dimensiona pela option mais longa (nome de orgao),
+# e item de flex (.filter-field) nao encolhe abaixo do conteudo por padrao
+# (min-width: auto). Fix so em web/src/style.css (.filter-field min-width: 0
+# + width/max-width/box-sizing nos campos dentro do media query mobile),
+# sem tocar HTML/TS -- afeta todo combobox/input do projeto, nao so
+# "Orgao". Validado local: bug reproduzido de verdade via git stash
+# temporario do CSS + Playwright/Chromium 375px (scrollWidth 626 vs
+# clientWidth 375 antes, select de Orgao com 610px); restaurado o fix,
+# mesmo teste da scrollWidth = clientWidth = 375, incl. caso extremo com a
+# option mais longa do seed real ("Administracao do Porto de Sao
+# Francisco do Sul") selecionada. Validado em staging 2026-10-06 (exec no
+# pod): /health 200, bundle main-BtywNKSo.css confirmado como o mesmo
+# validado localmente. So frontend, sem toque em dbt/marts.
 images:
   - name: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
     newName: ghcr.io/jeysel/compras-publicas-sc/compras-publicas-api
-    newTag: 10098d8
+    newTag: cb00467
