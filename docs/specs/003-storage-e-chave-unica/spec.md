@@ -241,3 +241,7 @@ Decisão de storage (schema dedicado no `postgres` compartilhado vs. container p
 ## Ver também
 
 - [[005-grao-do-dado-contrato-vs-aditivo]] — confirma que a colisão de `nucontrato` é reuso de número entre unidades gestoras, não aditivo mal identificado; chave composta `(cdunidadegestora, nucontrato)` validada aqui é a resposta final, sem necessidade de reestruturar o grão.
+
+## Nota posterior (2026-10-19)
+
+A linha 71 cita `docs/backlog/features/feature-01.2-transparencia_sc.md`; o caminho atual é `docs/backlog-archived/features/feature-01.2-transparencia_sc.md`.

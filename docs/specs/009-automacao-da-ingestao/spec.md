@@ -188,3 +188,7 @@ Primeiro job agendado de produção do projeto — sem precedente de `CronJob` k
 - [[004-origem-dados-api-vs-arquivo]]
 - [[006-backfill-historico]]
 - [[017-validacao-schema-tolerante]] (revisão da lógica de validação de schema)
+
+## Nota posterior (2026-10-19)
+
+As linhas ~99 e ~102 citam `.github/workflows/compras-publicas.yml`; o workflow atual é `.github/workflows/build-and-push.yml`.
