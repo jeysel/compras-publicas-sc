@@ -264,3 +264,7 @@ Existem outros dois projetos já migrados para k3s antes deste, seguindo um padr
 ## Fora do escopo desta fase
 
 Decisões de design para o deploy do `compras-publicas-sc` no k3s (nova Application Argo CD, namespace, secret, ingress, cron/job para o pipeline dbt) ficam para a Fase 2, só depois desta investigação revisada.
+
+## Nota posterior (2026-10-19)
+
+As linhas ~106 e ~114 citam `.github/workflows/compras-publicas.yml`; o workflow atual é `.github/workflows/build-and-push.yml`.
