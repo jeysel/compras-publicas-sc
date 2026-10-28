@@ -243,7 +243,7 @@ servidor; (3) conferir `/api/v1/kpis-resumo` (`total_contratos` ~79,6k) e a meto
    (`assert_stg_contratos_cobertura_oficial` PASS. Log:
    `<diretorio-de-logs-do-host>/spec034-dbt-20260903_174614.log`.)
 
-3. Verificação em produção (`compras_publicas` no container `postgres`):
+3. Verificação em produção (banco `compras_publicas`, no Postgres de produção):
 
    | | antes | depois |
    |---|---|---|
