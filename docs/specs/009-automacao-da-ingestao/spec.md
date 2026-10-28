@@ -9,9 +9,9 @@ Decisão de arquitetura — fecha o eixo pipeline (specs 003-008).
 **Superada em 2026-08-24** — ver [[030-ingestao-manual-upsert]]. A fonte
 CKAN que esta spec automatizava está congelada desde set/2025; o fluxo
 manual via SCP + upsert (spec 030) a substituiu definitivamente. O cron
-do host (`ubuntu`, servidor de produção, entrada `30 9 * * *` disparando
-`docker compose -f docker-compose.pipeline.yml run --rm
-compras-publicas-pipeline`) foi removido nessa data para eliminar o risco
+do host (usuário de serviço do servidor de produção; a linha de cron do pipeline,
+de cadência diária, disparava o `run` do serviço do pipeline a partir do arquivo
+compose do pipeline, no repo `infra` privado) foi removido nessa data para eliminar o risco
 documentado na spec 030 ("Casos de borda") de a Secretaria voltar a
 publicar no link antigo e o próximo disparo automático apagar
 silenciosamente o histórico 2011–2020 trazido só pelo fluxo manual. O
@@ -116,7 +116,7 @@ completed	failure	Feat: Migração de evidence para streamlit + ajustes para cri
 
 ### Funcionais
 
-1. O sistema DEVE executar a verificação de arquivo novo via entrada de `crontab` no host, disparando `docker-compose run` de uma imagem publicada no GHCR (ver [[015-convencao-build-imagem]]). O arquivo `docker-compose.pipeline.yml` (ou nome equivalente à convenção do `infra`) e a entrada de `crontab` vivem no repo `infra` (privado), consistente com a fronteira de dado físico já estabelecida — não no repo `compras-publicas-sc`.
+1. O sistema DEVE executar a verificação de arquivo novo via entrada de `crontab` no host, disparando `docker-compose run` de uma imagem publicada no GHCR (ver [[015-convencao-build-imagem]]). O arquivo compose do pipeline (nome definido pela convenção do `infra`) e a entrada de `crontab` vivem no repo `infra` (privado), consistente com a fronteira de dado físico já estabelecida — não no repo `compras-publicas-sc`.
 
 2. A rotina (crontab do host) DEVE rodar em cadência diária, realizando um `HEAD` request ao link de download do portal antes de qualquer download completo do arquivo.
 
@@ -155,7 +155,7 @@ Primeiro job agendado de produção do projeto — sem precedente de `CronJob` k
 
 ### Componentes afetados
 
-- Dockerfile do job de ingestão no repo `compras-publicas`; `docker-compose.pipeline.yml` + entrada de crontab no repo `infra` (spec 015).
+- Dockerfile do job de ingestão no repo `compras-publicas`; arquivo compose do pipeline + entrada de crontab no repo `infra` (spec 015).
 - Imagem de container com `dbt` + dependências de download, publicada no GHCR seguindo a convenção da spec 015.
 - `control.pipeline_metadata`: **não é mais um model dbt** (`dbt/models/control/pipeline_metadata.sql` e `dbt/models/control/schema/pipeline_metadata.yml` foram removidos, junto com o bloco `control:` de `dbt_project.yml`). A tabela agora é criada e mantida via DDL idempotente no próprio `dbt/scripts/ingest.sh` (passo 0, bootstrap), fora do controle do dbt.
 - Remoção do workflow `.github/workflows/*.yml` que rodava `dbt` (ou arquivamento, se preferir manter rastro histórico em vez de deletar puro).

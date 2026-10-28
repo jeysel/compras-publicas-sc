@@ -210,9 +210,9 @@ testes), API pública confirmando a contagem nova.
   sem risco real — mas o risco de a Secretaria voltar a publicar naquele
   link e o próximo disparo automático apagar silenciosamente todo o ganho
   deste fluxo era real e permanecia aberto. Resolvido removendo a entrada
-  do crontab do host (`ubuntu`, servidor de produção) que disparava
-  `docker compose -f docker-compose.pipeline.yml run --rm
-  compras-publicas-pipeline` (30 9 * * *) — a fonte CKAN foi definitivamente
+  do crontab do host (usuário de serviço do servidor de produção) que disparava
+  o `run` do serviço do pipeline, a partir do arquivo compose do pipeline (repo
+  `infra` privado), uma vez por dia — a fonte CKAN foi definitivamente
   substituída pelo fluxo manual desta spec, não há mais motivo para manter
   a automação rodando em paralelo. O script `ingest.sh` e a imagem do
   pipeline **não foram apagados** (mantidos como histórico/referência,

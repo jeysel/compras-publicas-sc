@@ -1,12 +1,10 @@
 # Egress restrito ao necessário para o pod `app: compras-publicas-api` --
-# DNS (kube-system) e Postgres compartilhado (172.18.0.2/32:5432, fora do
-# k3s, ver infra/deploy/k8s/platform -- IP FIXO desde 2026-08-28
-# (ipv4_address no docker-compose.yml do repo infra, correção definitiva
-# da causa raiz do IP-swap, não deveria mais trocar), ver comentário em
-# infra/deploy/k8s/platform/base/postgres-service.yaml). App não faz chamada HTTPS externa
-# própria (dbt/ingestão rodam fora do k3s, no host). Aplicado manualmente
-# via kubectl desde a spec 080 (2026-08-19), nunca versionado até a spec 088
-# -- mesmo gap encontrado nos outros 2 apps k3s (jeysel.dev,
+# DNS (kube-system) e Postgres compartilhado (IP no `cidr` abaixo, porta 5432,
+# fora do k3s). O IP é fixo e a sua definição, o histórico do IP-swap e a
+# correção da causa raiz ficam documentados no repo `infra` (privado).
+# App não faz chamada HTTPS externa própria (dbt/ingestão rodam fora do k3s,
+# no host). Aplicado manualmente via kubectl desde a spec 080 (2026-08-19),
+# nunca versionado até a spec 088 -- mesmo gap encontrado nos outros 2 apps k3s (jeysel.dev,
 # weather-analytics) durante a revisão de disaster-recovery da spec 087.
 # Conteúdo idêntico entre staging e production, confirmado via kubectl
 # antes deste commit.

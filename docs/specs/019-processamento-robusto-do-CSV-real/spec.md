@@ -160,7 +160,7 @@ Fora do escopo original desta spec, mas descoberto ao rodar o Cenário 5 e **blo
 - `dbt/scripts/ingest.sh:165-184` — chamada a `process_csv.py`, log do resumo, `AVISO` de quarentena visível (Requirement funcional 6), `mv "$FILTERED_FILE" "$SEED_FILE"` (não mais o `TMP_FILE` bruto).
 - `docker-compose.yml` — serviço `pipeline` (novo, `profiles: ["pipeline"]`), volume `./logs:/var/log/compras-publicas`.
 - `.gitignore` — `/logs/` (artefato de log/quarentena do serviço `pipeline` local).
-- Infra (repo privado, não alterado): `docker-compose.pipeline.yml` já mapeia `/home/ubuntu/logs/compras-publicas:/var/log/compras-publicas` — cobre o caminho da quarentena sem mudança, confirmado por leitura direta do arquivo.
+- Infra (repo privado, não alterado): o arquivo compose do pipeline já mapeia o diretório de logs do host para `/var/log/compras-publicas` no container — cobre o caminho da quarentena sem mudança, confirmado por leitura direta do arquivo.
 
 ## Ver também
 
