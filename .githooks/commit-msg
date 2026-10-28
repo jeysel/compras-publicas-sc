@@ -1,0 +1,5 @@
+#!/bin/sh
+# Remove a linha Co-Authored-By inserida automaticamente pelo Claude
+# e as linhas em branco que sobram no fim da mensagem
+sed -i '/^Co-Authored-By: Claude/d' "$1"
+sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$1"

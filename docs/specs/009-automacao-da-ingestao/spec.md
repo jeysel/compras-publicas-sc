@@ -6,7 +6,7 @@ Decisão de arquitetura — fecha o eixo pipeline (specs 003-008).
 
 ## Status
 
-**Superada em 2026-08-24** — ver [[030-ingestao-manual-upsert]]. A fonte
+**Superada em 2026-08-24** (data divergente entre repositorios; ver nota na spec 030) — ver [[030-ingestao-manual-upsert]]. A fonte
 CKAN que esta spec automatizava está congelada desde set/2025; o fluxo
 manual via SCP + upsert (spec 030) a substituiu definitivamente. O cron
 do host (usuário de serviço do servidor de produção; a linha de cron do pipeline,
