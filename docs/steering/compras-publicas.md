@@ -121,8 +121,9 @@ real é feito em `stg_contratos`).
 ## Ingestão — manual, sem cron automático
 
 Não há `CronJob` k3s nem crontab de host disparando a ingestão hoje. O
-cron que existia (`30 9 * * *`, `docker compose run` do pipeline) foi
-**removido deliberadamente** na spec 030: a fonte CKAN automatizável que o
+cron diário que existia (linha de cron do pipeline, `run` do serviço no
+compose do repo `infra`) foi
+**removido deliberadamente** na spec 030 (data divergente entre repositorios; ver nota na spec 030): a fonte CKAN automatizável que o
 cron dependia está congelada desde set/2025, e um disparo automático
 baseado em `ETag`/`Last-Modified` do link antigo arriscava sobrescrever
 silenciosamente o histórico 2011–2020 que só existe porque foi trazido

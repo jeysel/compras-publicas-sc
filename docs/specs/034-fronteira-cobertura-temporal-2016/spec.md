@@ -227,21 +227,21 @@ servidor; (3) conferir `/api/v1/kpis-resumo` (`total_contratos` ~79,6k) e a meto
 
 1. Commits `a39f3db` (impl) + `8966c77` (promoção `overlays/production` → `a39f3db`). CI verde
    (suíte 32 passed). Staging sincronizou sozinho; produção via
-   `kubectl -n argocd patch application compras-publicas-production ... {"operation":{"sync":...}}`
+   `kubectl -n argocd patch application <application-de-producao> ... {"operation":{"sync":...}}`
    (sem `automated` — spec 015), sync `Succeeded`, 2 pods `a39f3db` ready.
 
-2. Reprocessamento dbt no host (mesmo padrão do passo 7 de `infra/scripts/importar-contratos.sh`
+2. Reprocessamento dbt no host (mesmo padrão do passo 7 do script de importação do repo `infra`
    — `run` + `test`, **nunca** `seed`/`build`, senão o `dbt seed` sobrescreve os upserts da
    spec 030 em `raw.contratos`):
 
    ```
-   docker run --rm --entrypoint dbt --network jeysel-network \
-     --env-file /home/ubuntu/secrets/compras-publicas.env -w /usr/app/dbt \
+   docker run --rm --entrypoint dbt --network <rede-docker-de-servicos> \
+     --env-file <arquivo-de-env-do-pipeline> -w /usr/app/dbt \
      ghcr.io/jeysel/compras-publicas-sc/compras-publicas-pipeline:latest  run    # PASS=24
    ...                                                                    test   # PASS=109
    ```
    (`assert_stg_contratos_cobertura_oficial` PASS. Log:
-   `/home/ubuntu/logs/compras-publicas/spec034-dbt-20260903_174614.log`.)
+   `<diretorio-de-logs-do-host>/spec034-dbt-20260903_174614.log`.)
 
 3. Verificação em produção (`compras_publicas` no container `postgres`):
 
