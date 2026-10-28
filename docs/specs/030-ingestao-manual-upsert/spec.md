@@ -219,6 +219,17 @@ testes), API pública confirmando a contagem nova.
   podem ser reativados manualmente se necessário) — só o disparo
   automático foi removido. Ver [[009-automacao-da-ingestao]], marcada
   como superada por esta decisão.
+  **Divergência de data entre repositórios, não resolvida:** esta spec (e a
+  009 e o steering, que a replicam) dá a remoção do cron do crontab como
+  ocorrida em 2026-08-24. O registro do repositório `infra` (privado) diz
+  outra coisa: uma tentativa de instalar o cron em 2026-08-20, revertida no
+  mesmo dia, e, em 2026-09-04, a constatação de "sem cron ativo, ingestão
+  automática abandonada" (sem execução do pipeline desde 24/08). Os dois
+  registros não são conciliáveis só por leitura: não há, no `infra`, anotação
+  de uma remoção do crontab em 24/08. A fonte autoritativa **não foi
+  determinada**; até que seja, trate a data de 2026-08-24 como a data desta
+  spec, não como fato confirmado do host. O estado atual (nenhum cron ativo)
+  é o mesmo nos dois registros.
 - **Contrato já existente com dado corrigido na fonte** (mesma chave,
   valores diferentes): upsert atualiza — pode mudar número já publicado.
   Confirmado na carga real (6.172 registros atualizados, maioria aditivo
